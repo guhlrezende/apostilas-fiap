@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 8: Algoritmo na prática: o cofre | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-5-8.js"></script>
+</head>
+<body data-cap="8" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 8 · Aula 9</div>
+  <h1>Algoritmo na prática: o cofre</h1>
+  <p class="sub">Aplicar o pensamento computacional a um jogo de senha, com um algoritmo que elimina hipóteses.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">3 demos · 3 testes · 4 flashcards</span><span class="chip">jogue contra o cofre</span></div>
+  <span class="num">8</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 7 você aprendeu a guardar e compartilhar código. Agora é hora de usar tudo o que veio antes (variáveis, condições, listas, laços, funções) num problema em que <b>ninguém entrega a fórmula</b>: um jogo de senha. O ponto da atividade é que <i>programar começa antes do teclado</i>, na estratégia.</div>
+<section class="sec" id="dinamica">
+  <h2><span class="sn">1</span>A dinâmica: o cofre de 4 dígitos</h2>
+  <p class="gancho">Descobrir a senha do adversário antes que ele descubra a sua.</p>
+  <p>Na atividade em grupo, cada grupo protegia um cofre (IoT) com uma <b>senha de 4 dígitos</b> e tentava abrir o do adversário. A cada tentativa, o cofre respondia com duas pistas, <b>sem dizer qual dígito</b> gerou cada uma:</p>
+  <div class="grid2">
+    <div class="card rv"><b style="color:var(--green)">ótimo</b><p>Um dígito do chute existe na senha <b>e está na posição certa</b>.</p></div>
+    <div class="card rv"><b style="color:var(--c1)">bom</b><p>Um dígito do chute existe na senha, mas está em <b>outra posição</b>.</p></div>
+  </div>
+  <p>Teste a resposta do cofre com a sua própria senha e chute (a senha 4071 e o chute 0111 dão 1 ótimo e 1 bom: o dígito 1 está certo na última posição, e o 0 existe, mas em outro lugar):</p>
+  <div class="demo" data-demo="cofrepistas"></div>
+  <div class="nota cuidado"><span class="lbl">O que deu errado</span>O grupo não conseguiu combinar uma estratégia: cada pessoa chutava por conta própria, e as pistas não eram aproveitadas. Sem uma regra comum, <b>as respostas anteriores não ajudam</b> nos chutes seguintes. O que faltou é justamente o que um algoritmo entrega: uma regra acordada antes de começar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Dá para sentir o tamanho do problema antes de resolver?</div><p>Dá: jogue contra o cofre.</p></div>
+</section>
+
+<section class="sec" id="jogar">
+  <h2><span class="sn">2</span>Sinta o problema</h2>
+  <p class="gancho">São 10 × 10 × 10 × 10 = 10.000 senhas. Quantas tentativas você precisa?</p>
+  <p>Jogue algumas partidas. Ligue "mostrar quantas senhas ainda são possíveis" para ver o efeito de cada resposta: <b>cada pista elimina hipóteses</b>.</p>
+  <div class="demo" data-demo="cofrejogo"></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se um programa jogasse? Que regra ele seguiria?</div><p>Antes da regra, o que "pensar como um computador" significa aqui.</p></div>
+</section>
+
+<section class="sec" id="pilares">
+  <h2><span class="sn">3</span>Os quatro pilares do pensamento computacional</h2>
+  <p class="gancho">A mesma atividade, vista por quatro lentes.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Pilar</th><th>O que é</th><th>No cofre</th></tr>
+    <tr><td><b>Decomposição</b></td><td>quebrar o problema em partes menores</td><td>separar "quais dígitos existem" de "em que posição estão"</td></tr>
+    <tr><td><b>Reconhecimento de padrões</b></td><td>achar o que se repete ou se parece</td><td>comparar duas respostas que diferem em um só dígito</td></tr>
+    <tr><td><b>Abstração</b></td><td>ficar só com o que importa, ignorando o resto</td><td>reduzir cada tentativa a um par de números: (ótimo, bom)</td></tr>
+    <tr><td><b>Algoritmo</b></td><td>uma sequência de passos clara, que sempre funciona</td><td>uma regra fixa para escolher o próximo chute</td></tr>
+  </table></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Qual é essa regra?</div><p>Uma ideia simples: só chute o que ainda pode ser a resposta.</p></div>
+</section>
+
+<section class="sec" id="estrategia">
+  <h2><span class="sn">4</span>Um algoritmo que elimina hipóteses</h2>
+  <p class="gancho">Cada resposta é uma peneira. Só passa quem daria <i>a mesma resposta</i>.</p>
+  <p>Estratégia de <b>consistência</b> (complemento, não foi dada em aula):</p>
+  <ol>
+    <li>Comece com a lista das 10.000 senhas possíveis.</li>
+    <li>Chute uma senha <b>que ainda está na lista</b>.</li>
+    <li>Com a resposta (ótimo, bom), <b>descarte toda senha que não teria dado a mesma resposta</b> a esse chute.</li>
+    <li>Repita até dar 4 ótimos.</li>
+  </ol>
+  <p>Todo o coração do programa é a função que compara um chute com uma senha:</p>
+<pre><code><span class="k">from</span> itertools <span class="k">import</span> product
+<span class="k">from</span> collections <span class="k">import</span> Counter
+
+<span class="k">def</span> <span class="f">pistas</span>(segredo, chute):
+    <span class="an" tabindex="0" data-t="zip percorre as duas senhas em paralelo, posição a posição. Soma 1 para cada posição igual.">otimo = <span class="f">sum</span>(s == c <span class="k">for</span> s, c <span class="k">in</span> <span class="f">zip</span>(segredo, chute))</span>
+    <span class="an" tabindex="0" data-t="Counter conta quantas vezes cada dígito aparece. O &amp; fica com o mínimo de cada um: os dígitos em comum, em qualquer posição.">comuns = <span class="f">sum</span>((<span class="f">Counter</span>(segredo) &amp; <span class="f">Counter</span>(chute)).<span class="f">values</span>())</span>
+    <span class="k">return</span> otimo, comuns - otimo        <span class="c"># bom = em comum menos os que já são ótimos</span>
+
+candidatos = [<span class="s">""</span>.<span class="f">join</span>(p) <span class="k">for</span> p <span class="k">in</span> <span class="f">product</span>(<span class="s">"0123456789"</span>, repeat=<span class="n">4</span>)]   <span class="c"># 10.000 senhas</span>
+
+<span class="k">def</span> <span class="f">filtra</span>(candidatos, chute, resposta):
+    <span class="k">return</span> [c <span class="k">for</span> c <span class="k">in</span> candidatos <span class="k">if</span> <span class="f">pistas</span>(c, chute) == resposta]</code></pre>
+  <p>Veja o algoritmo trabalhando, sobre a senha 4071. A coluna "possíveis" mostra como cada resposta derruba a lista:</p>
+  <div class="demo" data-demo="cofresolver"></div>
+  <p>Para a senha 4071, o Python (conferido rodando) resolve em <b>8 tentativas</b>: 0000 → 0111 → 2012 → 3031 → 4041 → 4051 → 4061 → 4071, e a lista cai de 10.000 para 2.916, 384, 98, 36, 10, 4 e 3 antes do acerto. Rodando o algoritmo (conferido) em todas as 10.000 senhas possíveis, a média é de cerca de 8,7 tentativas e o pior caso é 13.</p>
+  <div class="nota lembra"><span class="lbl">Complemento: quão bom dá para ser?</span>Em 1977, Donald Knuth mostrou que o Mastermind clássico (4 posições, 6 cores) sempre se resolve em até <b>5 jogadas</b>, escolhendo o chute que minimiza o pior caso. Nosso algoritmo escolhe o <i>primeiro</i> candidato, e não o melhor, e por isso é mais simples e um pouco mais lento. Existe sempre esse compromisso entre simplicidade e otimização.</div>
+  <div class="nota exemplo"><span class="lbl">Como o grupo poderia ter jogado</span>Divida papéis <b>antes</b> de começar: uma pessoa chuta, outra anota cada (chute, resposta) numa tabela, e uma terceira elimina hipóteses. É um algoritmo executado por pessoas, e mostra que pensar em passos serve fora do computador também.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>O cofre responde com <b>ótimo</b> (dígito certo, posição certa) e <b>bom</b> (dígito existe, posição errada).</li><li>Quatro pilares: <b>decomposição</b>, <b>padrões</b>, <b>abstração</b>, <b>algoritmo</b>.</li><li>Há <b>10.000</b> senhas. Chutar sem usar as pistas é força bruta.</li><li><b>Estratégia de consistência:</b> chute só o que ainda é possível e descarte o que não daria a mesma resposta.</li><li><code>zip</code> compara posição a posição; <code>Counter</code> conta repetições; <code>itertools.product</code> gera as combinações.</li><li>Sem regra combinada, as respostas anteriores <b>não são aproveitadas</b>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Senha 4071 e chute 0111. Quantos 'ótimo' e quantos 'bom'?</p>
+    <div class="opts"><button data-k="a">2 ótimos e 0 bons.</button><button data-k="b">1 ótimo e 1 bom.</button><button data-k="c">0 ótimos e 2 bons.</button></div>
+    <div class="fb">O último 1 está na posição certa (ótimo). O 0 existe na senha, mas em outra posição (bom). O segundo 1 do chute não tem par: só há um 1 na senha.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual pilar corresponde a reduzir cada tentativa a um par de números (ótimo, bom)?</p>
+    <div class="opts"><button data-k="a">Decomposição.</button><button data-k="b">Reconhecimento de padrões.</button><button data-k="c">Abstração: ficar só com o que importa.</button></div>
+    <div class="fb">Abstrair é ignorar os detalhes que não ajudam e guardar só o essencial. Aqui, todo o chute vira um par.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Depois de uma resposta (ótimo, bom), quais senhas devem ser descartadas?</p>
+    <div class="opts"><button data-k="a">As que NÃO teriam dado a mesma resposta ao mesmo chute.</button><button data-k="b">As que têm o primeiro dígito do chute.</button><button data-k="c">Nenhuma: só o chute em si.</button></div>
+    <div class="fb">Se a senha verdadeira deu aquela resposta, qualquer candidata que desse outra resposta ao mesmo chute não pode ser a verdadeira.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quantas senhas de 4 dígitos existem?</b></span><span class="bk">10 × 10 × 10 × 10 = 10.000 (de 0000 a 9999).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o zip?</b></span><span class="bk">Percorre duas sequências em paralelo, posição a posição.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que usar Counter?</b></span><span class="bk">Para contar quantas vezes cada dígito aparece e achar os dígitos em comum, mesmo repetidos.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que um algoritmo traz ao trabalho em grupo?</b></span><span class="bk">Uma regra acordada antes de começar, em que cada resposta é aproveitada.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 9</div><div class="q">Escrevi programas inteiros. O que mais o Python tem que eu ainda não usei?</div><p>Strings, arquivos, tratamento de erros e módulos: o complemento final.</p></div>
+</section>
+
+</article>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: Decisões: if, lógica e match-case | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-1-4.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Aulas 2, 4 e 7</div>
+  <h1>Decisões: if, lógica e match-case</h1>
+  <p class="sub">Fazer o programa escolher o caminho: condições, operadores lógicos e o match-case.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">código rastreado</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 2 o programa passou a ler dados, calcular e formatar. Mas ele ainda fazia <b>sempre a mesma coisa</b>, de cima para baixo. Agora ele vai aprender a escolher: executar um bloco ou outro conforme uma condição.</div>
+<section class="sec" id="if">
+  <h2><span class="sn">1</span>if, elif e else</h2>
+  <p class="gancho">Uma pergunta de sim ou não decide o caminho.</p>
+  <p>Uma <b>estrutura condicional</b> executa (ou ignora) um bloco de código dependendo de uma condição. A condição é uma expressão que vira <code>True</code> ou <code>False</code>:</p>
+<pre><code><span class="k">if</span> idade &gt;= <span class="n">18</span>:
+    <span class="f">print</span>(<span class="s">"Você é maior de idade."</span>)
+<span class="k">else</span>:
+    <span class="f">print</span>(<span class="s">"Você é menor de idade."</span>)</code></pre>
+  <p>Para mais de duas saídas entra o <code>elif</code> ("senão se"). O Python avalia <b>de cima para baixo</b> e executa só o <b>primeiro</b> bloco cuja condição for verdadeira:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["nota = 6", "if nota >= 7:", "    print(\"Aprovado\")", "elif nota >= 5:", "    print(\"Recuperação\")", "else:", "    print(\"Reprovado\")", "print(\"Fim\")"], "steps": [{"l": 0, "v": {}, "o": "", "n": "<code>nota = 6<\/code>."}, {"l": 1, "v": {"nota": 6}, "o": "", "n": "6 &gt;= 7 é <b>False<\/b>: o Python <b>pula<\/b> o bloco indentado."}, {"l": 3, "v": {"nota": 6}, "o": "", "n": "6 &gt;= 5 é <b>True<\/b>: entra neste bloco."}, {"l": 4, "v": {"nota": 6}, "o": "", "n": "Executa o bloco e <b>ignora todo o resto<\/b> da cadeia (o else nem é avaliado)."}, {"l": 7, "v": {"nota": 6}, "o": "Recuperação", "n": "Depois da cadeia, o programa segue normalmente. Esta linha não está indentada, então não pertence ao if."}, {"l": -1, "v": {"nota": 6}, "o": "Recuperação\nFim", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "elif: o primeiro verdadeiro vence"}</script></div>
+  <div class="nota cuidado"><span class="lbl">Cuidado: a indentação é a sintaxe</span>Em Python não há chaves <code>{ }</code>: o que pertence a cada bloco é definido pelo <b>recuo</b> (4 espaços, por convenção). A linha <code>print("Fim")</code> sem recuo <i>não</i> faz parte do if. Misturar espaços e tabs ou errar o recuo dá <code>IndentationError</code>.</div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b><code>=</code> não é <code>==</code>.</b> <code>idade = 18</code> <i>atribui</i>; <code>idade == 18</code> <i>compara</i>. Dentro de um if, use sempre <code>==</code>. Outro clássico: <code>if x == 1 or 2:</code> está <b>errado</b> (o <code>2</code> sozinho é sempre verdadeiro). O certo é <code>if x == 1 or x == 2:</code> (ou <code>x in (1, 2)</code>).</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E quando a decisão depende de duas coisas ao mesmo tempo?</div><p>Combinamos condições com operadores lógicos.</p></div>
+</section>
+
+<section class="sec" id="logicos">
+  <h2><span class="sn">2</span>Comparação e operadores lógicos</h2>
+  <p class="gancho">Perguntas pequenas combinadas em uma pergunta grande.</p>
+  <div class="grid2">
+    <div class="card rv"><b>Comparação</b><p><code>==</code> igual · <code>!=</code> diferente · <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code></p></div>
+    <div class="card rv"><b>Lógicos</b><p><code>and</code> (E): as duas · <code>or</code> (OU): pelo menos uma · <code>not</code> (NÃO): inverte</p></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Correção ao slide</span>O slide mostra os símbolos <code>&amp;&amp;</code>, <code>||</code> e <code>!</code> ao lado de E/OU/NÃO. <b>Esses símbolos não existem em Python</b> (são de C, Java e JavaScript). Em Python os operadores lógicos se escrevem por extenso: <code>and</code>, <code>or</code>, <code>not</code>.</div>
+  <div class="demo" data-demo="cond"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: ano bissexto</span>
+    <div class="l"><div>Regra: bissexto se for múltiplo de 4, <b>exceto</b> os múltiplos de 100, <b>exceto</b> os múltiplos de 400.</div></div>
+    <div class="l"><div>Em lógica: <code>(ano % 4 == 0 and ano % 100 != 0) or ano % 400 == 0</code>.</div></div>
+    <div class="l"><div>Teste mentalmente: 2024 (sim), 1900 (não), 2000 (sim). Confira o passo a passo para 1900:</div></div>
+  </div>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["ano = 1900", "div4 = ano % 4 == 0", "div100 = ano % 100 == 0", "div400 = ano % 400 == 0", "if (div4 and not div100) or div400:", "    print(\"bissexto\")", "else:", "    print(\"não bissexto\")"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {"ano": 1900}, "o": "", "n": "1900 é divisível por 4."}, {"l": 2, "v": {"ano": 1900, "div4": true}, "o": "", "n": "Mas também por 100..."}, {"l": 3, "v": {"ano": 1900, "div4": true, "div100": true}, "o": "", "n": "...e não por 400."}, {"l": 4, "v": {"ano": 1900, "div4": true, "div100": true, "div400": false}, "o": "", "n": "(True e <b>não<\/b> True) → False; ou False → <b>False<\/b>."}, {"l": 7, "v": {"ano": 1900, "div4": true, "div100": true, "div400": false}, "o": "", "n": "1900 <b>não<\/b> foi bissexto, apesar de ser múltiplo de 4. A regra: múltiplo de 4, exceto os de 100, exceto os de 400 (por isso 2000 foi bissexto)."}, {"l": -1, "v": {"ano": 1900, "div4": true, "div100": true, "div400": false}, "o": "não bissexto", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Ano bissexto"}</script></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Um menu com muitas opções vira uma escada de elif enorme. Existe algo mais limpo?</div><p>Existe, a partir do Python 3.10: o match-case.</p></div>
+</section>
+
+<section class="sec" id="match">
+  <h2><span class="sn">3</span>match-case: menus e faixas</h2>
+  <p class="gancho">Comparar uma variável com vários valores possíveis.</p>
+  <p>O <code>match</code> (Python <b>3.10 ou mais novo</b>) compara um valor com cada <code>case</code>. O <code>case _</code> é o curinga, que pega o que sobrou (o equivalente ao <code>else</code>). Dentro de um case, o <code>|</code> lê como "ou", e um <b>guard</b> (<code>case ... if condição</code>) acrescenta uma condição extra:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["dia = 6", "match dia:", "    case 1 | 2 | 3 | 4 | 5:", "        print(\"Dia útil\")", "    case 6 | 7:", "        print(\"Fim de semana\")", "    case _:", "        print(\"Dia inválido\")"], "steps": [{"l": 0, "v": {}, "o": "", "n": "Valor a testar."}, {"l": 1, "v": {"dia": 6}, "o": "", "n": "O <code>match<\/code> compara <code>dia<\/code> com cada <code>case<\/code>, de cima para baixo."}, {"l": 2, "v": {"dia": 6}, "o": "", "n": "6 não está entre 1 e 5 (o <code>|<\/code> lê como \"ou\")."}, {"l": 4, "v": {"dia": 6}, "o": "", "n": "6 está entre 6 e 7: entra aqui."}, {"l": 5, "v": {"dia": 6}, "o": "", "n": "Executa e sai do match. O <code>case _<\/code> (curinga) só roda se nenhum outro casar."}, {"l": -1, "v": {"dia": 6}, "o": "Fim de semana", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "match-case com vários valores"}</script></div>
+<pre><code>idade = <span class="n">15</span>
+<span class="k">match</span> idade:
+    <span class="k">case</span> n <span class="k">if</span> n &lt;= <span class="n">12</span>:
+        <span class="f">print</span>(<span class="s">"criança"</span>)
+    <span class="k">case</span> n <span class="k">if</span> n &lt;= <span class="n">17</span>:
+        <span class="f">print</span>(<span class="s">"adolescente"</span>)
+    <span class="k">case</span> _:
+        <span class="f">print</span>(<span class="s">"adulto"</span>)</code></pre>
+  <p>Menu clássico do exercício (1 ver perfil, 2 editar perfil, 3 sair):</p>
+<pre><code>opcao = <span class="f">int</span>(<span class="f">input</span>(<span class="s">"1-Ver perfil  2-Editar perfil  3-Sair: "</span>))
+<span class="k">match</span> opcao:
+    <span class="k">case</span> <span class="n">1</span>:
+        <span class="f">print</span>(<span class="s">"Mostrando o perfil"</span>)
+    <span class="k">case</span> <span class="n">2</span>:
+        <span class="f">print</span>(<span class="s">"Editando o perfil"</span>)
+    <span class="k">case</span> <span class="n">3</span>:
+        <span class="f">print</span>(<span class="s">"Saindo"</span>)
+    <span class="k">case</span> _:
+        <span class="f">print</span>(<span class="s">"Opção inválida"</span>)</code></pre>
+  <div class="nota lembra"><span class="lbl">Quando usar qual</span>Para <b>faixas</b> e condições compostas, o <code>if/elif</code> costuma ser mais claro. O <code>match</code> brilha para <b>valores exatos</b> (menus, dias, comandos). Uma pegadinha: dentro de <code>case</code>, um nome sozinho (como o <code>n</code> acima) <b>captura</b> o valor, e não compara com uma variável existente.</div>
+  <h3>Os seis exercícios da aula, com soluções de estudo (complemento)</h3>
+<pre><code><span class="c"># 1) positivo, negativo ou zero</span>
+n = <span class="f">float</span>(<span class="f">input</span>(<span class="s">"Número: "</span>))
+<span class="k">if</span> n &gt; <span class="n">0</span>:   <span class="f">print</span>(<span class="s">"positivo"</span>)
+<span class="k">elif</span> n &lt; <span class="n">0</span>: <span class="f">print</span>(<span class="s">"negativo"</span>)
+<span class="k">else</span>:        <span class="f">print</span>(<span class="s">"zero"</span>)
+
+<span class="c"># 2) par ou ímpar (o resto da divisão por 2)</span>
+n = <span class="f">int</span>(<span class="f">input</span>(<span class="s">"Inteiro: "</span>))
+<span class="f">print</span>(<span class="s">"par"</span> <span class="k">if</span> n % <span class="n">2</span> == <span class="n">0</span> <span class="k">else</span> <span class="s">"ímpar"</span>)
+
+<span class="c"># 4) vogal ou consoante (um caractere; o len(c) == 1 evita que "" ou "ae" contem como vogal)</span>
+c = <span class="f">input</span>(<span class="s">"Letra: "</span>).<span class="f">lower</span>()
+<span class="f">print</span>(<span class="s">"vogal"</span> <span class="k">if</span> <span class="f">len</span>(c) == <span class="n">1</span> <span class="k">and</span> c <span class="k">in</span> <span class="s">"aeiou"</span> <span class="k">else</span> <span class="s">"consoante"</span>)
+
+<span class="c"># 5) desconto de 10% acima de 10 unidades</span>
+preco, qtd = <span class="f">float</span>(<span class="f">input</span>(<span class="s">"Preço: "</span>)), <span class="f">int</span>(<span class="f">input</span>(<span class="s">"Quantidade: "</span>))
+total = preco * qtd
+<span class="k">if</span> qtd &gt; <span class="n">10</span>:
+    total = total * <span class="n">0.9</span>
+<span class="f">print</span>(<span class="s">f"Total: R$ {total:.2f}"</span>)
+
+<span class="c"># 6) pode votar? (mínimo 16 anos)</span>
+idade = <span class="f">int</span>(<span class="f">input</span>(<span class="s">"Idade: "</span>))
+<span class="f">print</span>(<span class="s">"pode votar"</span> <span class="k">if</span> idade &gt;= <span class="n">16</span> <span class="k">else</span> <span class="s">"não pode votar"</span>)</code></pre>
+  <p class="muted">O exercício 3 (bissexto) é o do exemplo acima. A forma <code>valor_a if condição else valor_b</code> é o <b>operador ternário</b>: uma decisão numa expressão só.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><code>if</code>/<code>elif</code>/<code>else</code>: executa o <b>primeiro</b> bloco verdadeiro, de cima para baixo.</li><li>A <b>indentação</b> define o bloco. Sem chaves.</li><li><code>=</code> atribui; <code>==</code> compara. Em Python: <code>and</code>, <code>or</code>, <code>not</code> (nada de <code>&amp;&amp;</code> ou <code>||</code>).</li><li><b>Bissexto:</b> <code>(ano % 4 == 0 and ano % 100 != 0) or ano % 400 == 0</code>.</li><li><code>match</code>/<code>case</code> (Python 3.10+): menus e valores exatos; <code>|</code> é "ou"; <code>case _</code> é o curinga; guard com <code>if</code>.</li><li><code>x == 1 or 2</code> é um erro clássico: escreva <code>x == 1 or x == 2</code>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Com <code>nota = 8</code>, qual bloco da cadeia <code>if nota &gt;= 7 / elif nota &gt;= 5 / else</code> executa?</p>
+    <div class="opts"><button data-k="a">Os dois primeiros.</button><button data-k="b">Só o primeiro (Aprovado).</button><button data-k="c">O else.</button></div>
+    <div class="fb">O Python para no primeiro verdadeiro. Como 8 &gt;= 7, executa esse bloco e ignora o elif e o else, mesmo que 8 &gt;= 5 também fosse verdadeiro.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual condição diz 'maior de idade E com carteira'?</p>
+    <div class="opts"><button data-k="a">idade >= 18 && tem_carteira</button><button data-k="b">idade >= 18 & tem_carteira</button><button data-k="c">idade >= 18 and tem_carteira</button></div>
+    <div class="fb">Em Python o E lógico é <code>and</code>. O <code>&amp;&amp;</code> é de outras linguagens.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O ano 1900 é bissexto?</p>
+    <div class="opts"><button data-k="a">Não: é múltiplo de 4 e de 100, mas não de 400.</button><button data-k="b">Sim: é múltiplo de 4.</button><button data-k="c">Sim: é múltiplo de 100.</button></div>
+    <div class="fb">A regra tem exceções em cascata: múltiplos de 100 não são bissextos, a menos que sejam múltiplos de 400 (como 2000).</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a diferença entre = e ==?</b></span><span class="bk">= atribui um valor a uma variável. == compara dois valores e devolve True ou False.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o case _?</b></span><span class="bk">É o curinga do match: roda quando nenhum outro case casou (como o else).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o %?</b></span><span class="bk">Resto da divisão: n % 2 == 0 testa par; ano % 4 == 0 testa múltiplo de 4.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que a indentação importa?</b></span><span class="bk">Em Python ela define quais linhas pertencem ao bloco do if, do laço ou da função.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">Decide uma vez. E se eu tiver muitos valores, ou precisar repetir a decisão?</div><p>Aí entram as coleções, as listas, e depois os laços.</p></div>
+</section>
+
+</article>
+</body>
+</html>

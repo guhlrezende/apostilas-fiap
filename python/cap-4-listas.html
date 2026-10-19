@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: Listas e outras coleções | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-1-4.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aula 5</div>
+  <h1>Listas e outras coleções</h1>
+  <p class="sub">Guardar muitos valores sob um nome só, mexer neles com segurança e conhecer as outras coleções.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">código rastreado</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 o programa passou a decidir. Mas cada decisão olhava um valor só. Quando você tem 100 notas, não vai criar 100 variáveis (<code>nota1</code>, <code>nota2</code>, ...). Falta uma forma de guardar uma <b>coleção</b> sob um único nome.</div>
+<section class="sec" id="lista">
+  <h2><span class="sn">1</span>Lista: a fila de caixas numeradas</h2>
+  <p class="gancho">Uma variável só, muitos valores, na ordem.</p>
+  <p>Uma <b>lista</b> é uma coleção <mark class="hl">ordenada</mark> (a posição faz parte da identidade do dado) e <mark class="hl g">mutável</mark> (dá para mudar o conteúdo depois de criada). O índice começa em <b>0</b>, e <code>-1</code> pega o último elemento sem você calcular <code>len(lista) - 1</code>.</p>
+<pre><code>numeros = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">5</span>]
+nomes   = [<span class="s">"Alice"</span>, <span class="s">"Bob"</span>, <span class="s">"Charlie"</span>]
+mista   = [<span class="n">1</span>, <span class="s">"Bob"</span>, <span class="n">3.14</span>, <span class="n">True</span>]   <span class="c"># tipos misturados são permitidos</span>
+vazia   = []
+
+numeros[<span class="n">0</span>]    <span class="c"># 1: o primeiro</span>
+numeros[-<span class="n">1</span>]   <span class="c"># 5: o último</span></code></pre>
+  <p>Para que serve: armazenar e organizar dados, <b>iterar</b> sobre eles (Capítulo 5), simular filas e pilhas, guardar dados estruturados (uma lista de listas é uma tabela, Capítulo 6) e passar coleções para funções. Brinque com as operações e com as fatias:</p>
+  <div class="demo" data-demo="listbox"></div>
+  <div class="tablewrap"><table>
+    <tr><th>Método</th><th>Faz</th><th>Detalhe</th></tr>
+    <tr><td><code>append(x)</code></td><td>põe x no final</td><td>rápido</td></tr>
+    <tr><td><code>insert(i, x)</code></td><td>põe x na posição i</td><td>desloca os seguintes (mais caro)</td></tr>
+    <tr><td><code>extend(outra)</code></td><td>junta todos os elementos de outra lista</td><td><code>append([1,2])</code> poria a lista inteira como <b>um</b> elemento</td></tr>
+    <tr><td><code>remove(x)</code></td><td>tira a primeira ocorrência do <b>valor</b> x</td><td>dá <code>ValueError</code> se x não existir</td></tr>
+    <tr><td><code>pop()</code> / <code>pop(i)</code></td><td>remove <b>e devolve</b> o último (ou o do índice i)</td><td>pelo índice, não pelo valor</td></tr>
+    <tr><td><code>sort()</code> / <code>reverse()</code></td><td>ordena / inverte <b>no lugar</b></td><td>devolvem <code>None</code></td></tr>
+    <tr><td><code>len(l)</code>, <code>l.count(x)</code>, <code>l.index(x)</code></td><td>tamanho, quantas vezes aparece, posição</td><td></td></tr>
+  </table></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b><code>lista = lista.sort()</code>.</b> O <code>sort()</code> ordena no lugar e devolve <code>None</code>, então a variável vira <code>None</code>. Use <code>lista.sort()</code> sozinho, ou <code>nova = sorted(lista)</code> para obter uma cópia ordenada.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Mutável é uma vantagem. Será que também é um risco?</div><p>É, e o risco tem nome: dois nomes para a mesma lista.</p></div>
+</section>
+
+<section class="sec" id="mutavel">
+  <h2><span class="sn">2</span>Mutável: a pegadinha do "b = a"</h2>
+  <p class="gancho">Você achou que copiou a lista. Não copiou.</p>
+  <p>Em Python, uma variável guarda uma <b>referência</b> ao objeto. Quando você escreve <code>b = a</code> com listas, os dois nomes apontam para a <b>mesma</b> lista. Quem muda por um nome muda para o outro. Acompanhe:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["a = [1, 2, 3]", "b = a", "b.append(4)", "c = a.copy()", "c.append(5)", "print(a)", "print(c)"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {"a": [1, 2, 3]}, "o": "", "n": "<code>b = a<\/code> <b>não copia<\/b>: cria um segundo nome para a <b>mesma<\/b> lista."}, {"l": 2, "v": {"a": [1, 2, 3], "b": [1, 2, 3]}, "o": "", "n": "Mudar pelo nome <code>b<\/code> muda a lista que o <code>a<\/code> também aponta."}, {"l": 3, "v": {"a": [1, 2, 3, 4], "b": [1, 2, 3, 4]}, "o": "", "n": "<code>copy()<\/code> cria uma lista <b>nova<\/b>, independente."}, {"l": 4, "v": {"a": [1, 2, 3, 4], "b": [1, 2, 3, 4], "c": [1, 2, 3, 4]}, "o": "", "n": "Mexer em <code>c<\/code> não afeta <code>a<\/code>."}, {"l": 5, "v": {"a": [1, 2, 3, 4], "b": [1, 2, 3, 4], "c": [1, 2, 3, 4, 5]}, "o": "", "n": "<code>a<\/code> (e <code>b<\/code>) têm o 4, mas não o 5."}, {"l": 6, "v": {"a": [1, 2, 3, 4], "b": [1, 2, 3, 4], "c": [1, 2, 3, 4, 5]}, "o": "[1, 2, 3, 4]", "n": ""}, {"l": -1, "v": {"a": [1, 2, 3, 4], "b": [1, 2, 3, 4], "c": [1, 2, 3, 4, 5]}, "o": "[1, 2, 3, 4]\n[1, 2, 3, 4, 5]", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Copiar lista: a pegadinha do b = a"}</script></div>
+  <p>Para uma cópia independente, use <code>a.copy()</code> (ou <code>a[:]</code>, ou <code>list(a)</code>). Esse é o mesmo problema que faz uma função que recebe uma lista poder <b>alterar</b> a lista de quem a chamou.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se eu quiser guardar algo que não pode mudar, ou achar um valor pelo nome em vez da posição?</div><p>Há outras coleções.</p></div>
+</section>
+
+<section class="sec" id="colecoes">
+  <h2><span class="sn">3</span>As quatro coleções nativas (complemento)</h2>
+  <p class="gancho">Cada uma resolve um problema diferente.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Coleção</th><th>Escrita</th><th>Ordenada?</th><th>Mutável?</th><th>Use para</th></tr>
+    <tr><td><b>list</b></td><td><code>[1, 2, 3]</code></td><td>sim</td><td>sim</td><td>sequência que cresce e muda</td></tr>
+    <tr><td><b>tuple</b> (tupla)</td><td><code>(1, 2, 3)</code></td><td>sim</td><td><b>não</b></td><td>dados fixos (coordenada, data)</td></tr>
+    <tr><td><b>dict</b> (dicionário)</td><td><code>{"nome": "Ana", "idade": 19}</code></td><td>pela inserção</td><td>sim</td><td>achar um valor pela <b>chave</b></td></tr>
+    <tr><td><b>set</b> (conjunto)</td><td><code>{1, 2, 3}</code></td><td>não</td><td>sim</td><td>valores <b>sem repetição</b>, testar pertencimento</td></tr>
+  </table></div>
+<pre><code>aluno = {<span class="s">"nome"</span>: <span class="s">"Ana"</span>, <span class="s">"idade"</span>: <span class="n">19</span>}
+aluno[<span class="s">"nome"</span>]            <span class="c"># 'Ana'</span>
+aluno[<span class="s">"curso"</span>] = <span class="s">"TI"</span>    <span class="c"># acrescenta uma chave nova</span>
+<span class="f">set</span>([<span class="n">1</span>, <span class="n">2</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">3</span>])        <span class="c"># {1, 2, 3}: os repetidos somem</span></code></pre>
+  <p>Na ciência de dados, o <b>DataFrame</b> do pandas é uma tabela que se constrói sobre essas ideias (colunas como listas, linhas como dicionários). Se você chegou até aqui, o resto é questão de prática.</p>
+  <h3>Complemento: list comprehension</h3>
+  <p>Uma forma compacta e "pythônica" de construir listas a partir de outras:</p>
+<pre><code>quadrados = [x ** <span class="n">2</span> <span class="k">for</span> x <span class="k">in</span> <span class="f">range</span>(<span class="n">1</span>, <span class="n">6</span>)]          <span class="c"># [1, 4, 9, 16, 25]</span>
+pares     = [x <span class="k">for</span> x <span class="k">in</span> <span class="f">range</span>(<span class="n">10</span>) <span class="k">if</span> x % <span class="n">2</span> == <span class="n">0</span>]   <span class="c"># [0, 2, 4, 6, 8]</span></code></pre>
+  <h3>Exercícios do slide, resolvidos</h3>
+<pre><code>nums = [<span class="n">4</span>, <span class="n">8</span>, <span class="n">15</span>, <span class="n">16</span>]
+<span class="f">sum</span>(nums)                              <span class="c"># 1) soma: 43</span>
+<span class="s">", "</span>.<span class="f">join</span>([<span class="s">"a"</span>, <span class="s">"b"</span>, <span class="s">"c"</span>])           <span class="c"># 2) juntar strings: 'a, b, c'</span>
+<span class="f">max</span>(nums), <span class="f">min</span>(nums)                    <span class="c"># 3) maior e menor: (16, 4)</span>
+<span class="s">"Bob"</span> <span class="k">in</span> [<span class="s">"Alice"</span>, <span class="s">"Bob"</span>]              <span class="c"># 4) nome na lista? True</span>
+[x * <span class="n">2</span> <span class="k">for</span> x <span class="k">in</span> nums]                  <span class="c"># 6) cada número vezes 2</span>
+<span class="f">all</span>(<span class="f">len</span>(s) &gt; <span class="n">3</span> <span class="k">for</span> s <span class="k">in</span> [<span class="s">"casa"</span>, <span class="s">"sol"</span>])  <span class="c"># 7) todas com mais de 3 letras? False</span>
+<span class="f">sorted</span>(nums, reverse=<span class="n">True</span>)          <span class="c"># 8) ordem decrescente</span>
+<span class="f">len</span>([x <span class="k">for</span> x <span class="k">in</span> nums <span class="k">if</span> x % <span class="n">2</span> == <span class="n">0</span>])    <span class="c"># 9) quantos são pares: 3</span></code></pre>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Lista</b>: ordenada e <b>mutável</b>. Índice começa em 0; <code>-1</code> é o último.</li><li><code>append</code> (final), <code>insert</code> (posição), <code>extend</code> (junta elementos), <code>remove</code> (por <b>valor</b>), <code>pop</code> (por <b>índice</b>, e devolve).</li><li><code>sort()</code> e <code>reverse()</code> mudam <b>no lugar</b> e devolvem <code>None</code>; <code>sorted()</code> devolve uma cópia.</li><li><code>b = a</code> <b>não copia</b> a lista. Use <code>a.copy()</code>.</li><li><b>tupla</b> (imutável), <b>dicionário</b> (chave → valor), <b>conjunto</b> (sem repetição).</li><li>Fatia <code>l[a:b]</code> vai do índice <code>a</code> ao <code>b - 1</code>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Dada <code>l = [10, 20, 30, 40]</code>, o que é <code>l[1:3]</code>?</p>
+    <div class="opts"><button data-k="a">[10, 20, 30]</button><button data-k="b">[20, 30, 40]</button><button data-k="c">[20, 30]</button></div>
+    <div class="fb">A fatia começa no índice 1 (incluído) e vai até o 3 (<b>excluído</b>): fica o 20 e o 30.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Depois de <code>a = [1, 2]; b = a; b.append(3)</code>, quanto vale <code>a</code>?</p>
+    <div class="opts"><button data-k="a">[1, 2, 3]: a e b são a mesma lista.</button><button data-k="b">[1, 2]</button><button data-k="c">Dá erro.</button></div>
+    <div class="fb">Atribuir uma lista a outra variável só cria outro nome para o mesmo objeto.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Qual a diferença entre <code>remove(5)</code> e <code>pop(5)</code>?</p>
+    <div class="opts"><button data-k="a">Nenhuma.</button><button data-k="b">remove tira o valor 5; pop tira o elemento do índice 5.</button><button data-k="c">pop só funciona no fim.</button></div>
+    <div class="fb"><code>remove</code> procura pelo valor. <code>pop(i)</code> usa o índice, e ainda devolve o elemento removido.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Lista é mutável: o que isso quer dizer?</b></span><span class="bk">Dá para mudar o conteúdo depois de criada, sem criar outra lista.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>sort() x sorted()?</b></span><span class="bk">sort() ordena no lugar e devolve None. sorted() devolve uma nova lista ordenada.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve um dicionário?</b></span><span class="bk">Guardar pares chave → valor e achar um valor pela chave.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como copiar uma lista de verdade?</b></span><span class="bk">Com a.copy() (ou a[:]). b = a só cria outro nome para a mesma lista.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">Tenho uma coleção de valores. Como aplico o mesmo tratamento a cada um sem escrever 100 vezes?</div><p>Com os laços de repetição.</p></div>
+</section>
+
+</article>
+</body>
+</html>

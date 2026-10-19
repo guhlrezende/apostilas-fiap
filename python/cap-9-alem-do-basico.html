@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 9: Para ir além (complemento) | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-5-8.js"></script>
+</head>
+<body data-cap="9" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 9 · Complemento</div>
+  <h1>Para ir além (complemento)</h1>
+  <p class="sub">O que quase todo programa real usa: strings, dicionários, erros, arquivos, módulos e estilo.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <span class="num">9</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Nos capítulos anteriores você montou o essencial da linguagem e resolveu um problema de estratégia. Este capítulo é <b>complemento</b> (não foi dado em aula): as peças que aparecem em quase todo programa real e que você ainda não usou. Todos os exemplos de código foram executados.</div>
+<section class="sec" id="strings">
+  <h2><span class="sn">1</span>Strings: mais do que aspas</h2>
+  <p class="gancho">Texto é uma sequência, e muito do que você aprendeu em listas vale aqui.</p>
+  <p>Uma <code>str</code> é uma sequência de caracteres: dá para indexar (<code>"python"[0]</code> é <code>'p'</code>), fatiar (<code>"python"[1:4]</code> é <code>'yth'</code>) e percorrer com <code>for</code>. Mas ela é <b>imutável</b>: os métodos devolvem uma <b>nova</b> string, e a original não muda.</p>
+<pre><code>nome = <span class="s">"  Ana Souza  "</span>
+nome.<span class="f">strip</span>()                 <span class="c"># 'Ana Souza'    (tira espaços das pontas)</span>
+nome.<span class="f">strip</span>().<span class="f">upper</span>()        <span class="c"># 'ANA SOUZA'</span>
+<span class="s">"sol,lua,mar"</span>.<span class="f">split</span>(<span class="s">","</span>)   <span class="c"># ['sol', 'lua', 'mar']</span>
+<span class="s">" - "</span>.<span class="f">join</span>([<span class="s">"a"</span>, <span class="s">"b"</span>])      <span class="c"># 'a - b'</span>
+<span class="s">"banana"</span>.<span class="f">replace</span>(<span class="s">"a"</span>, <span class="s">"o"</span>) <span class="c"># 'bonono'</span>
+<span class="s">"banana"</span>.<span class="f">find</span>(<span class="s">"na"</span>)        <span class="c"># 2 (posição; -1 se não achar)</span>
+<span class="s">"python"</span>.<span class="f">startswith</span>(<span class="s">"py"</span>)  <span class="c"># True</span>
+<span class="s">"ana"</span> <span class="k">in</span> <span class="s">"banana"</span>          <span class="c"># True</span></code></pre>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Esquecer que strings são imutáveis: <code>nome.upper()</code> sozinho <b>não muda</b> <code>nome</code>. É preciso guardar: <code>nome = nome.upper()</code>.</div>
+</section>
+
+<section class="sec" id="dicionarios">
+  <h2><span class="sn">2</span>Dicionários na prática</h2>
+  <p class="gancho">Contar, agrupar, achar por nome.</p>
+  <p>O padrão mais útil: <b>contar ocorrências</b>. O <code>get(chave, padrão)</code> evita o <code>KeyError</code> de ler uma chave que ainda não existe:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["palavras = [\"sol\", \"lua\", \"sol\", \"mar\", \"sol\"]", "contagem = {}", "for p in palavras:", "    contagem[p] = contagem.get(p, 0) + 1", "print(contagem)"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"]}, "o": "", "n": "Um dicionário vazio."}, {"l": 2, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {}}, "o": "", "n": ""}, {"l": 3, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {}, "p": "sol"}, "o": "", "n": "<code>get(p, 0)<\/code> devolve o valor da chave, ou <b>0<\/b> se ela ainda não existir. Soma 1 e guarda de volta."}, {"l": 2, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 1}, "p": "sol"}, "o": "", "n": ""}, {"l": 3, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 1}, "p": "lua"}, "o": "", "n": "<code>get(p, 0)<\/code> devolve o valor da chave, ou <b>0<\/b> se ela ainda não existir. Soma 1 e guarda de volta."}, {"l": 2, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 1, "lua": 1}, "p": "lua"}, "o": "", "n": ""}, {"l": 3, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 1, "lua": 1}, "p": "sol"}, "o": "", "n": "<code>get(p, 0)<\/code> devolve o valor da chave, ou <b>0<\/b> se ela ainda não existir. Soma 1 e guarda de volta."}, {"l": 2, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 2, "lua": 1}, "p": "sol"}, "o": "", "n": ""}, {"l": 3, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 2, "lua": 1}, "p": "mar"}, "o": "", "n": "<code>get(p, 0)<\/code> devolve o valor da chave, ou <b>0<\/b> se ela ainda não existir. Soma 1 e guarda de volta."}, {"l": 2, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 2, "lua": 1, "mar": 1}, "p": "mar"}, "o": "", "n": ""}, {"l": 3, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 2, "lua": 1, "mar": 1}, "p": "sol"}, "o": "", "n": "<code>get(p, 0)<\/code> devolve o valor da chave, ou <b>0<\/b> se ela ainda não existir. Soma 1 e guarda de volta."}, {"l": 2, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 3, "lua": 1, "mar": 1}, "p": "sol"}, "o": "", "n": ""}, {"l": 4, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 3, "lua": 1, "mar": 1}, "p": "sol"}, "o": "", "n": "\"sol\" apareceu 3 vezes."}, {"l": -1, "v": {"palavras": ["sol", "lua", "sol", "mar", "sol"], "contagem": {"sol": 3, "lua": 1, "mar": 1}, "p": "sol"}, "o": "{'sol': 3, 'lua': 1, 'mar': 1}", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Contar palavras com dicionário"}</script></div>
+<pre><code>aluno = {<span class="s">"nome"</span>: <span class="s">"Ana"</span>, <span class="s">"idade"</span>: <span class="n">19</span>}
+<span class="k">for</span> chave, valor <span class="k">in</span> aluno.<span class="f">items</span>():     <span class="c"># percorre os pares</span>
+    <span class="f">print</span>(chave, <span class="s">"=&gt;"</span>, valor)
+<span class="s">"idade"</span> <span class="k">in</span> aluno                       <span class="c"># True: testa se a chave existe</span>
+aluno.<span class="f">get</span>(<span class="s">"curso"</span>, <span class="s">"não informado"</span>)   <span class="c"># 'não informado' (sem erro)</span></code></pre>
+</section>
+
+<section class="sec" id="erros">
+  <h2><span class="sn">3</span>Erros: ler o traceback e tratar</h2>
+  <p class="gancho">Todo programa quebra. A diferença é saber ler o recado.</p>
+  <p>Quando algo dá errado, o Python imprime um <b>traceback</b>. Leia <b>de baixo para cima</b>: a última linha diz <i>o tipo e o motivo</i> do erro, e as de cima mostram o caminho até lá.</p>
+<pre><code>Traceback (most recent call last):
+  File "ex.py", line 3, in &lt;module&gt;
+    <span class="an" tabindex="0" data-t="A linha onde o erro ocorreu.">resultado = idade + "anos"</span>
+<span class="an" tabindex="0" data-t="O tipo do erro e o motivo, em linguagem do Python. Comece sempre por aqui.">TypeError: unsupported operand type(s) for +: 'int' and 'str'</span></code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Erro</th><th>Quando aparece</th></tr>
+    <tr><td><code>SyntaxError</code> / <code>IndentationError</code></td><td>o código está escrito errado (dois-pontos, parêntese, recuo)</td></tr>
+    <tr><td><code>NameError</code></td><td>usou uma variável que não existe (ou errou o nome)</td></tr>
+    <tr><td><code>TypeError</code></td><td>operação com tipos incompatíveis (<code>int + str</code>)</td></tr>
+    <tr><td><code>ValueError</code></td><td>o tipo está certo, mas o valor não serve (<code>int("abc")</code>)</td></tr>
+    <tr><td><code>IndexError</code> / <code>KeyError</code></td><td>índice fora da lista / chave que não está no dicionário</td></tr>
+    <tr><td><code>ZeroDivisionError</code></td><td>divisão por zero</td></tr>
+  </table></div>
+  <p>Para <b>tratar</b> um erro previsto (como o usuário digitar texto onde se espera número), use <code>try</code> e <code>except</code>. O programa abaixo pede de novo até a pessoa acertar (as duas digitações do exemplo são <code>abc</code> e <code>21</code>):</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["while True:", "    texto = input(\"Digite um numero: \")", "    try:", "        n = int(texto)", "        break", "    except ValueError:", "        print(\"Isso nao e um numero inteiro.\")", "print(n * 2)"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {}, "o": "", "n": "Primeira volta: a pessoa digita <code>abc<\/code>."}, {"l": 2, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": ""}, {"l": 3, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": "<code>int('abc')<\/code> falha e levanta um <code>ValueError<\/code>."}, {"l": 5, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": "O erro é <b>capturado<\/b> aqui: o programa não quebra."}, {"l": 6, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": "Mostra o aviso e o <code>while True<\/code> volta ao início."}, {"l": 0, "v": {"texto": "abc"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.", "n": ""}, {"l": 1, "v": {"texto": "abc"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.", "n": "Segunda volta: a pessoa digita <code>21<\/code>."}, {"l": 2, "v": {"texto": "21"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": ""}, {"l": 3, "v": {"texto": "21"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": "<code>int('21')<\/code> funciona: <code>n<\/code> vira 21."}, {"l": 4, "v": {"texto": "21", "n": 21}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": "Sem erro: o <code>break<\/code> sai do laço."}, {"l": 7, "v": {"texto": "21", "n": 21}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": "O programa segue normalmente."}, {"l": -1, "v": {"texto": "21", "n": 21}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21\n42", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "try/except: pedir de novo até acertar"}</script></div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Capture <b>o erro específico</b> (<code>except ValueError</code>), e não um genérico <code>except:</code> que engole tudo, inclusive erros de digitação seus. Esconder erros é pior do que deixá-los aparecer.</div>
+</section>
+
+<section class="sec" id="arquivos">
+  <h2><span class="sn">4</span>Arquivos e módulos</h2>
+  <p class="gancho">Guardar dados além do fim do programa, e usar código dos outros.</p>
+<pre><code><span class="c"># escrever e ler um arquivo de texto</span>
+<span class="k">with</span> <span class="f">open</span>(<span class="s">"notas.txt"</span>, <span class="s">"w"</span>, encoding=<span class="s">"utf-8"</span>) <span class="k">as</span> f:
+    f.<span class="f">write</span>(<span class="s">"Ana;9.5\nBia;8.0\n"</span>)
+
+<span class="k">with</span> <span class="f">open</span>(<span class="s">"notas.txt"</span>, encoding=<span class="s">"utf-8"</span>) <span class="k">as</span> f:
+    <span class="k">for</span> linha <span class="k">in</span> f:
+        nome, nota = linha.<span class="f">strip</span>().<span class="f">split</span>(<span class="s">";"</span>)
+        <span class="f">print</span>(nome, <span class="f">float</span>(nota))</code></pre>
+  <ul>
+    <li>Modos: <code>"r"</code> ler (padrão), <code>"w"</code> escrever (<b>apaga</b> o que havia), <code>"a"</code> acrescentar no final.</li>
+    <li>O <code>with</code> garante que o arquivo é <b>fechado</b> mesmo se der erro no meio.</li>
+    <li>Informe <code>encoding="utf-8"</code> para acentos não virarem símbolos estranhos.</li>
+  </ul>
+  <p>Um <b>módulo</b> é código pronto que você importa. A biblioteca padrão já traz muito: <code>math</code>, <code>random</code>, <code>datetime</code>, <code>csv</code>, <code>json</code>. Bibliotecas de terceiros se instalam com <code>pip install nome</code> (por exemplo, <code>pandas</code> e <code>numpy</code> nas disciplinas de dados).</p>
+<pre><code><span class="k">import</span> math, random
+math.<span class="f">sqrt</span>(<span class="n">16</span>)            <span class="c"># 4.0</span>
+random.<span class="f">randint</span>(<span class="n">1</span>, <span class="n">10</span>)    <span class="c"># inteiro aleatório de 1 a 10</span></code></pre>
+  <div class="nota lembra"><span class="lbl">Complemento: ambiente virtual</span>Cada projeto deve ter suas próprias bibliotecas, para versões diferentes não brigarem. O jeito padrão é um <b>ambiente virtual</b>: <code>python -m venv .venv</code> (e ativá-lo). E nunca versione essa pasta: ela entra no <code>.gitignore</code> (Capítulo 7).</div>
+</section>
+
+<section class="sec" id="estilo">
+  <h2><span class="sn">5</span>Escrever código que outras pessoas leem</h2>
+  <p class="gancho">Você vai ler seu código daqui a três meses, e vai parecer de um desconhecido.</p>
+  <ul>
+    <li><b>PEP 8</b> é o guia de estilo oficial: nomes de variáveis e funções em <code>minusculo_com_underline</code> (<i>snake_case</i>), constantes em MAIÚSCULAS, 4 espaços de recuo, linhas curtas.</li>
+    <li><b>Nomes que dizem o que são</b>: <code>total_de_horas</code> vence <code>x</code>.</li>
+    <li><b>Funções pequenas</b>, que fazem uma coisa só.</li>
+    <li><b>Comentários explicam o porquê</b>, e não o óbvio (<code># soma 1</code> não ajuda). Funções importantes ganham uma <i>docstring</i>, o texto entre aspas triplas logo abaixo do <code>def</code>.</li>
+    <li><b>Depurar</b>: leia o traceback de baixo para cima; use <code>print()</code> para ver os valores; reduza o problema ao menor código que ainda erra.</li>
+  </ul>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento da apostila</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Strings</b> são imutáveis: os métodos (<code>strip</code>, <code>split</code>, <code>replace</code>) devolvem novas strings.</li><li><b>Dicionário</b>: <code>get(chave, padrão)</code> evita KeyError; ótimo para contar.</li><li><b>Traceback</b>: leia de baixo para cima. A última linha diz o tipo e o motivo.</li><li><code>try/except ValueError</code> trata um erro previsto. Capture o <b>específico</b>.</li><li><code>with open(...)</code> fecha o arquivo sozinho. <code>"w"</code> apaga; <code>"a"</code> acrescenta.</li><li><b>PEP 8</b>, nomes claros, funções pequenas: escreva para quem vai ler.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Depois de <code>s = 'ana'</code> e <code>s.upper()</code> (sem atribuir), quanto vale <code>s</code>?</p>
+    <div class="opts"><button data-k="a">'ANA'</button><button data-k="b">'ana': a string não muda, o método devolveu outra.</button><button data-k="c">None</button></div>
+    <div class="fb">Strings são imutáveis. Para guardar o resultado: <code>s = s.upper()</code>.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual a melhor forma de tratar o usuário digitar texto onde se espera número?</p>
+    <div class="opts"><button data-k="a">Um try/except sem tipo, para pegar qualquer erro.</button><button data-k="b">Ignorar: o Python se vira.</button><button data-k="c">try/except ValueError em volta do int(), pedindo de novo.</button></div>
+    <div class="fb">Capturar o erro específico trata o caso previsto e deixa os outros erros aparecerem.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O modo <code>"w"</code> do <code>open</code>:</p>
+    <div class="opts"><button data-k="a">Escreve e apaga o conteúdo anterior do arquivo.</button><button data-k="b">Acrescenta no final.</button><button data-k="c">Só lê.</button></div>
+    <div class="fb">Para acrescentar sem apagar, use <code>"a"</code>. Para só ler, <code>"r"</code>.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como ler um traceback?</b></span><span class="bk">De baixo para cima: a última linha mostra o tipo e o motivo do erro; as de cima mostram o caminho.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o with?</b></span><span class="bk">Garante que o arquivo seja fechado ao sair do bloco, mesmo se ocorrer um erro.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o PEP 8?</b></span><span class="bk">O guia de estilo oficial do Python (nomes, recuo, tamanho de linha).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>dict.get(chave, 0)?</b></span><span class="bk">Devolve o valor da chave, ou 0 se ela não existir, sem dar KeyError.</span></button></div>
+  <div class="ponte rv"><div class="t">E agora?</div><div class="q">Você percorreu o caminho de variáveis até algoritmos.</div><p>O melhor próximo passo é um projeto seu: um quiz, um controle de gastos, um organizador de notas. Comece pequeno, versione no Git e use o que viu aqui. Volte à <a href="index.html">visão geral</a> sempre que quiser revisar.</p></div>
+</section>
+
+</article>
+</body>
+</html>

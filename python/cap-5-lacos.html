@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: Laços: for e while | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-5-8.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Aulas 5 e 6</div>
+  <h1>Laços: for e while</h1>
+  <p class="sub">Repetir sem copiar e colar: for, while, range, break e os cuidados com o loop infinito.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">código rastreado</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 4 você guardou muitos valores numa lista. Falta fazer algo com cada um deles <b>sem escrever o mesmo comando 100 vezes</b>. É a ideia da repetição: um laço.</div>
+<section class="sec" id="for">
+  <h2><span class="sn">1</span>for: percorrer uma sequência</h2>
+  <p class="gancho">"Para cada item desta coleção, faça isto."</p>
+  <p>O <code>for</code> percorre uma <b>sequência</b> (uma lista, uma string, um <code>range</code>). O número de voltas é <b>conhecido</b>: é o tamanho da sequência. A cada volta, a variável do laço assume o próximo valor.</p>
+<pre><code><span class="k">for</span> numero <span class="k">in</span> [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">5</span>]:
+    <span class="f">print</span>(numero)
+
+<span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">10</span>):      <span class="c"># 0, 1, ..., 9</span>
+    <span class="f">print</span>(i)</code></pre>
+  <p><code>range(n)</code> vai de 0 a n-1; <code>range(a, b)</code> de a a b-1; <code>range(a, b, passo)</code> pula de <i>passo</i> em <i>passo</i>. O padrão mais importante de todo laço é o <b>acumulador</b>: uma variável que começa num valor neutro e vai juntando algo a cada volta.</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["soma = 0", "for n in range(1, 6):", "    soma = soma + n", "print(soma)"], "steps": [{"l": 0, "v": {}, "o": "", "n": "<code>soma<\/code> começa em 0: é o <b>acumulador<\/b>."}, {"l": 1, "v": {"soma": 0}, "o": "", "n": "<code>range(1, 6)<\/code> gera 1, 2, 3, 4, 5 (o 6 <b>não<\/b> entra). A cada volta, <code>n<\/code> assume um valor."}, {"l": 2, "v": {"soma": 0, "n": 1}, "o": "", "n": "Soma o valor atual ao acumulador. Observe <code>soma<\/code> crescer a cada volta."}, {"l": 1, "v": {"soma": 1, "n": 1}, "o": "", "n": "<code>range(1, 6)<\/code> gera 1, 2, 3, 4, 5 (o 6 <b>não<\/b> entra). A cada volta, <code>n<\/code> assume um valor."}, {"l": 2, "v": {"soma": 1, "n": 2}, "o": "", "n": "Soma o valor atual ao acumulador. Observe <code>soma<\/code> crescer a cada volta."}, {"l": 1, "v": {"soma": 3, "n": 2}, "o": "", "n": "<code>range(1, 6)<\/code> gera 1, 2, 3, 4, 5 (o 6 <b>não<\/b> entra). A cada volta, <code>n<\/code> assume um valor."}, {"l": 2, "v": {"soma": 3, "n": 3}, "o": "", "n": "Soma o valor atual ao acumulador. Observe <code>soma<\/code> crescer a cada volta."}, {"l": 1, "v": {"soma": 6, "n": 3}, "o": "", "n": "<code>range(1, 6)<\/code> gera 1, 2, 3, 4, 5 (o 6 <b>não<\/b> entra). A cada volta, <code>n<\/code> assume um valor."}, {"l": 2, "v": {"soma": 6, "n": 4}, "o": "", "n": "Soma o valor atual ao acumulador. Observe <code>soma<\/code> crescer a cada volta."}, {"l": 1, "v": {"soma": 10, "n": 4}, "o": "", "n": "<code>range(1, 6)<\/code> gera 1, 2, 3, 4, 5 (o 6 <b>não<\/b> entra). A cada volta, <code>n<\/code> assume um valor."}, {"l": 2, "v": {"soma": 10, "n": 5}, "o": "", "n": "Soma o valor atual ao acumulador. Observe <code>soma<\/code> crescer a cada volta."}, {"l": 1, "v": {"soma": 15, "n": 5}, "o": "", "n": "<code>range(1, 6)<\/code> gera 1, 2, 3, 4, 5 (o 6 <b>não<\/b> entra). A cada volta, <code>n<\/code> assume um valor."}, {"l": 3, "v": {"soma": 15, "n": 5}, "o": "", "n": "Depois que o <code>range<\/code> acaba, o laço termina e o programa segue."}, {"l": -1, "v": {"soma": 15, "n": 5}, "o": "15", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "for: somar de 1 a 5"}</script></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se eu não souber quantas vezes vou repetir?</div><p>Por exemplo, pedir a senha até a pessoa acertar.</p></div>
+</section>
+
+<section class="sec" id="while">
+  <h2><span class="sn">2</span>while: repetir enquanto valer a condição</h2>
+  <p class="gancho">O laço que depende do que acontece durante a execução.</p>
+  <p>O <code>while</code> repete <b>enquanto uma condição for verdadeira</b>, e a avalia antes de cada volta. Use quando o número de repetições <b>não é conhecido antes</b>: "continue pedindo até digitar um número válido".</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["contador = 3", "while contador > 0:", "    print(contador)", "    contador = contador - 1", "print(\"Fogo!\")"], "steps": [{"l": 0, "v": {}, "o": "", "n": "Variável de controle."}, {"l": 1, "v": {"contador": 3}, "o": "", "n": "A condição é avaliada <b>antes de cada volta<\/b>."}, {"l": 2, "v": {"contador": 3}, "o": "", "n": "Mostra o valor atual."}, {"l": 3, "v": {"contador": 3}, "o": "3", "n": "<b>Esta linha é essencial<\/b>: sem ela, a condição nunca ficaria falsa e o laço seria infinito."}, {"l": 1, "v": {"contador": 2}, "o": "3", "n": "A condição é avaliada <b>antes de cada volta<\/b>."}, {"l": 2, "v": {"contador": 2}, "o": "3", "n": "Mostra o valor atual."}, {"l": 3, "v": {"contador": 2}, "o": "3\n2", "n": "<b>Esta linha é essencial<\/b>: sem ela, a condição nunca ficaria falsa e o laço seria infinito."}, {"l": 1, "v": {"contador": 1}, "o": "3\n2", "n": "A condição é avaliada <b>antes de cada volta<\/b>."}, {"l": 2, "v": {"contador": 1}, "o": "3\n2", "n": "Mostra o valor atual."}, {"l": 3, "v": {"contador": 1}, "o": "3\n2\n1", "n": "<b>Esta linha é essencial<\/b>: sem ela, a condição nunca ficaria falsa e o laço seria infinito."}, {"l": 1, "v": {"contador": 0}, "o": "3\n2\n1", "n": "A condição é avaliada <b>antes de cada volta<\/b>."}, {"l": 4, "v": {"contador": 0}, "o": "3\n2\n1", "n": "Condição falsa (0 &gt; 0): o <code>while<\/code> termina."}, {"l": -1, "v": {"contador": 0}, "o": "3\n2\n1\nFogo!", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "while: contagem regressiva"}</script></div>
+<pre><code>numero = <span class="f">int</span>(<span class="f">input</span>(<span class="s">"Digite um número maior que 10: "</span>))
+<span class="k">while</span> numero &lt;= <span class="n">10</span>:
+    numero = <span class="f">int</span>(<span class="f">input</span>(<span class="s">"Não é maior que 10. Tente novamente: "</span>))</code></pre>
+  <div class="nota cuidado"><span class="lbl">Regra de bolso</span><b><code>for</code></b> quando você sabe (ou pode calcular) quantas vezes vai repetir; <b><code>while</code></b> quando a parada depende de algo que só se descobre rodando.</div>
+  <div class="nota erro"><span class="lbl">Erro comum: loop infinito</span>É quando a condição do <code>while</code> <b>nunca</b> fica falsa, quase sempre porque você esqueceu de atualizar a variável de controle (<code>contador = contador - 1</code>). O programa "trava" sem mensagem de erro. Se acontecer, interrompa com <b>Ctrl + C</b> e releia: "o que muda a cada volta e leva a condição a falhar?"</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se eu quiser sair do laço no meio, ou pular uma volta?</div><p>Há dois comandos para isso.</p></div>
+</section>
+
+<section class="sec" id="break">
+  <h2><span class="sn">3</span>break, continue e o else do laço</h2>
+  <p class="gancho">Controle fino sobre cada volta.</p>
+  <ul>
+    <li><code>break</code>: <b>sai do laço</b> imediatamente.</li>
+    <li><code>continue</code>: <b>pula</b> o resto desta volta e vai para a próxima.</li>
+    <li><code>else</code> num laço (complemento): roda quando o laço <b>terminou sem break</b>. Útil em buscas: "se percorri tudo e não achei...".</li>
+  </ul>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["soma = 0", "for n in range(1, 8):", "    if n == 3:", "        continue", "    if n == 6:", "        break", "    soma = soma + n", "print(soma)"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {"soma": 0}, "o": "", "n": ""}, {"l": 2, "v": {"soma": 0, "n": 1}, "o": "", "n": "n = 1: é igual a 3? Não, segue para a próxima linha."}, {"l": 4, "v": {"soma": 0, "n": 1}, "o": "", "n": "n = 1: é igual a 6? Não, segue."}, {"l": 6, "v": {"soma": 0, "n": 1}, "o": "", "n": ""}, {"l": 1, "v": {"soma": 1, "n": 1}, "o": "", "n": ""}, {"l": 2, "v": {"soma": 1, "n": 2}, "o": "", "n": "n = 2: é igual a 3? Não, segue para a próxima linha."}, {"l": 4, "v": {"soma": 1, "n": 2}, "o": "", "n": "n = 2: é igual a 6? Não, segue."}, {"l": 6, "v": {"soma": 1, "n": 2}, "o": "", "n": ""}, {"l": 1, "v": {"soma": 3, "n": 2}, "o": "", "n": ""}, {"l": 2, "v": {"soma": 3, "n": 3}, "o": "", "n": "n = 3: é igual a 3? Sim."}, {"l": 3, "v": {"soma": 3, "n": 3}, "o": "", "n": "n = 3: o <code>continue<\/code> pula o resto <b>desta volta<\/b> e vai para o próximo n."}, {"l": 1, "v": {"soma": 3, "n": 3}, "o": "", "n": ""}, {"l": 2, "v": {"soma": 3, "n": 4}, "o": "", "n": "n = 4: é igual a 3? Não, segue para a próxima linha."}, {"l": 4, "v": {"soma": 3, "n": 4}, "o": "", "n": "n = 4: é igual a 6? Não, segue."}, {"l": 6, "v": {"soma": 3, "n": 4}, "o": "", "n": ""}, {"l": 1, "v": {"soma": 7, "n": 4}, "o": "", "n": ""}, {"l": 2, "v": {"soma": 7, "n": 5}, "o": "", "n": "n = 5: é igual a 3? Não, segue para a próxima linha."}, {"l": 4, "v": {"soma": 7, "n": 5}, "o": "", "n": "n = 5: é igual a 6? Não, segue."}, {"l": 6, "v": {"soma": 7, "n": 5}, "o": "", "n": ""}, {"l": 1, "v": {"soma": 12, "n": 5}, "o": "", "n": ""}, {"l": 2, "v": {"soma": 12, "n": 6}, "o": "", "n": "n = 6: é igual a 3? Não, segue para a próxima linha."}, {"l": 4, "v": {"soma": 12, "n": 6}, "o": "", "n": "n = 6: é igual a 6? Sim."}, {"l": 5, "v": {"soma": 12, "n": 6}, "o": "", "n": "n = 6: o <code>break<\/code> <b>sai do laço<\/b> de vez."}, {"l": 7, "v": {"soma": 12, "n": 6}, "o": "", "n": "Somou 1 + 2 + 4 + 5 = 12: o 3 foi pulado e o laço parou no 6."}, {"l": -1, "v": {"soma": 12, "n": 6}, "o": "12", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "break e continue"}</script></div>
+  <p>Jogue o clássico <b>adivinhação com 3 tentativas</b> (exercício do slide), que usa <code>while</code>, <code>break</code> e o <code>else</code> do laço juntos:</p>
+  <div class="demo" data-demo="guess"></div>
+  <h3>Os exercícios de laço, resolvidos</h3>
+<pre><code><span class="c"># 1 a 50</span>
+<span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">1</span>, <span class="n">51</span>): <span class="f">print</span>(i)
+
+<span class="c"># soma de 1 a 10 (55) e produto de 1 a 5 (120)</span>
+soma, prod = <span class="n">0</span>, <span class="n">1</span>
+<span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">1</span>, <span class="n">11</span>): soma += i
+<span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">1</span>, <span class="n">6</span>):  prod *= i
+
+<span class="c"># pares de 2 a 10: o terceiro argumento é o passo</span>
+<span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">2</span>, <span class="n">11</span>, <span class="n">2</span>): <span class="f">print</span>(i)
+
+<span class="c"># contagem regressiva de 10 a 1 com "Fogo!"</span>
+<span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">10</span>, <span class="n">0</span>, -<span class="n">1</span>): <span class="f">print</span>(i)
+<span class="f">print</span>(<span class="s">"Fogo!"</span>)
+
+<span class="c"># somar positivos até o usuário digitar um negativo</span>
+total = <span class="n">0</span>
+n = <span class="f">float</span>(<span class="f">input</span>(<span class="s">"Número: "</span>))
+<span class="k">while</span> n &gt;= <span class="n">0</span>:
+    total += n
+    n = <span class="f">float</span>(<span class="f">input</span>(<span class="s">"Número: "</span>))
+<span class="f">print</span>(total)</code></pre>
+  <div class="nota lembra"><span class="lbl">Complemento: enumerate</span>Quando precisar do índice <b>e</b> do valor: <code>for i, valor in enumerate(lista):</code>. É mais limpo que <code>for i in range(len(lista))</code>. E o laço dos notebooks de ML (<code>for k in range(1, 21)</code>) é exatamente este padrão: testar cada valor de uma coleção.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>for</b>: percorre uma sequência (número de voltas conhecido). <b>while</b>: repete enquanto a condição for verdadeira.</li><li><code>range(a, b, passo)</code> vai de <code>a</code> a <code>b - 1</code>. <code>range(10, 0, -1)</code> conta para trás.</li><li><b>Acumulador</b>: variável que começa neutra (0 na soma, 1 no produto) e junta algo a cada volta.</li><li><b>Loop infinito</b>: a condição nunca fica falsa. Atualize a variável de controle; Ctrl + C para parar.</li><li><code>break</code> sai do laço; <code>continue</code> pula a volta; o <code>else</code> do laço roda se não houve break.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Quantas vezes executa <code>for i in range(3, 8):</code>?</p>
+    <div class="opts"><button data-k="a">8</button><button data-k="b">5 (de 3 a 7)</button><button data-k="c">6</button></div>
+    <div class="fb">O range inclui o início (3) e exclui o fim (8): 3, 4, 5, 6, 7 são 5 valores.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Por que este laço nunca termina? <code>n = 5 / while n &gt; 0: print(n)</code></p>
+    <div class="opts"><button data-k="a">Porque o print é lento.</button><button data-k="b">Porque while só roda uma vez.</button><button data-k="c">Porque n nunca muda, então a condição fica sempre verdadeira.</button></div>
+    <div class="fb">Falta atualizar a variável de controle dentro do laço (por exemplo, <code>n = n - 1</code>).</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual a soma de <code>for n in range(1, 8)</code> com <code>if n == 3: continue</code> e <code>if n == 6: break</code>?</p>
+    <div class="opts"><button data-k="a">12 (1 + 2 + 4 + 5)</button><button data-k="b">28</button><button data-k="c">21</button></div>
+    <div class="fb">O continue pula o 3 e o break encerra no 6 (sem somar). Sobram 1, 2, 4, 5.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>for x while?</b></span><span class="bk">for percorre uma sequência de tamanho conhecido. while repete até a condição falhar (número de voltas desconhecido).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um acumulador?</b></span><span class="bk">Uma variável que começa num valor neutro e junta algo a cada volta do laço.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>break x continue?</b></span><span class="bk">break sai do laço de vez. continue pula só o resto da volta atual.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que gera range(2, 11, 2)?</b></span><span class="bk">2, 4, 6, 8, 10: o terceiro argumento é o passo.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">Já repito e decido. Como organizo dados em duas dimensões e blocos reutilizáveis?</div><p>Com matrizes (listas de listas) e funções.</p></div>
+</section>
+
+</article>
+</body>
+</html>

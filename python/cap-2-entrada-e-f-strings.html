@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: Entrada, operadores e f-strings | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-1-4.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aula 2</div>
+  <h1>Entrada, operadores e f-strings</h1>
+  <p class="sub">Ler dados do usuário, fazer contas com eles e mostrar a resposta bem formatada.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">código rastreado</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 você guardou valores em variáveis e viu os tipos. Faltava o programa <b>conversar</b>: receber dados de quem o usa, calcular e devolver uma resposta bem escrita.</div>
+<section class="sec" id="input">
+  <h2><span class="sn">1</span>input(): sempre texto</h2>
+  <p class="gancho">O usuário digitou 7. O que chegou ao programa?</p>
+  <p>A função <code>input()</code> lê o que a pessoa digita e <b>sempre devolve um <code>str</code></b> (texto), mesmo que ela digite um número. Para fazer conta, você precisa converter: <code>int(...)</code> para inteiros, <code>float(...)</code> para números com casas decimais. Esse é o bug número 1 dos primeiros exercícios.</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["num = int(input('Digite um numero: '))", "num2 = int(input('Digite outro numero: '))", "resultado = num + num2", "print(resultado)"], "steps": [{"l": 0, "v": {}, "o": "", "n": "<code>input()<\/code> devolve o <b>texto<\/b> '7'. O <code>int()<\/code> converte para o número 7."}, {"l": 1, "v": {"num": 7}, "o": "Digite um numero: 7", "n": "Mesma coisa para o segundo valor."}, {"l": 2, "v": {"num": 7, "num2": 5}, "o": "Digite um numero: 7\nDigite outro numero: 5", "n": "Agora a soma é aritmética: 7 + 5."}, {"l": 3, "v": {"num": 7, "num2": 5, "resultado": 12}, "o": "Digite um numero: 7\nDigite outro numero: 5", "n": "Se não tivéssemos convertido, <code>'7' + '5'<\/code> daria <code>'75'<\/code>."}, {"l": -1, "v": {"num": 7, "num2": 5, "resultado": 12}, "o": "Digite um numero: 7\nDigite outro numero: 5\n12", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Somar dois números lidos do usuário"}</script></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Esquecer de converter.</b> Sem o <code>int()</code>, <code>'7' + '5'</code> vira <code>'75'</code> (concatenação), e <code>'7' * 2</code> vira <code>'77'</code>. Se a pessoa digitar casas decimais e você usou <code>int()</code>, o Python dá <code>ValueError</code>: use <code>float()</code>. (No Capítulo 9 você vê como tratar essa digitação errada sem o programa quebrar.)</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E agora que a entrada virou número, que contas faço com ela?</div><p>As quatro operações da aula, em quatro problemas de verdade.</p></div>
+</section>
+
+<section class="sec" id="exercicios">
+  <h2><span class="sn">2</span>Quatro problemas, quatro contas</h2>
+  <p class="gancho">Transformar o enunciado em fórmula, e a fórmula em código.</p>
+  <p>Os exercícios do primeiro bloco aplicam os operadores. Veja como cada um vira código:</p>
+<pre><code><span class="c"># 1) Área de um círculo de raio r:  área = π · r²</span>
+PI = <span class="n">3.14159</span>
+raio = <span class="f">float</span>(<span class="f">input</span>(<span class="s">"Raio: "</span>))
+area = PI * raio ** <span class="n">2</span>
+<span class="f">print</span>(<span class="s">f"A área é {area:.2f}"</span>)
+
+<span class="c"># 3) Total gasto: 3 livros a R$ 25 e 2 canetas a R$ 5</span>
+total = <span class="n">3</span> * <span class="n">25</span> + <span class="n">2</span> * <span class="n">5</span>        <span class="c"># 85</span>
+<span class="f">print</span>(<span class="s">f"R$ {total:.2f}"</span>)  <span class="c"># R$ 85.00</span></code></pre>
+  <p>O problema 2 (Fahrenheit para Celsius) é o melhor para observar a formatação: o valor bruto com 94,3 °F é <code>34.611111111111114</code>, e o <code>:.2f</code> mostra <code>34.61</code>.</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["Fah = float(input(\"Temperatura em Fahrenheit: \"))", "C = (Fah - 32) * 5 / 9", "print(C)", "print(f\"Em Celsius: {C:.2f}\")", "print(f\"Com 4 casas: {C:.4f}\")"], "steps": [{"l": 0, "v": {}, "o": "", "n": "<code>float()<\/code> porque a entrada tem casa decimal. <code>int('94.3')<\/code> daria erro."}, {"l": 1, "v": {"Fah": 94.3}, "o": "Temperatura em Fahrenheit: 94.3", "n": "Os parênteses forçam a subtração antes da multiplicação. Sem eles, o resultado seria outro."}, {"l": 2, "v": {"Fah": 94.3, "C": 34.611111111111114}, "o": "Temperatura em Fahrenheit: 94.3", "n": "O valor bruto tem muitas casas: 34.611111..."}, {"l": 3, "v": {"Fah": 94.3, "C": 34.611111111111114}, "o": "Temperatura em Fahrenheit: 94.3\n34.611111111111114", "n": "<code>:.2f<\/code> arredonda <b>só na hora de mostrar<\/b>. A variável <code>C<\/code> continua com o valor completo."}, {"l": 4, "v": {"Fah": 94.3, "C": 34.611111111111114}, "o": "Temperatura em Fahrenheit: 94.3\n34.611111111111114\nEm Celsius: 34.61", "n": ""}, {"l": -1, "v": {"Fah": 94.3, "C": 34.611111111111114}, "o": "Temperatura em Fahrenheit: 94.3\n34.611111111111114\nEm Celsius: 34.61\nCom 4 casas: 34.6111", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Fahrenheit para Celsius"}</script></div>
+  <p>E o problema 4 (150 km a 60 km/h). A primeira versão da aula calculava <code>horas</code> e <code>minutos</code>, mas imprimia só o <code>resultado</code> (2.5), o que é uma <b>pendência clássica</b>: calculou e esqueceu de mostrar. A versão corrigida:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["distancia = float(input(\"Distancia em km: \"))", "vel_med = float(input(\"Velocidade media em km/h: \"))", "resultado = distancia / vel_med", "horas = int(resultado)", "minutos = int((resultado - horas) * 60)", "print(f\"Tempo: {horas}h e {minutos}min\")"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {"distancia": {"__py": "150.0"}}, "o": "Distancia em km: 150", "n": ""}, {"l": 2, "v": {"distancia": {"__py": "150.0"}, "vel_med": {"__py": "60.0"}}, "o": "Distancia em km: 150\nVelocidade media em km/h: 60", "n": "150 / 60 = 2.5 horas."}, {"l": 3, "v": {"distancia": {"__py": "150.0"}, "vel_med": {"__py": "60.0"}, "resultado": 2.5}, "o": "Distancia em km: 150\nVelocidade media em km/h: 60", "n": "<code>int()<\/code> descarta a parte decimal: sobram 2 horas inteiras."}, {"l": 4, "v": {"distancia": {"__py": "150.0"}, "vel_med": {"__py": "60.0"}, "resultado": 2.5, "horas": 2}, "o": "Distancia em km: 150\nVelocidade media em km/h: 60", "n": "O que sobrou (0.5 hora) vira minutos: 0.5 × 60 = 30."}, {"l": 5, "v": {"distancia": {"__py": "150.0"}, "vel_med": {"__py": "60.0"}, "resultado": 2.5, "horas": 2, "minutos": 30}, "o": "Distancia em km: 150\nVelocidade media em km/h: 60", "n": "Esta é a versão corrigida do exercício: mostra horas <b>e<\/b> minutos."}, {"l": -1, "v": {"distancia": {"__py": "150.0"}, "vel_med": {"__py": "60.0"}, "resultado": 2.5, "horas": 2, "minutos": 30}, "o": "Distancia em km: 150\nVelocidade media em km/h: 60\nTempo: 2h e 30min", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Tempo de percurso: horas e minutos"}</script></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Esse <code>:.2f</code> controla o que aparece. Que outros formatos existem?</div><p>Brinque com eles.</p></div>
+</section>
+
+<section class="sec" id="fstring">
+  <h2><span class="sn">3</span>f-strings: texto com variáveis dentro</h2>
+  <p class="gancho">Montar uma frase com valores sem somar pedaços de texto.</p>
+  <p>Uma <b>f-string</b> começa com <code>f</code> antes das aspas e aceita variáveis (e até contas) dentro de <code>{ }</code>. Depois de dois-pontos vem o <b>formato</b>: <code>{valor:.2f}</code> mostra 2 casas decimais. Teste vários:</p>
+  <p class="muted">Em aula só apareceram os formatos <code>:.2f</code> e <code>:.4f</code>; os demais da demo (vírgula, %, notação científica, largura e alinhamento) são <b>complemento</b>.</p>
+  <div class="demo" data-demo="fmt"></div>
+  <div class="nota lembra"><span class="lbl">Lembra</span>O formato <b>só muda o que aparece</b> no <code>print</code>. A variável continua guardando o valor completo. Por isso você formata na hora de mostrar, e não antes de calcular (arredondar no meio da conta acumula erro).</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><code>input()</code> <b>sempre</b> devolve <code>str</code>. Converta com <code>int()</code> ou <code>float()</code>.</li><li><code>int()</code> quebra com casas decimais digitadas: use <code>float()</code> nesse caso.</li><li>Parênteses mandam na ordem das contas: <code>(Fah - 32) * 5 / 9</code>.</li><li><b>f-string</b>: <code>f"texto {variavel:.2f}"</code>. O formato só afeta a saída.</li><li><code>int(2.5)</code> corta a parte decimal (dá 2); é como se calculam horas e minutos separados.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O que <code>print(input() + input())</code> mostra se o usuário digitar 3 e depois 4?</p>
+    <div class="opts"><button data-k="a">7</button><button data-k="b">34</button><button data-k="c">Um erro</button></div>
+    <div class="fb">Os dois <code>input()</code> devolvem texto, e <code>+</code> entre textos concatena: '3' + '4' = '34'.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Com <code>x = 2.0 / 3</code>, o que mostra <code>print(f"{x:.2f}")</code>?</p>
+    <div class="opts"><button data-k="a">0.67, e x continua guardando 0.6666666666666666.</button><button data-k="b">0.67, e x passa a valer 0.67.</button><button data-k="c">0</button></div>
+    <div class="fb">O formato só atua na saída. A variável mantém o valor completo.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Para ler a temperatura 36.5 digitada, qual conversão usar?</p>
+    <div class="opts"><button data-k="a">int(input())</button><button data-k="b">str(input())</button><button data-k="c">float(input())</button></div>
+    <div class="fb"><code>int('36.5')</code> dá <code>ValueError</code>. Com casas decimais, é float.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que converter o input?</b></span><span class="bk">Porque ele devolve texto, e conta com texto concatena (ou dá erro) em vez de somar.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz :.2f?</b></span><span class="bk">Mostra o número com 2 casas decimais, arredondando só na saída.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>int(7.9) dá quanto?</b></span><span class="bk">7. O int() corta a parte decimal, não arredonda.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma f-string?</b></span><span class="bk">Uma string com f antes das aspas, que aceita {variáveis} e formatos dentro.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">O programa lê e calcula, mas faz sempre a mesma coisa. Como ele decide o que fazer?</div><p>Com as estruturas condicionais: if, elif e else.</p></div>
+</section>
+
+</article>
+</body>
+</html>

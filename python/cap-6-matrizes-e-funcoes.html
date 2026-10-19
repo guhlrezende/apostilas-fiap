@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Matrizes e funções | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-5-8.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Aula 7</div>
+  <h1>Matrizes e funções</h1>
+  <p class="sub">Dados em duas dimensões e código com nome: as duas peças que montam programas de verdade.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">código rastreado</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 5 você repetiu comandos com laços sobre listas. Duas necessidades aparecem em seguida: <b>dados em duas dimensões</b> (tabelas, grades de dados) e <b>blocos de código com nome</b>, para não repetir a mesma lógica em vários lugares.</div>
+<section class="sec" id="matriz">
+  <h2><span class="sn">1</span>Matriz: uma lista de listas</h2>
+  <p class="gancho">Uma tabela cabe numa variável só?</p>
+  <p>Uma <b>matriz</b> é uma estrutura bidimensional: cada elemento tem um índice de <b>linha</b> e um de <b>coluna</b>, ambos começando em 0. Em Python é simplesmente uma <b>lista de listas</b>, e se acessa com <code>matriz[y][x]</code>: <i>y</i> escolhe a linha, <i>x</i> a coluna.</p>
+<pre><code>matriz = [
+    [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>],
+    [<span class="n">4</span>, <span class="n">5</span>, <span class="n">6</span>],
+    [<span class="n">7</span>, <span class="n">8</span>, <span class="n">9</span>],
+]
+matriz[<span class="n">1</span>][<span class="n">2</span>]    <span class="c"># 6: segunda linha, terceira coluna</span></code></pre>
+  <div class="demo" data-demo="matriz"></div>
+  <p>Para <b>percorrer</b>, um <code>for</code> dentro do outro: o de fora escolhe a linha, o de dentro anda pelas colunas. Para acrescentar, remover e inserir, as mesmas operações de lista valem, aplicadas à linha certa:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["matriz = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]", "matriz.append([10, 11, 12])", "matriz[1].insert(0, 100)", "del matriz[0][1]", "print(matriz[1][2])", "print(len(matriz))"], "steps": [{"l": 0, "v": {}, "o": "", "n": "Uma lista de listas: 3 linhas, 3 colunas."}, {"l": 1, "v": {"matriz": [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}, "o": "", "n": "<code>append<\/code> acrescenta uma <b>linha<\/b> inteira."}, {"l": 2, "v": {"matriz": [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]}, "o": "", "n": "<code>matriz[1]<\/code> é a segunda linha; o <code>insert<\/code> põe o 100 no <b>início<\/b> dela (que agora tem 4 elementos)."}, {"l": 3, "v": {"matriz": [[1, 2, 3], [100, 4, 5, 6], [7, 8, 9], [10, 11, 12]]}, "o": "", "n": "<code>del matriz[0][1]<\/code> remove o 2 da primeira linha."}, {"l": 4, "v": {"matriz": [[1, 3], [100, 4, 5, 6], [7, 8, 9], [10, 11, 12]]}, "o": "", "n": "<code>matriz[1][2]<\/code>: linha 1, coluna 2. A linha é [100, 4, 5, 6], e o índice 2 é o <b>5<\/b>."}, {"l": 5, "v": {"matriz": [[1, 3], [100, 4, 5, 6], [7, 8, 9], [10, 11, 12]]}, "o": "5", "n": "Agora há 4 linhas."}, {"l": -1, "v": {"matriz": [[1, 3], [100, 4, 5, 6], [7, 8, 9], [10, 11, 12]]}, "o": "5\n4", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Mexendo numa matriz"}</script></div><div class="demo" data-demo="trace"><script type="application/json">{"code": ["m = [[1, 2], [3, 4]]", "total = 0", "for y in range(2):", "    for x in range(2):", "        total = total + m[y][x]", "print(total)"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {"m": [[1, 2], [3, 4]]}, "o": "", "n": ""}, {"l": 2, "v": {"m": [[1, 2], [3, 4]], "total": 0}, "o": "", "n": "O laço de fora escolhe a <b>linha<\/b> y."}, {"l": 3, "v": {"m": [[1, 2], [3, 4]], "total": 0, "y": 0}, "o": "", "n": "O laço de dentro percorre as <b>colunas<\/b> x dessa linha."}, {"l": 4, "v": {"m": [[1, 2], [3, 4]], "total": 0, "y": 0, "x": 0}, "o": "", "n": "Soma o elemento da linha y, coluna x."}, {"l": 3, "v": {"m": [[1, 2], [3, 4]], "total": 1, "y": 0, "x": 0}, "o": "", "n": "O laço de dentro percorre as <b>colunas<\/b> x dessa linha."}, {"l": 4, "v": {"m": [[1, 2], [3, 4]], "total": 1, "y": 0, "x": 1}, "o": "", "n": "Soma o elemento da linha y, coluna x."}, {"l": 3, "v": {"m": [[1, 2], [3, 4]], "total": 3, "y": 0, "x": 1}, "o": "", "n": "O laço de dentro percorre as <b>colunas<\/b> x dessa linha."}, {"l": 2, "v": {"m": [[1, 2], [3, 4]], "total": 3, "y": 0, "x": 1}, "o": "", "n": "O laço de fora escolhe a <b>linha<\/b> y."}, {"l": 3, "v": {"m": [[1, 2], [3, 4]], "total": 3, "y": 1, "x": 1}, "o": "", "n": "O laço de dentro percorre as <b>colunas<\/b> x dessa linha."}, {"l": 4, "v": {"m": [[1, 2], [3, 4]], "total": 3, "y": 1, "x": 0}, "o": "", "n": "Soma o elemento da linha y, coluna x."}, {"l": 3, "v": {"m": [[1, 2], [3, 4]], "total": 6, "y": 1, "x": 0}, "o": "", "n": "O laço de dentro percorre as <b>colunas<\/b> x dessa linha."}, {"l": 4, "v": {"m": [[1, 2], [3, 4]], "total": 6, "y": 1, "x": 1}, "o": "", "n": "Soma o elemento da linha y, coluna x."}, {"l": 3, "v": {"m": [[1, 2], [3, 4]], "total": 10, "y": 1, "x": 1}, "o": "", "n": "O laço de dentro percorre as <b>colunas<\/b> x dessa linha."}, {"l": 2, "v": {"m": [[1, 2], [3, 4]], "total": 10, "y": 1, "x": 1}, "o": "", "n": "O laço de fora escolhe a <b>linha<\/b> y."}, {"l": 5, "v": {"m": [[1, 2], [3, 4]], "total": 10, "y": 1, "x": 1}, "o": "", "n": "1 + 2 + 3 + 4 = 10."}, {"l": -1, "v": {"m": [[1, 2], [3, 4]], "total": 10, "y": 1, "x": 1}, "o": "10", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "for aninhado: somar todos os elementos"}</script></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Trocar y e x.</b> É <code>matriz[y][x]</code> (linha primeiro), e não <code>[x][y]</code>. E criar uma matriz com <code>[[0] * 3] * 3</code> é uma armadilha: as três linhas são a <b>mesma</b> lista (lembra do <code>b = a</code> do Capítulo 4?). O certo: <code>[[0] * 3 for _ in range(3)]</code>.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Percorrer uma matriz, calcular um primo, contar vogais: tudo isso eu vou querer reutilizar.</div><p>Dar um nome ao bloco de código é a ideia da função.</p></div>
+</section>
+
+<section class="sec" id="funcoes">
+  <h2><span class="sn">2</span>Funções: blocos com nome</h2>
+  <p class="gancho">Escreva uma vez, use quantas vezes quiser.</p>
+  <p>Uma <b>função</b> é um bloco de código reutilizável, definido com <code>def</code>. Ela recebe <b>parâmetros</b> (entradas) e devolve um resultado com <code>return</code>:</p>
+<pre><code><span class="k">def</span> <span class="f">media</span>(numeros):
+    <span class="k">return</span> <span class="f">sum</span>(numeros) / <span class="f">len</span>(numeros)
+
+<span class="f">print</span>(<span class="f">media</span>([<span class="n">7</span>, <span class="n">8</span>, <span class="n">9</span>]))   <span class="c"># 8.0</span></code></pre>
+  <p>Acompanhe o controle <i>entrando</i> e <i>saindo</i> da função <code>eh_primo</code>. Repare que dentro dela as variáveis são as da função (<code>n</code> e <code>d</code>), e não as do programa principal:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["def eh_primo(n):", "    if n < 2:", "        return False", "    for d in range(2, int(n ** 0.5) + 1):", "        if n % d == 0:", "            return False", "    return True", "", "print(eh_primo(9))", "print(eh_primo(7))"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 8, "v": {}, "o": "", "n": "Chamada com <code>n = 9<\/code>. O controle <b>entra<\/b> na função."}, {"l": 1, "v": {"n": 9}, "o": "", "n": "9 não é menor que 2: segue."}, {"l": 3, "v": {"n": 9}, "o": "", "n": "Só é preciso testar divisores até a raiz quadrada: <code>range(2, 4)<\/code>."}, {"l": 4, "v": {"n": 9, "d": 2}, "o": "", "n": "9 % 2 == 1: não divide, tenta o próximo."}, {"l": 3, "v": {"n": 9, "d": 2}, "o": "", "n": "Só é preciso testar divisores até a raiz quadrada: <code>range(2, 4)<\/code>."}, {"l": 4, "v": {"n": 9, "d": 3}, "o": "", "n": "9 % 3 == 0: achou um divisor."}, {"l": 5, "v": {"n": 9, "d": 3}, "o": "", "n": "<code>return False<\/code> <b>encerra a função<\/b> na hora e devolve o valor a quem chamou."}, {"l": 9, "v": {}, "o": "False", "n": "Nova chamada, agora com 7: o <code>n<\/code> da função é outro."}, {"l": 1, "v": {"n": 7}, "o": "False", "n": "7 não é menor que 2: segue."}, {"l": 3, "v": {"n": 7}, "o": "False", "n": "Só é preciso testar divisores até a raiz quadrada: <code>range(2, 3)<\/code>."}, {"l": 4, "v": {"n": 7, "d": 2}, "o": "False", "n": "7 % 2 == 1: não divide, tenta o próximo."}, {"l": 3, "v": {"n": 7, "d": 2}, "o": "False", "n": "Só é preciso testar divisores até a raiz quadrada: <code>range(2, 3)<\/code>."}, {"l": 6, "v": {"n": 7, "d": 2}, "o": "False", "n": "Nenhum divisor encontrado: <code>return True<\/code>."}, {"l": -1, "v": {}, "o": "False\nTrue", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Função: eh_primo"}</script></div>
+  <div class="grid2">
+    <div class="card rv"><b>return x print</b><p><code>print</code> só <b>mostra</b> na tela. <code>return</code> <b>devolve</b> o valor a quem chamou, para você guardar numa variável ou usar numa conta. Uma função sem <code>return</code> devolve <code>None</code>.</p></div>
+    <div class="card rv"><b>Escopo (complemento)</b><p>Variáveis criadas <b>dentro</b> da função são <b>locais</b>: só existem lá. O mundo de fora não as enxerga, e a função não deveria depender de variáveis globais.</p></div>
+  </div>
+<pre><code><span class="k">def</span> <span class="f">saudacao</span>(nome, idioma=<span class="s">"pt"</span>):       <span class="c"># idioma tem valor padrão</span>
+    <span class="k">if</span> idioma == <span class="s">"pt"</span>:
+        <span class="k">return</span> <span class="s">f"Olá, {nome}!"</span>
+    <span class="k">return</span> <span class="s">f"Hello, {nome}!"</span>
+
+<span class="f">saudacao</span>(<span class="s">"Ana"</span>)                <span class="c"># 'Olá, Ana!'</span>
+<span class="f">saudacao</span>(<span class="s">"Ana"</span>, <span class="s">"en"</span>)          <span class="c"># 'Hello, Ana!'</span>
+<span class="f">saudacao</span>(idioma=<span class="s">"en"</span>, nome=<span class="s">"Bia"</span>)   <span class="c"># argumentos nomeados: a ordem não importa</span></code></pre>
+  <h3>Os exercícios de função, resolvidos</h3>
+<pre><code><span class="c"># calculadora com 4 funções</span>
+<span class="k">def</span> <span class="f">soma</span>(a, b): <span class="k">return</span> a + b
+<span class="k">def</span> <span class="f">subtrai</span>(a, b): <span class="k">return</span> a - b
+<span class="k">def</span> <span class="f">multiplica</span>(a, b): <span class="k">return</span> a * b
+<span class="k">def</span> <span class="f">divide</span>(a, b):
+    <span class="k">if</span> b == <span class="n">0</span>:
+        <span class="k">return</span> <span class="s">"não dá para dividir por zero"</span>
+    <span class="k">return</span> a / b
+
+<span class="c"># contar vogais</span>
+<span class="k">def</span> <span class="f">conta_vogais</span>(texto):
+    <span class="k">return</span> <span class="f">sum</span>(<span class="n">1</span> <span class="k">for</span> c <span class="k">in</span> texto.<span class="f">lower</span>() <span class="k">if</span> c <span class="k">in</span> <span class="s">"aeiou"</span>)
+
+<span class="c"># fatorial: 5! = 5 * 4 * 3 * 2 * 1 = 120</span>
+<span class="k">def</span> <span class="f">fatorial</span>(n):
+    resultado = <span class="n">1</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">2</span>, n + <span class="n">1</span>):
+        resultado *= i
+    <span class="k">return</span> resultado</code></pre>
+  <div class="nota exemplo"><span class="lbl">Para um projeto seu</span>Matriz, funções, condicionais e laços são os ingredientes de qualquer programa interativo de tamanho médio. Escolha um projeto pequeno seu (um controle de gastos, uma agenda, um quiz), divida em funções com uma responsabilidade cada e monte a partir dessas peças antes de procurar soluções prontas: é o melhor jeito de fixar tudo isto.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">3</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Matriz</b> = lista de listas. <code>matriz[y][x]</code>: linha primeiro, coluna depois, ambos a partir de 0.</li><li>Percorrer: <code>for</code> aninhado. Linha: <code>append</code>, <code>insert</code>, <code>del</code>, <code>pop</code> funcionam como em listas.</li><li><code>[[0] * 3] * 3</code> repete a <b>mesma</b> linha. Use compreensão: <code>[[0] * 3 for _ in range(3)]</code>.</li><li><b>Função</b>: <code>def nome(parametros):</code>; <code>return</code> devolve e encerra; sem return, devolve <code>None</code>.</li><li><b>Escopo</b>: variável de dentro da função é local. <b>return</b> não é <b>print</b>.</li><li>Parâmetro com valor padrão (<code>idioma="pt"</code>) e argumentos nomeados.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Dada <code>m = [[1, 2, 3], [4, 5, 6]]</code>, o que é <code>m[1][0]</code>?</p>
+    <div class="opts"><button data-k="a">4: linha 1 (a segunda), coluna 0.</button><button data-k="b">2</button><button data-k="c">1</button></div>
+    <div class="fb">O primeiro índice escolhe a linha (a de índice 1 é [4, 5, 6]) e o segundo a coluna (a de índice 0 é o 4).</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual a diferença entre <code>return</code> e <code>print</code> dentro de uma função?</p>
+    <div class="opts"><button data-k="a">Nenhuma.</button><button data-k="b">print devolve o valor e return mostra na tela.</button><button data-k="c">return devolve o valor a quem chamou; print só mostra na tela.</button></div>
+    <div class="fb">Com <code>return</code> você pode guardar o resultado (<code>x = media(...)</code>). Com <code>print</code> o valor aparece e se perde.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O que acontece quando uma função executa <code>return False</code> no meio do código?</p>
+    <div class="opts"><button data-k="a">O laço continua.</button><button data-k="b">A função termina na hora e devolve False.</button><button data-k="c">O programa inteiro para.</button></div>
+    <div class="fb"><code>return</code> encerra a função naquele ponto, mesmo dentro de um laço, e devolve o valor.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como acessar uma matriz?</b></span><span class="bk">matriz[y][x]: linha primeiro, coluna depois.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é escopo local?</b></span><span class="bk">Variável criada dentro da função só existe lá dentro.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que a função devolve sem return?</b></span><span class="bk">None.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que testar divisores só até a raiz de n?</b></span><span class="bk">Porque se n tem um divisor maior que a raiz, ele também tem um menor, que já teria sido encontrado.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">Meu código funciona no meu computador. Como guardo as versões e compartilho com outras pessoas?</div><p>Com o Git e o GitHub.</p></div>
+</section>
+
+</article>
+</body>
+</html>

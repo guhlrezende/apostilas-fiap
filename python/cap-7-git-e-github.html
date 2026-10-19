@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: Git e GitHub | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-5-8.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Aula 3</div>
+  <h1>Git e GitHub</h1>
+  <p class="sub">Guardar o histórico do seu código, voltar no tempo e compartilhar com o mundo.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">simulador de Git</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 6 você terminou de aprender as peças principais da linguagem. Agora uma pergunta prática: onde esse código <b>mora</b>? Se você apagar um arquivo sem querer, ou quiser voltar a como estava ontem, ou trabalhar com outra pessoa no mesmo programa, o computador sozinho não resolve.</div>
+<section class="sec" id="git">
+  <h2><span class="sn">1</span>Git e GitHub: duas coisas diferentes</h2>
+  <p class="gancho">Quem guarda o histórico, e quem guarda a cópia na nuvem?</p>
+  <div class="grid2">
+    <div class="card rv"><b>Git</b><p>Um <b>sistema de controle de versão</b>, que roda no seu computador. Registra o histórico de mudanças do projeto: permite voltar a versões anteriores, comparar alterações e trabalhar em paralelo sem perder trabalho.</p></div>
+    <div class="card rv"><b>GitHub</b><p>Uma plataforma que <b>hospeda repositórios Git na nuvem</b>. É o intermediário entre o código local e uma cópia remota na internet: backup, colaboração e compartilhamento.</p></div>
+  </div>
+  <p>Um <b>repositório</b> é a pasta do projeto com o histórico. No GitHub ele pode ser <b>público</b> (qualquer pessoa vê o código, mesmo sem conta; ótimo para portfólio, material de estudo e open source) ou <b>privado</b> (só você e quem você convidar).</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como uma mudança vira "histórico"?</div><p>Ela passa por quatro lugares.</p></div>
+</section>
+
+<section class="sec" id="fluxo">
+  <h2><span class="sn">2</span>O caminho de uma mudança</h2>
+  <p class="gancho">Editar não é salvar no histórico. Salvar no histórico não é enviar para a nuvem.</p>
+  <p>Um <b>commit</b> é um "ponto de salvamento": uma fotografia do estado dos arquivos naquele momento, com uma mensagem dizendo o que mudou. Até o commit existir, o Git só <i>percebe</i> que algo mudou. O fluxo básico:</p>
+  <ol>
+    <li>Alterar arquivos no projeto.</li>
+    <li><code>git add</code>: escolher o que vai entrar no próximo commit (a <b>staging</b>, a "mesa de preparação").</li>
+    <li><code>git commit -m "mensagem"</code>: tirar a foto.</li>
+    <li><code>git push</code>: enviar os commits para o GitHub.</li>
+  </ol>
+  <p>Experimente cada passo e observe onde a mudança está depois de cada botão:</p>
+  <div class="demo" data-demo="gitsim"></div>
+<pre><code>git add .                                  <span class="c"># prepara todas as mudanças</span>
+git commit -m "corrige o cálculo do desconto"
+git push                                   <span class="c"># envia para o GitHub</span></code></pre>
+  <div class="nota cuidado"><span class="lbl">add . ou arquivo específico?</span><code>git add .</code> prepara <b>tudo</b> o que mudou. Para ser seletivo, <code>git add arquivo.py</code> prepara só aquele. A seletividade serve para que cada commit conte <b>uma história só</b> (uma correção, uma funcionalidade), o que facilita entender e desfazer depois.</div>
+</section>
+
+<section class="sec" id="comandos">
+  <h2><span class="sn">3</span>Os comandos do dia a dia</h2>
+  <p class="gancho">Uma lista curta que resolve 90% das situações.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Comando</th><th>Faz</th></tr>
+    <tr><td><code>git init</code></td><td>transforma a pasta atual em um repositório Git</td></tr>
+    <tr><td><code>git clone &lt;url&gt;</code></td><td>baixa uma cópia de um repositório do GitHub</td></tr>
+    <tr><td><code>git status</code></td><td>mostra o que mudou e o que está na staging (use sempre!)</td></tr>
+    <tr><td><code>git add .</code></td><td>prepara as mudanças para o commit</td></tr>
+    <tr><td><code>git commit -m "..."</code></td><td>registra a foto no histórico local</td></tr>
+    <tr><td><code>git push</code></td><td>envia os commits para o GitHub</td></tr>
+    <tr><td><code>git pull</code></td><td>traz do GitHub os commits que você ainda não tem</td></tr>
+    <tr><td><code>git log</code></td><td>lista o histórico de commits</td></tr>
+    <tr><td><code>git diff</code></td><td>mostra o que mudou, linha a linha</td></tr>
+  </table></div>
+  <h3>Complemento: branches</h3>
+  <p>Uma <b>branch</b> (ramo) é uma linha paralela de commits. Serve para desenvolver algo novo sem mexer na versão estável (a <code>main</code>): você cria um ramo, trabalha nele e, quando estiver pronto, <b>junta</b> (<i>merge</i>) de volta. É o jeito de várias pessoas trabalharem ao mesmo tempo sem pisar umas nas outras. Comandos: <code>git branch</code>, <code>git switch -c nome-do-ramo</code>, <code>git merge nome-do-ramo</code>.</p>
+  <h3>Complemento: boas práticas que evitam dor de cabeça</h3>
+  <ul>
+    <li><b>Mensagens que contam o porquê</b>, não "mudanças" ou "arrumei": <i>"corrige desconto para mais de 10 unidades"</i>.</li>
+    <li><b>Nunca commite segredos</b> (senhas, chaves de API, arquivos <code>.env</code>). Em repositório público, qualquer um vê. Se um segredo vazar, <b>revogue-o</b> imediatamente (apagar o commit depois não basta, porque ele fica no histórico).</li>
+    <li>Use um arquivo <code>.gitignore</code> para dizer ao Git o que <b>não</b> versionar (arquivos temporários, <code>.env</code>, pastas de dependências).</li>
+    <li>Faça <b>commits pequenos e frequentes</b>. E <code>git pull</code> antes de começar a trabalhar, se mais gente mexe no projeto.</li>
+  </ul>
+  <div class="nota lembra"><span class="lbl">Ligação com o resto do curso</span>Um repositório público bem cuidado funciona como <b>portfólio</b>: cada projeto das disciplinas (um notebook de ML, um projeto de ESP32, um site) pode virar um repositório com um bom README. É assim que esta apostila foi publicada.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Git</b> controla versões (no seu computador). <b>GitHub</b> hospeda repositórios na nuvem.</li><li>Repositório <b>público</b> (todos veem) ou <b>privado</b> (só convidados).</li><li>Fluxo: editar → <code>git add</code> (staging) → <code>git commit -m</code> (histórico local) → <code>git push</code> (GitHub).</li><li><code>git status</code> mostra onde cada mudança está. <code>git pull</code> traz o que você não tem.</li><li><b>Branch</b>: linha paralela de trabalho. <b>Merge</b>: junta de volta.</li><li><b>Nunca</b> commite segredos. <code>.gitignore</code> lista o que não versionar.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Depois de <code>git commit</code>, as mudanças já estão no GitHub?</p>
+    <div class="opts"><button data-k="a">Sim, o commit envia tudo.</button><button data-k="b">Não: ficam só no seu computador até o git push.</button><button data-k="c">Só se o repositório for público.</button></div>
+    <div class="fb">O commit registra no histórico <b>local</b>. É o <code>push</code> que envia para o repositório remoto.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual a função do <code>git add</code>?</p>
+    <div class="opts"><button data-k="a">Baixar arquivos do GitHub.</button><button data-k="b">Apagar arquivos.</button><button data-k="c">Escolher o que entra no próximo commit (staging).</button></div>
+    <div class="fb">O add leva as mudanças para a staging. Só o que está lá entra no commit.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Você commitou uma senha num repositório público. O que fazer primeiro?</p>
+    <div class="opts"><button data-k="a">Revogar/trocar a senha, porque ela já ficou exposta.</button><button data-k="b">Apagar o arquivo e seguir, que o histórico some.</button><button data-k="c">Mudar o repositório para privado e esquecer.</button></div>
+    <div class="fb">O histórico guarda o commit antigo, e a exposição pode já ter ocorrido (inclusive por robôs). O primeiro passo é invalidar o segredo.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Git x GitHub?</b></span><span class="bk">Git é o controle de versão local. GitHub é a plataforma que hospeda repositórios Git na nuvem.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um commit?</b></span><span class="bk">Uma foto do estado dos arquivos naquele momento, com uma mensagem.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve a staging?</b></span><span class="bk">Escolher exatamente o que entra no próximo commit.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma branch?</b></span><span class="bk">Uma linha paralela de commits, para desenvolver sem mexer na versão estável.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 8</div><div class="q">Tenho todas as peças. Dá para usá-las num problema de verdade, sem fórmula pronta?</div><p>Dá: um jogo de senha, em que ninguém lhe entrega o algoritmo.</p></div>
+</section>
+
+</article>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: Linguagens, variáveis e tipos | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-1-4.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 1</div>
+  <h1>Linguagens, variáveis e tipos</h1>
+  <p class="sub">Como o Python vira ação no computador, onde ele guarda valores, e as primeiras contas.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">código rastreado</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo. Você não precisa saber programar: precisa só de curiosidade e de um computador. Daqui em diante, cada capítulo abre lembrando a pergunta que o anterior deixou em aberto.</div>
+<section class="sec" id="porque-python">
+  <h2><span class="sn">1</span>Por que Python</h2>
+  <p class="gancho">Antes do primeiro comando: com que ferramenta estamos trabalhando?</p>
+  <p>Python foi criado por <b>Guido van Rossum</b> e lançado em <b>1991</b>, no CWI, na Holanda, com um objetivo bem claro: ter uma sintaxe <mark class="hl">limpa e fácil de ler</mark>, inspirada na linguagem ABC. (O nome vem do grupo de humor Monty Python, e não da cobra.) Isso importa na prática: uma linguagem pensada para a leitura humana deixa você entender o código dos outros sem decorar símbolos.</p>
+  <p>Python é de <b>alto nível</b>: fica perto da linguagem humana e esconde o hardware. Você escreve <code>soma = 2 + 2</code> sem saber como o processador guarda o número em binário. Linguagens de <b>baixo nível</b> (como Assembly) mostram esses detalhes. O preço da abstração é velocidade de execução; o ganho é velocidade de <i>desenvolvimento</i>, e no começo é isso que importa.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O computador entende binário. Como o meu texto em Python vira algo que ele executa?</div><p>Há três caminhos, e vale conhecer os três.</p></div>
+</section>
+
+<section class="sec" id="traducao">
+  <h2><span class="sn">2</span>Compilada, interpretada, transpilada</h2>
+  <p class="gancho">Quem traduz o seu código, e quando?</p>
+  <div class="grid3">
+    <div class="card rv"><b>Compilada</b><p>O código é <b>todo traduzido</b> para código de máquina <b>antes</b> de rodar, gerando um executável. Rápida; mas qualquer mudança exige recompilar. Ex.: C, C++, Rust.</p></div>
+    <div class="card rv"><b>Interpretada</b><p>O código é traduzido <b>durante</b> a execução, linha a linha. Você edita e testa na hora. Ex.: Python.</p></div>
+    <div class="card rv"><b>Transpilada</b><p>Traduz de uma linguagem de alto nível para <b>outra</b> de alto nível. Ex.: TypeScript vira JavaScript. <span class="muted">(complemento)</span></p></div>
+  </div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="comp:Compilada|inter:Interpretada|trans:Transpilada">
+    <div class="item" data-ans="inter"><p>Você escreve um arquivo <code>.py</code> e o roda direto, e um erro de execução só aparece quando a linha problemática é executada (erros de sintaxe aparecem antes de rodar qualquer linha).</p><span class="why">Interpretada: o Python traduz e executa enquanto lê.</span></div>
+    <div class="item" data-ans="comp"><p>Você precisa gerar um executável antes de testar, e qualquer mudança exige gerar de novo (é o passo de <i>build</i> de um projeto C++).</p><span class="why">Compilada: a tradução completa vem antes da execução.</span></div>
+    <div class="item" data-ans="trans"><p>O código em TypeScript é convertido em JavaScript, que o navegador entende.</p><span class="why">Transpilada: de uma linguagem de alto nível para outra de alto nível.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Complemento: Python também "compila"</span>Na verdade o Python traduz seu código para um formato intermediário (<i>bytecode</i>, os arquivos <code>.pyc</code>) e só então o interpreta. Por isso se diz "interpretada" no sentido prático: você não gera um executável nativo. O detalhe mostra que a divisão não é tão rígida quanto o slide sugere.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O programa precisa guardar valores enquanto trabalha. Onde?</div><p>Em variáveis.</p></div>
+</section>
+
+<section class="sec" id="variaveis">
+  <h2><span class="sn">3</span>Variáveis, constantes e tipos</h2>
+  <p class="gancho">Uma caixa com nome, e o que cabe nela.</p>
+  <p>Uma <b>variável</b> é um nome associado a um valor na memória, e o valor pode mudar. Uma <b>constante</b> é um valor que não deveria mudar: Python não impede, mas por <i>convenção</i> escreve-se em MAIÚSCULAS (<code>PI = 3.14159</code>). Marcar algo como constante evita que alguém sobrescreva sem querer um valor que devia ser fixo, como uma taxa ou um limite de tentativas.</p>
+  <p>Cada valor tem um <b>tipo</b>. Python é <b>dinamicamente tipado</b>: você não declara o tipo (como <code>int x = 5</code> em C), o interpretador descobre pelo valor.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Tipo</th><th>Representa</th><th>Exemplos</th></tr>
+    <tr><td><code>int</code></td><td>inteiros</td><td><code>42</code>, <code>-10</code></td></tr>
+    <tr><td><code>float</code></td><td>números com casas decimais</td><td><code>3.14</code></td></tr>
+    <tr><td><code>str</code></td><td>texto</td><td><code>'Olá, mundo!'</code></td></tr>
+    <tr><td><code>bool</code></td><td>verdadeiro ou falso</td><td><code>True</code>, <code>False</code></td></tr>
+    <tr><td><code>list</code></td><td>coleção ordenada e mutável</td><td><code>[1, 2, 3]</code> (Capítulo 4)</td></tr>
+  </table></div>
+  <p>Acompanhe, linha por linha, o que o Python faz com os quatro tipos:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["nome = \"Ana\"", "idade = 19", "altura = 1.68", "estudante = True", "print(type(nome), type(idade))", "print(type(altura), type(estudante))", "idade = idade + 1", "print(idade)"], "steps": [{"l": 0, "v": {}, "o": "", "n": "<code>str<\/code>: texto, sempre entre aspas."}, {"l": 1, "v": {"nome": "Ana"}, "o": "", "n": "<code>int<\/code>: inteiro."}, {"l": 2, "v": {"nome": "Ana", "idade": 19}, "o": "", "n": "<code>float<\/code>: número com casas decimais (ponto, não vírgula)."}, {"l": 3, "v": {"nome": "Ana", "idade": 19, "altura": 1.68}, "o": "", "n": "<code>bool<\/code>: só <code>True<\/code> ou <code>False<\/code>, com a primeira letra maiúscula."}, {"l": 4, "v": {"nome": "Ana", "idade": 19, "altura": 1.68, "estudante": true}, "o": "", "n": "<code>type()<\/code> pergunta o tipo ao Python. Você não declarou nenhum: ele <b>descobriu pelo valor<\/b>."}, {"l": 5, "v": {"nome": "Ana", "idade": 19, "altura": 1.68, "estudante": true}, "o": "<class 'str'> <class 'int'>", "n": ""}, {"l": 6, "v": {"nome": "Ana", "idade": 19, "altura": 1.68, "estudante": true}, "o": "<class 'str'> <class 'int'>\n<class 'float'> <class 'bool'>", "n": "A <b>variável<\/b> pode mudar. O Python lê o lado direito primeiro (19 + 1) e depois guarda em <code>idade<\/code>."}, {"l": 7, "v": {"nome": "Ana", "idade": 20, "altura": 1.68, "estudante": true}, "o": "<class 'str'> <class 'int'>\n<class 'float'> <class 'bool'>", "n": ""}, {"l": -1, "v": {"nome": "Ana", "idade": 20, "altura": 1.68, "estudante": true}, "o": "<class 'str'> <class 'int'>\n<class 'float'> <class 'bool'>\n20", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Quatro tipos, quatro caixas"}</script></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Misturar tipos.</b> <code>"idade: " + 19</code> dá erro (<code>TypeError</code>): não dá para somar texto com número. Converta com <code>str(19)</code>, ou use uma f-string (Capítulo 2). O oposto também: <code>"3" + "4"</code> dá <code>"34"</code> (concatena), e não 7.</div>
+  <h3>Operadores matemáticos</h3>
+  <div class="tablewrap"><table>
+    <tr><th><code>+</code> <code>-</code> <code>*</code></th><th><code>/</code></th><th><code>//</code></th><th><code>%</code></th><th><code>**</code></th></tr>
+    <tr><td>soma, subtração, multiplicação</td><td>divisão (sempre <code>float</code>)</td><td>divisão inteira</td><td>resto</td><td>potência</td></tr>
+  </table></div>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["x = 17", "y = 5", "print(x / y)", "print(x // y)", "print(x % y)", "print(x ** 2)"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {"x": 17}, "o": "", "n": ""}, {"l": 2, "v": {"x": 17, "y": 5}, "o": "", "n": "<code>/<\/code> <b>sempre<\/b> devolve <code>float<\/code>, mesmo quando divide certinho."}, {"l": 3, "v": {"x": 17, "y": 5}, "o": "3.4", "n": "<code>//<\/code> é a divisão inteira: arredonda para baixo."}, {"l": 4, "v": {"x": 17, "y": 5}, "o": "3.4\n3", "n": "<code>%<\/code> devolve o resto da divisão."}, {"l": 5, "v": {"x": 17, "y": 5}, "o": "3.4\n3\n2", "n": "<code>**<\/code> é a potência."}, {"l": -1, "v": {"x": 17, "y": 5}, "o": "3.4\n3\n2\n289", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Divisão: / x // x %"}</script></div>
+  <p>O <code>%</code> é a base de todo teste de paridade: <code>n % 2 == 0</code> significa "n é par". E <code>/</code> versus <code>//</code> é um dos tropeços mais comuns de quem começa: <code>10 / 2</code> dá <code>5.0</code> (com decimal), e <code>10 // 2</code> dá <code>5</code>.</p>
+</section>
+
+<section class="sec" id="troca">
+  <h2><span class="sn">4</span>Um desafio clássico: trocar A e B</h2>
+  <p class="gancho">Parece trivial, e tem uma armadilha.</p>
+  <p>O slide propõe: dadas duas variáveis, <b>trocar o conteúdo</b> de uma pela outra. A tentativa ingênua (<code>a = b</code> e depois <code>b = a</code>) falha, porque a primeira linha já apagou o valor antigo de <code>a</code>. A solução clássica usa uma variável temporária:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"code": ["a = 5", "b = 9", "temp = a", "a = b", "b = temp", "print(a, b)"], "steps": [{"l": 0, "v": {}, "o": "", "n": "<code>a<\/code> guarda 5."}, {"l": 1, "v": {"a": 5}, "o": "", "n": "<code>b<\/code> guarda 9."}, {"l": 2, "v": {"a": 5, "b": 9}, "o": "", "n": "Se fizéssemos <code>a = b<\/code> já, o 5 se perderia. Guardamos o 5 em uma <b>variável temporária<\/b>."}, {"l": 3, "v": {"a": 5, "b": 9, "temp": 5}, "o": "", "n": "Agora é seguro: <code>a<\/code> recebe o valor de <code>b<\/code>."}, {"l": 4, "v": {"a": 9, "b": 9, "temp": 5}, "o": "", "n": "<code>b<\/code> recebe o que estava guardado em <code>temp<\/code>."}, {"l": 5, "v": {"a": 9, "b": 5, "temp": 5}, "o": "", "n": "Trocou! (Em Python existe um atalho: <code>a, b = b, a<\/code>.)"}, {"l": -1, "v": {"a": 9, "b": 5, "temp": 5}, "o": "9 5", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "Trocar o conteúdo de A e B"}</script></div>
+  <p>Em Python existe a forma curta <code>a, b = b, a</code>, que faz a mesma troca numa linha. Vale conhecer as duas: a temporária mostra a lógica, e a curta é a que você usa no dia a dia.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Python: criada por <b>Guido van Rossum</b> em <b>1991</b>, de alto nível e feita para ser legível.</li><li><b>Compilada</b>: traduz tudo antes. <b>Interpretada</b>: traduz enquanto executa. <b>Transpilada</b>: converte para outra linguagem de alto nível.</li><li><b>Variável</b> muda; <b>constante</b> (em MAIÚSCULAS, por convenção) não deveria.</li><li>Tipos básicos: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code> (e <code>list</code>). Tipagem <b>dinâmica</b>.</li><li><code>/</code> sempre devolve <code>float</code>; <code>//</code> é divisão inteira; <code>%</code> é o resto; <code>**</code> é potência.</li><li>Para trocar duas variáveis: use uma <b>temporária</b>, ou <code>a, b = b, a</code>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Qual o resultado de <code>17 // 5</code> e de <code>17 % 5</code>?</p>
+    <div class="opts"><button data-k="a">3,4 e 2</button><button data-k="b">4 e 3</button><button data-k="c">3 e 2</button></div>
+    <div class="fb">17 dividido por 5 dá 3 com resto 2. <code>//</code> devolve o quociente inteiro (3), e <code>%</code> o resto (2). <code>17 / 5</code> seria 3.4.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 2</span><p class="qq">Por que <code>a = b</code> seguido de <code>b = a</code> NÃO troca os valores?</p>
+    <div class="opts"><button data-k="a">Porque Python não permite duas atribuições seguidas.</button><button data-k="b">Porque a primeira linha apaga o valor antigo de a, e a segunda copia o mesmo valor de volta.</button><button data-k="c">Porque b é constante.</button></div>
+    <div class="fb">Depois de <code>a = b</code>, ambos valem o valor de b. Faltou guardar o valor antigo de a em algum lugar, a variável temporária.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq"><code>type(3.0)</code> devolve:</p>
+    <div class="opts"><button data-k="a">float: o ponto decimal faz dele um float, mesmo com valor inteiro.</button><button data-k="b">int, porque 3.0 é igual a 3.</button><button data-k="c">str</button></div>
+    <div class="fb">O tipo vem da forma como o valor é escrito. <code>3</code> é int; <code>3.0</code> é float.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Compilada x interpretada?</b></span><span class="bk">Compilada traduz o programa inteiro antes de rodar. Interpretada traduz durante a execução, linha a linha.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é tipagem dinâmica?</b></span><span class="bk">Você não declara o tipo da variável: o Python descobre pelo valor guardado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o %?</b></span><span class="bk">Devolve o resto da divisão. Base do teste de par e ímpar (<code>n % 2 == 0</code>).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como trocar duas variáveis?</b></span><span class="bk">Com uma variável temporária, ou com <code>a, b = b, a</code>.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Já sei guardar valores. Como faço o programa receber dados de quem o usa?</div><p>Com a função <code>input()</code>, e um cuidado: ela sempre devolve texto.</p></div>
+</section>
+
+</article>
+</body>
+</html>
