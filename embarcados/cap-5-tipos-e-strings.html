@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: Tipos, strings, operadores e printf | Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/emb.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Aula 5</div>
+  <h1>Tipos, strings, operadores e printf</h1>
+  <p class="sub">Tipos primitivos, os três jeitos de guardar texto, operadores, printf e leitura pelo Serial.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">formatador de printf</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 4 você viu que variáveis guardam valores. Falta saber <b>que tipos existem</b>, como o texto é guardado (e por que há três jeitos), como comparar e como imprimir tudo isso com formato.</div>
+<section class="sec" id="tipos">
+  <h2><span class="sn">1</span>Tipos primitivos</h2>
+  <p class="gancho">A variável precisa saber o que guarda.</p>
+<pre><code>int idade = 18;            <span class="c">// inteiro</span>
+float temperatura = 27.5;  <span class="c">// decimal</span>
+char letra = 'N';          <span class="c">// um único caractere (aspas simples)</span>
+String nome = "ESP 32";    <span class="c">// texto (classe do Arduino)</span>
+bool ligado = true;        <span class="c">// verdadeiro ou falso</span></code></pre>
+  <div class="card sorter rv" data-demo="sorter" data-opts="i:int|fl:float|c:char|s:String|b:bool">
+    <div class="item" data-ans="b"><p>Se a luz está ligada: sim ou não.</p><span class="why">Dois estados possíveis: bool.</span></div>
+    <div class="item" data-ans="fl"><p>A temperatura 27,5 °C.</p><span class="why">Tem parte decimal: float.</span></div>
+    <div class="item" data-ans="i"><p>O número de pessoas na sala.</p><span class="why">Contagem inteira: int.</span></div>
+    <div class="item" data-ans="c"><p>A letra 'N' (um único caractere).</p><span class="why">Um caractere, entre aspas simples: char.</span></div>
+    <div class="item" data-ans="s"><p>A mensagem "Sistema ligado".</p><span class="why">Texto com vários caracteres: String.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <p>No Monitor Serial, um <code>float</code> sai com 2 casas por padrão (<code>20.50</code>) e um <code>bool</code> sai como <code>1</code> ou <code>0</code>, e não como <i>true</i>/<i>false</i>.</p>
+</section>
+
+<section class="sec" id="texto">
+  <h2><span class="sn">2</span>Três jeitos de guardar texto</h2>
+  <p class="gancho">O texto é uma sequência de caracteres, e o final precisa ser marcado.</p>
+  <h3>1. char array (C-string)</h3>
+<pre><code>char palavra[6] = "ESP32";   <span class="c">// 5 letras, mas o array precisa de 6</span></code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>índice</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+    <tr><td>valor</td><td>E</td><td>S</td><td>P</td><td>3</td><td>2</td><td><code>\0</code></td></tr>
+  </table></div>
+  <p>O sexto espaço guarda o <b>caractere nulo <code>\0</code></b>, que marca onde o texto termina. Por isso o tamanho é sempre <b>o número de caracteres visíveis + 1</b>; <code>char texto[5] = "ESP32";</code> é erro. <code>palavra[1]</code> vale <code>'S'</code>. Um caractere usa aspas <b>simples</b> (<code>'S'</code>); um texto usa aspas <b>duplas</b> (<code>"ESP32"</code>).</p>
+  <h3>2. std::string e 3. String do Arduino</h3>
+<pre><code>String texto = "ESP32";
+texto += ": funcionando!";     <span class="c">// concatena (equivale a texto = texto + ...)</span>
+Serial.println(texto);</code></pre>
+  <p>O <code>std::string</code> é da biblioteca padrão do C++. No ESP32 recomenda-se a classe <code>String</code> (S maiúsculo) do Arduino, que gerencia a memória sozinha. Mas há um <b>ponto de atenção real de engenharia</b>: <code>String</code> facilita a manipulação, porém <b>pode fragmentar a memória</b>, ruim em dispositivos com pouca RAM que rodam por muito tempo e concatenam muito. Em código de produção, às vezes o <code>char</code> array é preferível.</p>
+</section>
+
+<section class="sec" id="operadores">
+  <h2><span class="sn">3</span>Operadores e a pegadinha do = e ==</h2>
+  <p class="gancho">Atribuir não é comparar.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Operador</th><th>Significado</th><th>Exemplo</th></tr>
+    <tr><td><code>+ - * /</code></td><td>soma, subtração, multiplicação, divisão</td><td><code>5+3</code>, <code>2*6</code></td></tr>
+    <tr><td><code>%</code></td><td>resto da divisão</td><td><code>10 % 3</code> = 1</td></tr>
+    <tr><td><code>++ --</code></td><td>incremento e decremento</td><td><code>x++</code></td></tr>
+    <tr><td><code>=</code></td><td><b>atribui</b></td><td><code>a = 5;</code></td></tr>
+    <tr><td><code>== !=</code></td><td><b>compara</b> (igual, diferente)</td><td><code>idade == 20</code> → <code>true</code> ou <code>false</code></td></tr>
+    <tr><td><code>&gt; &lt; &gt;= &lt;=</code></td><td>maior, menor, maior ou igual, menor ou igual</td><td><code>temp &gt; 35</code></td></tr>
+  </table></div>
+  <p>O resultado de uma comparação é um <code>bool</code>, que o Monitor Serial imprime como <code>1</code> (verdadeiro) ou <code>0</code> (falso). Comentários usam <code>//</code>.</p>
+  <div class="nota cuidado"><span class="lbl">Cuidado: divisão de inteiros</span>Em C++, <code>10 / 4</code> com dois <code>int</code> dá <b>2</b>, e não 2,5: a divisão entre inteiros é inteira. Para ter decimais, ao menos um dos lados precisa ser <code>float</code> (<code>10.0 / 4</code>). Teste junto com o <code>printf</code> na demo abaixo.</div>
+</section>
+
+<section class="sec" id="printf">
+  <h2><span class="sn">4</span>Imprimir com formato: printf</h2>
+  <p class="gancho">Concatenar String é caro; o printf é direto.</p>
+<pre><code>float media = 27.456;
+Serial.printf("A temperatura média é: %.2f ºC\r\n", media);   <span class="c">// 27.46</span>
+
+String nome = "ESP32";
+Serial.printf("Placa: %s\r\n", nome.c_str());   <span class="c">// %s com String exige .c_str()</span></code></pre>
+  <p>Marcadores: <code>%d</code> inteiro, <code>%.2f</code> decimal com 2 casas (<code>%.7f</code>, 7 casas), <code>%c</code> caractere, <code>%s</code> texto. O <code>printf</code> <b>não quebra linha sozinho</b>: coloque <code>\n</code> (ou <code>\r\n</code>, que funciona bem no Monitor Serial). Teste:</p>
+  <div class="demo" data-demo="formato"></div>
+  <h3>Operador ternário</h3>
+<pre><code>bool ligado = true;
+Serial.println(ligado ? "ligado" : "desligado");   <span class="c">// condição ? se_verdadeiro : se_falso</span></code></pre>
+  <div class="ex rv"><span class="t">Exemplo resolvido: Celsius para Fahrenheit</span>
+    <div class="l"><div>Fórmula: <code>F = C × 1,8 + 32</code>. Para <b>27,5 °C</b>: <code>27,5 × 1,8 = 49,5</code>; <code>49,5 + 32 = <b>81,5 °F</b></code>.</div></div>
+    <div class="l"><div>Em código: <code>float c = 27.5; float f = c * 1.8 + 32; Serial.printf("%.1f C = %.1f F\r\n", c, f);</code> imprime <code>27.5 C = 81.5 F</code>.</div></div>
+  </div>
+</section>
+
+<section class="sec" id="leitura">
+  <h2><span class="sn">5</span>Ler comandos pelo Monitor Serial</h2>
+  <p class="gancho">A comunicação é de mão dupla.</p>
+<pre><code>void loop() {
+  if (Serial.available() &gt; 0) {                 <span class="c">// só entra se há algo no buffer</span>
+    String cmd = Serial.readStringUntil('\n');   <span class="c">// lê até o Enter</span>
+    cmd.trim();                                  <span class="c">// tira espaços e \r</span>
+    if (cmd == "ligar")         digitalWrite(LED, HIGH);
+    else if (cmd == "desligar") digitalWrite(LED, LOW);
+  }
+}</code></pre>
+  <p><code>Serial.available()</code> diz se há algo esperando. <code>Serial.readStringUntil('\n')</code> é <b>bloqueante</b>: trava o <code>loop()</code>, acumulando caracteres até achar o <code>\n</code> ou estourar o tempo limite (<i>timeout</i>). Por isso se testa <code>available() &gt; 0</code> <b>antes</b>: é o padrão "verificar antes de bloquear". (O slide da aula fala em 5 s de tempo limite; o padrão do núcleo Arduino costuma ser 1 s, e <code>Serial.setTimeout()</code> muda. Confira na sua versão.)</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Tipos: <code>int</code>, <code>float</code>, <code>char</code> (aspas simples), <code>String</code> (aspas duplas), <code>bool</code> (imprime 1 ou 0).</li><li><b>char array</b> precisa de <b>tamanho + 1</b> por causa do <code>\0</code>. <code>String</code> é prático, mas pode <b>fragmentar a memória</b>.</li><li><code>=</code> atribui; <code>==</code> compara. Divisão de <b>inteiros é inteira</b>: <code>10/4 = 2</code>.</li><li><code>printf</code>: <code>%d</code>, <code>%.2f</code>, <code>%c</code>, <code>%s</code> (com <code>.c_str()</code>); não quebra linha sozinho.</li><li>Ler pelo Serial: <code>available() &gt; 0</code> antes de <code>readStringUntil('\n')</code>, que bloqueia.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Qual o tamanho mínimo do array para guardar a palavra 'ESP32' como char array?</p>
+    <div class="opts"><button data-k="a">5.</button><button data-k="b">4.</button><button data-k="c">6: 5 letras mais o caractere nulo \0.</button></div>
+    <div class="fb">O \0 marca o fim do texto e ocupa uma posição.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Quanto é 10 / 4 com dois int em C++?</p>
+    <div class="opts"><button data-k="a">2.</button><button data-k="b">2,5.</button><button data-k="c">3.</button></div>
+    <div class="fb">A divisão entre inteiros descarta a parte decimal. Com float (10.0 / 4), seria 2,5.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Por que testar Serial.available() > 0 antes de readStringUntil?</p>
+    <div class="opts"><button data-k="a">Porque readStringUntil não existe sem isso.</button><button data-k="b">Para não travar o loop() esperando o tempo limite quando não há nada digitado.</button><button data-k="c">Para acelerar o printf.</button></div>
+    <div class="fb">readStringUntil bloqueia; verificar antes evita bloquear sem necessidade.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a diferença entre = e ==?</b></span><span class="bk">= atribui um valor; == compara dois valores e devolve true ou false.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que String pode ser um problema no ESP32?</b></span><span class="bk">Concatenações repetidas podem fragmentar a RAM, que é pouca.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o operador ternário?</b></span><span class="bk">É um if/else compacto que devolve um valor: condição ? a : b.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o %s com uma String?</b></span><span class="bk">Imprime o texto, desde que você passe nome.c_str().</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">Até aqui o ESP32 só mandou sinais. Como ele passa a ler o mundo, começando por um botão?</div><p>Com um pino de entrada.</p></div>
+</section>
+
+</article>
+</body>
+</html>

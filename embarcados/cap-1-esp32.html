@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: O ESP32 e o mundo embarcado | Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/emb.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 1</div>
+  <h1>O ESP32 e o mundo embarcado</h1>
+  <p class="sub">O que é um dispositivo restrito, como o ESP32 se compara ao Arduino e ao ESP8266 e o ciclo de qualquer sistema embarcado.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">classifique as placas</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo. Você não precisa de eletrônica: basta já ter programado um pouco. Ele apresenta a placa que acompanha o resto da apostila, o <b>ESP32</b>, e a ideia por trás de qualquer sistema embarcado.</div>
+<section class="sec" id="dispositivos">
+  <h2><span class="sn">1</span>Dois grupos de dispositivos</h2>
+  <p class="gancho">Nem todo computador tem sistema operacional.</p>
+  <p>Dispositivos que carregam "inteligência" se dividem em dois grandes grupos:</p>
+  <div class="grid2">
+    <div class="card rv"><b>Robustos</b><p>Exemplo: <b>Raspberry Pi 5</b>. Rodam um <b>sistema operacional de propósito geral</b> (Linux), têm de centenas de MB a vários GB de RAM, CPU de vários núcleos na casa de GHz, saída de vídeo, WiFi, Bluetooth e Ethernet. Exigem energia contínua ou uma bateria bem forte.</p></div>
+    <div class="card rv"><b>Restritos</b><p>Exemplos: <b>Arduino, ESP32</b>. São <b>microcontroladores (MCU)</b> de 8, 16 ou 32 bits, com RAM e memória flash na casa de centenas de KB a poucos MB. <b>Não executam sistema operacional geral</b>, mas têm pinos para sensores e atuadores e consomem muito pouco: uma bateria pode durar dias, meses ou anos.</p></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Dentro dos restritos, qual placa escolher?</div><p>Depende do que ela precisa fazer.</p></div>
+</section>
+
+<section class="sec" id="placas">
+  <h2><span class="sn">2</span>Arduino, ESP8266 e ESP32</h2>
+  <p class="gancho">Uma linha do tempo de três placas.</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Arduino</th><th>ESP8266</th><th>ESP32</th></tr>
+    <tr><td><b>Ano</b></td><td>2005 (ATmega8)</td><td>2014</td><td>2016</td></tr>
+    <tr><td><b>Processador</b></td><td>8 bits</td><td>capacidade baixa</td><td><b>dual-core de 32 bits</b></td></tr>
+    <tr><td><b>WiFi</b></td><td>não nativo (precisa de uma placa de expansão)</td><td>nativo</td><td>nativo</td></tr>
+    <tr><td><b>Bluetooth</b></td><td>não</td><td>não</td><td>sim, incluindo BLE (baixo consumo)</td></tr>
+    <tr><td><b>IoT e IA</b></td><td>pouco ou nenhum suporte</td><td>pouco suporte</td><td>suporte pleno, inclusive visão computacional</td></tr>
+  </table></div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="ard:Arduino|e82:ESP8266|e32:ESP32">
+    <div class="item" data-ans="e32"><p>Lançado em 2016, com CPU de 2 núcleos e 32 bits, WiFi e Bluetooth.</p><span class="why">Dual-core, 32 bits e Bluetooth são do ESP32.</span></div>
+    <div class="item" data-ans="ard"><p>Surgiu em 2005 com um ATmega de 8 bits e, por si só, não tem WiFi.</p><span class="why">É a revolução eletrônica do Arduino: simples, de 8 bits, sem rede nativa.</span></div>
+    <div class="item" data-ans="e82"><p>Trouxe WiFi nativo em 2014, mas com capacidade de processamento muito baixa.</p><span class="why">O ESP8266 popularizou o WiFi barato, mas é fraco para IA.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <p>O <b>ESP32</b> é o dispositivo usado no resto desta apostila: pequeno, barato, com WiFi e Bluetooth nativos e processamento suficiente para IA leve. Ele é o <b>cérebro</b>: o resto do circuito (LEDs, botões, sensores) é conectado a ele. Mas o chip sozinho é pequeno e delicado, por isso vem em uma <b>placa de desenvolvimento</b> (como a <b>NodeMCU</b>, uma plataforma aberta em que o chip é soldado em uma placa com conexão <b>USB</b>) e existem variantes, como a <b>ESP32-CAM</b>, com câmera.</p>
+</section>
+
+<section class="sec" id="ciclo">
+  <h2><span class="sn">3</span>O ciclo de três passos</h2>
+  <p class="gancho">Sentir, pensar, agir. Para sempre.</p>
+  <ol>
+    <li>Um <b>sensor</b> capta uma medição do ambiente (temperatura, luz, um clique).</li>
+    <li>O <b>dispositivo</b> (o ESP32) processa o dado.</li>
+    <li>Ele <b>toma uma ação</b>: acende uma luz, liga um motor, mostra um alerta.</li>
+  </ol>
+  <p><b>Sensores</b> são entradas (<i>input</i>): pegam algo do ambiente e levam para dentro do dispositivo. <b>Atuadores</b> são saídas (<i>output</i>): levam algo do dispositivo para o ambiente. O <b>LED</b> é o componente mais usado de todos. Outros que aparecem ao longo do caminho:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Componente</th><th>Função</th><th>Tipo</th></tr>
+    <tr><td>LED</td><td>emite luz</td><td>saída</td></tr>
+    <tr><td>Buzzer</td><td>emite som</td><td>saída</td></tr>
+    <tr><td>Botão (push button)</td><td>liga/desliga um sinal</td><td>entrada</td></tr>
+    <tr><td>DHT22</td><td>temperatura e umidade</td><td>entrada</td></tr>
+    <tr><td>LDR</td><td>luminosidade</td><td>entrada</td></tr>
+    <tr><td>HC-SR04</td><td>distância (ultrassom)</td><td>entrada</td></tr>
+    <tr><td>PIR</td><td>presença</td><td>entrada</td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">Isso é só o começo</span>A aplicação de IoT vem depois: ligar esse ciclo à internet (WiFi) e a modelos de IA. Mas tudo começa em um ESP32 que sabe ler um pino, decidir e escrever em outro.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Robustos</b> (Raspberry Pi: SO geral, GB de RAM) x <b>restritos</b> (Arduino, ESP32: microcontrolador, sem SO, consumo mínimo).</li><li><b>Arduino</b> (2005, 8 bits, sem WiFi), <b>ESP8266</b> (2014, WiFi, fraco), <b>ESP32</b> (2016, dual-core 32 bits, WiFi + Bluetooth/BLE, IA).</li><li>O ESP32 é o <b>cérebro</b>; vem numa <b>placa de desenvolvimento</b> (NodeMCU) com USB.</li><li>Ciclo: <b>sensor → processa → age</b>. Sensor é entrada; atuador é saída.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Qual característica define um dispositivo 'restrito'?</p>
+    <div class="opts"><button data-k="a">Roda Linux.</button><button data-k="b">Precisa de energia ininterrupta.</button><button data-k="c">É um microcontrolador, sem sistema operacional de propósito geral e com consumo muito baixo.</button></div>
+    <div class="fb">Restritos (Arduino, ESP32) são MCUs de baixo consumo. Robustos (Raspberry Pi) rodam um SO geral.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">O que o ESP32 tem que o Arduino original não tinha?</p>
+    <div class="opts"><button data-k="a">WiFi e Bluetooth nativos e CPU de 32 bits com dois núcleos.</button><button data-k="b">Apenas mais pinos.</button><button data-k="c">Sistema operacional Linux.</button></div>
+    <div class="fb">É a combinação de conectividade e processamento que o torna adequado a IoT e IA leve.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Um buzzer, que emite som, é...</p>
+    <div class="opts"><button data-k="a">Um sensor de entrada.</button><button data-k="b">Um atuador, ou seja, uma saída.</button><button data-k="c">Uma placa de desenvolvimento.</button></div>
+    <div class="fb">Saída leva algo do dispositivo para o ambiente; sensor traz do ambiente para o dispositivo.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma placa de desenvolvimento?</b></span><span class="bk">O chip soldado numa placa com USB e pinos, para facilitar programar e prototipar (por exemplo, NodeMCU).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais os três passos do ciclo embarcado?</b></span><span class="bk">O sensor capta, o ESP32 processa, e ele toma uma ação.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que significa BLE?</b></span><span class="bk">Bluetooth Low Energy: Bluetooth de baixo consumo.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Sensor x atuador?</b></span><span class="bk">Sensor é entrada (ambiente → dispositivo). Atuador é saída (dispositivo → ambiente).</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Já sei o que é a placa. Como se escreve um programa para ela, e onde os erros aparecem?</div><p>Em C++, que é compilado.</p></div>
+</section>
+
+</article>
+</body>
+</html>

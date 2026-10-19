@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: O sensor DHT22 e o índice de calor | Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/emb.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Aula 7</div>
+  <h1>O sensor DHT22 e o índice de calor</h1>
+  <p class="sub">Ler temperatura e umidade com uma biblioteca externa, tratar falhas, alertar e calcular o índice de calor.</p>
+  <div class="meta"><span class="chip"><b>~50 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">DHT22 virtual com índice de calor</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>O botão lê dois estados. O <b>DHT22</b> lê <b>números</b> do ambiente, com uma biblioteca externa, risco de falha e a necessidade de decidir a partir do valor. É a síntese do que veio antes: pinos, tipos, <code>printf</code>, <code>if</code> e <code>delay</code>.</div>
+<section class="sec" id="porque">
+  <h2><span class="sn">1</span>Por que medir temperatura e umidade</h2>
+  <p class="gancho">Um problema real: conservar coisas sensíveis.</p>
+  <p>Acervos de livros antigos, remédios e alimentos estragam com <b>calor e umidade</b> fora da faixa. Um sistema IoT que mede e alerta é a solução óbvia: sensor, ESP32 e um alerta (LED, buzzer, mensagem). Os sensores mais comuns:</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>DHT11</th><th>DHT22</th><th>SHT40</th></tr>
+    <tr><td><b>Precisão (temperatura)</b></td><td>±2 °C</td><td>±0,5 °C</td><td>±0,2 °C</td></tr>
+    <tr><td><b>Faixa (temperatura)</b></td><td>0 a 50 °C</td><td>−40 a 80 °C</td><td>−40 a 125 °C</td></tr>
+    <tr><td><b>Precisão (umidade)</b></td><td>±5 % UR</td><td>±2 a 5 % UR</td><td>±1,8 % UR</td></tr>
+    <tr><td><b>Faixa (umidade)</b></td><td>20 a 80 %</td><td>0 a 100 %</td><td>0 a 100 %</td></tr>
+    <tr><td><b>Intervalo entre leituras</b></td><td>1 s</td><td><b>2 s</b></td><td>várias por segundo</td></tr>
+    <tr><td><b>Resumo</b></td><td>o mais barato</td><td>mais preciso</td><td>o mais preciso e o mais usado em produto</td></tr>
+  </table></div>
+  <p>O DHT22 liga com quatro pinos: <b>VCC</b> em 3,3 V, <b>GND</b> no GND, <b>DATA</b> em um GPIO e um pino <b>NC</b> (não conectado). UR é umidade relativa.</p>
+</section>
+
+<section class="sec" id="codigo">
+  <h2><span class="sn">2</span>O código, peça por peça</h2>
+  <p class="gancho">A primeira biblioteca externa do projeto.</p>
+  <p>A biblioteca da Adafruit entra no <code>platformio.ini</code>, e o PlatformIO a baixa sozinho no primeiro build:</p>
+<pre><code>lib_deps =
+    adafruit/DHT sensor library @ ^1.4.6</code></pre>
+<pre><code><span class="k">#include</span> &lt;Arduino.h&gt;
+<span class="k">#include</span> &lt;DHT.h&gt;
+
+<span class="k">#define</span> DHT_PIN 19
+<span class="k">#define</span> DHT_MODEL DHT22
+
+DHT sensor(DHT_PIN, DHT_MODEL);          <span class="c">// objeto: pino e modelo</span>
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  sensor.begin();                        <span class="c">// inicializa o sensor</span>
+  delay(2000);                           <span class="c">// espera antes da 1ª medição</span>
+}
+
+<span class="k">void</span> loop() {
+  float temp = sensor.readTemperature();
+  float umid = sensor.readHumidity();
+
+  <span class="k">if</span> (isnan(temp) || isnan(umid)) {      <span class="c">// leitura falhou?</span>
+    Serial.println("Falha na leitura!!!");
+    delay(2000);
+    <span class="k">return</span>;                              <span class="c">// encerra ESTA volta e tenta de novo</span>
+  }
+
+  Serial.printf("Temperatura: %.2f  |  Umidade: %.2f\r\n", temp, umid);
+
+  <span class="k">if</span> (temp &gt; 35) Serial.println("-- ALERTA -- Temperatura Alta!");
+  <span class="k">if</span> (umid &gt; 65) Serial.println("-- ALERTA -- Umidade Alta!");
+
+  delay(2000);                           <span class="c">// o DHT22 só lê a cada 2 s</span>
+}</code></pre>
+  <ul>
+    <li><code>DHT sensor(DHT_PIN, DHT_MODEL);</code> cria um <b>objeto</b> da biblioteca. Daí em diante tudo é <code>sensor.alguma_coisa()</code>.</li>
+    <li><code>isnan()</code> (<i>is not a number</i>): quando a leitura falha, o sensor devolve <code>NaN</code>. Testa-se <b>antes</b> de usar o valor.</li>
+    <li><code>return</code> dentro do <code>loop()</code> <b>não para o programa</b>: só encerra esta volta; o framework chama o <code>loop()</code> de novo.</li>
+    <li>O <code>delay(2000)</code> respeita o intervalo mínimo do DHT22. O <code>delay</code> dentro do bloco de erro evita tentar de novo antes de 2 s.</li>
+    <li>Dois <code>if</code> <b>separados</b>, e não <code>if/else</code>: os dois alertas podem ocorrer juntos.</li>
+  </ul>
+  <p>No simulador, é possível ajustar a temperatura e a umidade do sensor virtual na mão, como no Wokwi. Faça o mesmo aqui:</p>
+  <div class="demo" data-demo="dht"></div>
+</section>
+
+<section class="sec" id="calor">
+  <h2><span class="sn">3</span>Índice de calor: o calor que se sente</h2>
+  <p class="gancho">Temperatura e umidade juntas valem mais que cada uma.</p>
+  <p>O <b>índice de calor</b> é a temperatura que o corpo <b>sente</b>: com o ar úmido, o suor evapora pior e o mesmo calor parece maior. A biblioteca já calcula:</p>
+<pre><code>float ic = sensor.computeHeatIndex(temp, umid, false);   <span class="c">// false = em Celsius</span></code></pre>
+  <div class="ex rv"><span class="t">Exemplo resolvido: duas leituras e um limite de 25</span>
+    <div class="l"><div><b>24 °C e 40%</b>: o índice de calor é cerca de <b>23,5 °C</b>. Menor que 25, então o LED fica <b>apagado</b>.</div></div>
+    <div class="l"><div><b>27 °C e 60%</b>: o índice sobe para cerca de <b>28,1 °C</b>, acima da temperatura real, por causa da umidade. Maior que 25: LED <b>aceso</b>.</div></div>
+    <div class="l"><div>Para <b>32 °C e 70%</b> o índice chega a cerca de <b>40,4 °C</b>: a sensação é 8 °C acima do termômetro. (Valores calculados com a lógica da biblioteca da Adafruit: média de Steadman em valores baixos e regressão de Rothfusz acima de cerca de 80 °F. É complemento: a aula não detalhou a fórmula, e os decimais podem diferir da sua versão. A regressão de Rothfusz pura daria 25,3 para 24 °C e 40%, e não 23,5.)</div></div>
+  </div>
+  <div class="ex rv"><span class="t">Atividade para você: LED de alerta</span>
+    <div class="l"><div>Monte ESP32 + LED + DHT22 (por exemplo, DHT no GPIO 26 e LED no 25). Leia temperatura e umidade e mostre no Monitor Serial. Se as leituras forem válidas, calcule o índice de calor (<code>ic</code>).</div></div>
+    <div class="l"><div>Se <code>ic &gt; 25</code>, acenda o LED e mostre o aviso com o valor. Depois de 3 segundos, apague o LED e meça de novo. Teste com valores acima e abaixo do limite.</div></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado com o intervalo</span>Um <code>delay(2000)</code> faltando antes do <code>return</code> do caso de erro faz o <code>loop()</code> pedir outra leitura na hora, antes dos 2 s que o DHT22 precisa. O resultado são falhas em série.</div>
+</section>
+
+<section class="sec" id="dataset">
+  <h2><span class="sn">4</span>De sensor a dataset</h2>
+  <p class="gancho">Medir é o primeiro passo de ensinar uma máquina.</p>
+  <p>Se cada leitura sair em <b>uma linha CSV</b>, o Monitor Serial vira uma fonte de dados: basta imprimir o cabeçalho uma vez e uma linha por leitura.</p>
+<pre><code><span class="c">// globais, fora do setup() e do loop():</span>
+int id = 0;
+String classe = "normal";   <span class="c">// o rótulo da linha: você decide como defini-lo</span>
+<span class="c">// no setup():</span>
+Serial.println("id,temperatura,umidade,classe");
+<span class="c">// no loop(), a cada leitura válida:</span>
+Serial.printf("%d,%.2f,%.2f,%s\r\n", id++, temp, umid, classe.c_str());</code></pre>
+  <p>Copiar a saída para um arquivo <code>.csv</code> e abri-lo com o Pandas leva ao mundo do machine learning, que usa o mesmo formato do conjunto Iris. A diferença é que aqui <b>você cria o próprio conjunto</b>, e a coluna de <b>classe</b> (o rótulo que diz o que cada linha representa) é sua responsabilidade: sem ela não existe classificação supervisionada. O valor de uma solução costuma estar em <b>modelo próprio com dados próprios</b>, e em saber explicar como os dados foram coletados.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo (e da apostila)</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>DHT22</b>: ±0,5 °C, −40 a 80 °C, leitura a cada <b>2 s</b>. Pinos: VCC (3,3 V), GND, DATA (um GPIO), NC.</li><li>Biblioteca externa em <code>lib_deps</code>; objeto <code>DHT sensor(pino, modelo)</code>; <code>sensor.begin()</code> no setup.</li><li><code>isnan()</code> antes de usar a leitura; <code>return</code> encerra só a volta do loop.</li><li>Dois <code>if</code> separados para alertas independentes. Respeite o intervalo do sensor com <code>delay</code>.</li><li><b>Índice de calor</b> junta temperatura e umidade (<code>computeHeatIndex(t, u, false)</code>). Saída em CSV leva ao dataset e ao machine learning.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O que isnan(temp) testa?</p>
+    <div class="opts"><button data-k="a">Se a temperatura é negativa.</button><button data-k="b">Se a leitura falhou e veio NaN, para não usar um valor inválido.</button><button data-k="c">Se a temperatura é maior que 35.</button></div>
+    <div class="fb">Se o sensor falha, o valor é 'not a number'. O teste vem antes de imprimir ou comparar.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual o intervalo mínimo entre leituras do DHT22?</p>
+    <div class="opts"><button data-k="a">100 ms.</button><button data-k="b">1 s.</button><button data-k="c">2 s.</button></div>
+    <div class="fb">O DHT11 lê a cada 1 s; o DHT22, a cada 2 s.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O que o 'false' em computeHeatIndex(temp, umid, false) faz?</p>
+    <div class="opts"><button data-k="a">Calcula o índice em graus Celsius.</button><button data-k="b">Desliga o sensor.</button><button data-k="c">Ignora a umidade.</button></div>
+    <div class="fb">O terceiro argumento indica se a temperatura está em Fahrenheit; false significa Celsius.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o índice de calor?</b></span><span class="bk">A temperatura que o corpo sente, combinando temperatura e umidade.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que dois if e não if/else nos alertas?</b></span><span class="bk">Porque temperatura alta e umidade alta podem acontecer ao mesmo tempo.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o return faz dentro do loop()?</b></span><span class="bk">Encerra só aquela volta. O loop() é chamado de novo logo em seguida.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é a coluna de classe de um dataset?</b></span><span class="bk">O rótulo de cada linha, necessário para o aprendizado supervisionado.</span></button></div>
+  <div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Do LED ao sensor, de um pino a um dataset.</div><p>O passo seguinte é levar esses dados para a rede (servidor web no próprio ESP32 e nuvem). Tudo o que foi visto aqui, de pinos a Serial, é a base dessa conversa.</p></div>
+</section>
+
+</article>
+</body>
+</html>

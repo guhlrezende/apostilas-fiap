@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+</head>
+<body data-hub data-root="../">
+<article class="paper">
+  <header class="capa">
+    <div class="kicker">Sistemas Embarcados e Sensores com ESP32</div>
+    <h1>Apostila de Sistemas Embarcados com ESP32</h1>
+    <p class="sub">Do LED que pisca ao sensor de temperatura, com C++ no ESP32, o Monitor Serial e circuitos para entender sem montar nada.</p>
+    <div class="meta"><span class="chip"><b>7</b> capítulos</span><span class="chip"><b>~4h55</b> de estudo ativo</span><span class="chip">circuitos e Serial simulados</span></div>
+    <span class="num">SI</span>
+  </header>
+
+  <section class="sec">
+    <h2><span class="sn">1</span>A história que esta apostila conta</h2>
+    <p>A história é a de um <mark class="hl">computador minúsculo que fala com o mundo físico</mark>. Primeiro conhecemos a placa e o que a separa de um computador comum. Depois aprendemos a escrever e compilar o programa, escolher os pinos e acender um LED sem queimá-lo. Em seguida vem a lógica (setup, loop, variáveis, strings), a primeira entrada (um botão) e, por fim, o primeiro sensor de verdade, o DHT22. Cada capítulo termina com a pergunta que o próximo responde.</p>
+    <div class="thread" id="thread"></div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="sn">2</span>Os capítulos</h2>
+    <div class="hubgrid" id="caps"></div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="sn">3</span>Como estudar com isto aqui</h2>
+    <div class="grid2">
+      <div class="nota"><span class="lbl">Dica</span>Faça um capítulo por sessão. Leia o <b>gancho</b> do começo, mexa em <b>todas</b> as demos (é onde a ideia fixa) e só então abra as respostas dos testes.</div>
+      <div class="nota lembra"><span class="lbl">Lembra</span>Os códigos seguem o estilo das aulas e foram revisados à mão, <b>sem compilar neste ambiente</b>: compile no seu PlatformIO antes de confiar. Os simuladores da página mostram o comportamento esperado, mas não substituem o Monitor Serial real. Material complementar (como <code>millis()</code> e debounce) vem marcado.</div>
+    </div>
+  </section>
+
+  <footer class="rodape">Atualizada nos domingos, conforme as aulas da semana. Projeto de estudo, feito a partir das anotações pessoais de aula.</footer>
+</article>
+</body>
+</html>

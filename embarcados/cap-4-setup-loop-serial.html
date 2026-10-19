@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: setup, loop, Serial e a lógica | Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/emb.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aulas 2, 4 e 6</div>
+  <h1>setup, loop, Serial e a lógica</h1>
+  <p class="sub">O modelo de execução do ESP32, o Monitor Serial, variáveis globais e as quatro estruturas da lógica.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">Monitor Serial simulado</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 o LED piscou com um <code>setup()</code> e um <code>loop()</code> que você ainda não abriu. Agora o modelo de execução, o <b>Monitor Serial</b> (a janela do ESP32 para o mundo) e as <b>quatro estruturas</b> que formam qualquer lógica de programação.</div>
+<section class="sec" id="modelo">
+  <h2><span class="sn">1</span>O modelo: setup uma vez, loop para sempre</h2>
+  <p class="gancho">Você escreve duas funções; o framework as chama.</p>
+  <p>Todo programa de ESP32 no estilo Arduino tem as duas funções, e quem as chama é o framework, e não você. Na prática é como se o firmware fizesse:</p>
+<pre><code>setup();            <span class="c">// uma vez, logo depois de ligar ou reiniciar</span>
+while (true) {
+  loop();           <span class="c">// repetidamente, enquanto houver energia</span>
+}</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Função</th><th>Quando roda</th><th>Para quê</th></tr>
+    <tr><td><code>void setup()</code></td><td>uma única vez</td><td>inicializar: <code>Serial.begin()</code>, <code>pinMode()</code>, conexões, sensores</td></tr>
+    <tr><td><code>void loop()</code></td><td>continuamente</td><td>operar: ler sensores, decidir, acionar saídas, imprimir</td></tr>
+  </table></div>
+  <p>Consequência prática: <b>o valor que precisa sobreviver entre as voltas do <code>loop()</code> não pode ser declarado dentro dele</b>. Variáveis declaradas dentro de uma função são <b>locais</b> (recriadas a cada chamada). Variáveis declaradas <b>fora</b> de qualquer função são <b>globais</b> e mantêm o valor.</p>
+</section>
+
+<section class="sec" id="serial">
+  <h2><span class="sn">2</span>O Monitor Serial</h2>
+  <p class="gancho">Como a placa fala com você.</p>
+  <ul>
+    <li><code>Serial.begin(115200)</code> abre a comunicação serial a 115200 bits por segundo (a <i>velocidade de comunicação</i>). O Monitor Serial precisa estar configurado na <b>mesma</b> velocidade; senão aparecem caracteres aleatórios.</li>
+    <li><code>Serial.println(x)</code> imprime e <b>quebra a linha</b>. <code>Serial.print(x)</code> imprime <b>sem</b> quebrar. Ambos aceitam texto e números.</li>
+    <li>Todo comando termina em <code>;</code>: o compilador usa o ponto e vírgula, e não a quebra de linha, como delimitador.</li>
+  </ul>
+  <p>Experimente: mude se a variável é global ou local, se a impressão quebra linha e o <code>delay</code>:</p>
+  <div class="demo" data-demo="serial"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: o contador que não conta</span>
+    <div class="l"><div>Código: <code>void loop() { int id = 0; id = id + 1; Serial.println(id); delay(2000); }</code>.</div></div>
+    <div class="l"><div>A cada volta, o <code>int id = 0;</code> roda de novo: <code>id</code> é recriado como 0, soma 1 e imprime <b>1</b>. Sempre 1.</div></div>
+    <div class="l"><div>Correção: mover <code>int id = 0;</code> para <b>fora</b> do <code>loop()</code>, antes do <code>setup()</code>. Agora <code>id</code> é criado uma só vez, e o <code>id = id + 1</code> acumula: 1, 2, 3...</div></div>
+  </div>
+</section>
+
+<section class="sec" id="logica">
+  <h2><span class="sn">3</span>As quatro estruturas da lógica de programação</h2>
+  <p class="gancho">Sequência, decisão, repetição e função.</p>
+  <div class="grid2">
+    <div class="card rv"><b>1. Instruções sequenciais</b><p>Executadas uma após a outra, na ordem, como uma receita.</p><pre><code>int a = 5;
+int b = 2;
+int resultado = a + b;</code></pre></div>
+    <div class="card rv"><b>2. Condicionais</b><p>Decisões a partir de uma condição.</p><pre><code>int temperatura = 32;
+if (temperatura &gt; 30) {
+  Serial.println("Ligue o ventilador.");
+} else {
+  Serial.println("Temperatura agradável.");
+}</code></pre></div>
+    <div class="card rv"><b>3. Repetição</b><p>Repete sem você escrever cada vez.</p><pre><code>for (int i = 1; i &lt;= 10; i++) {
+  Serial.println("Flexão número " + String(i));
+}</code></pre></div>
+    <div class="card rv"><b>4. Funções</b><p>Um bloco com nome, chamado quando preciso.</p><pre><code>void abrirPorta() {
+  Serial.println("Girando a maçaneta...");
+  Serial.println("Porta aberta!");
+}
+void setup() {
+  Serial.begin(115200);
+  abrirPorta();
+}</code></pre></div>
+  </div>
+  <p>É a mesma lógica que você usa em Python, com duas diferenças: <b>chaves <code>{ }</code> e ponto e vírgula</b> em vez de indentação, e o programa é <b>compilado</b>, em vez de interpretado.</p>
+  <div class="nota lembra"><span class="lbl">Uma regra de organização</span>Em qualquer aplicação: (1) defina os sensores e atuadores; (2) atribua os <b>pinos</b> antes do <code>setup()</code> (<code>#define LED 22</code> ou <code>const int LED = 22;</code>); (3) configure cada pino no <code>setup()</code>, com <code>INPUT</code> para sensor e <code>OUTPUT</code> para atuador. Trocar um pino fica sendo editar um só lugar.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><code>setup()</code> roda <b>uma vez</b>; <code>loop()</code> repete <b>para sempre</b>. O framework chama as duas.</li><li><code>Serial.begin(115200)</code> e o monitor na <b>mesma velocidade</b>. <code>println</code> quebra linha; <code>print</code> não.</li><li>Estado que sobrevive entre voltas do loop = variável <b>global</b>. Dentro do loop é <b>local</b> e é recriada.</li><li>Quatro estruturas: sequência, condicional (<code>if/else</code>), repetição (<code>for</code>) e função.</li><li>Organize: pinos antes do <code>setup()</code>, <code>pinMode</code> no <code>setup()</code>, uso no <code>loop()</code>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Um contador declarado dentro do loop() imprime sempre 1. Por quê?</p>
+    <div class="opts"><button data-k="a">Porque o delay reinicia a placa.</button><button data-k="b">Porque a variável local é recriada em 0 a cada volta.</button><button data-k="c">Porque println só imprime 1.</button></div>
+    <div class="fb">Variáveis locais vivem só durante a chamada. Para guardar o valor, declare fora do loop().</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">O Monitor Serial mostra caracteres aleatórios. Qual a causa mais provável?</p>
+    <div class="opts"><button data-k="a">Velocidade diferente de 115200 no monitor.</button><button data-k="b">Falta de ponto e vírgula.</button><button data-k="c">O LED está ao contrário.</button></div>
+    <div class="fb">As duas pontas da comunicação precisam usar a mesma velocidade.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Qual a diferença entre print e println?</p>
+    <div class="opts"><button data-k="a">println só imprime números.</button><button data-k="b">print é mais rápido.</button><button data-k="c">println quebra a linha ao final; print não.</button></div>
+    <div class="fb">Com print, as saídas ficam grudadas na mesma linha.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que roda no setup()?</b></span><span class="bk">A inicialização, uma única vez: Serial.begin, pinMode, configurações.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Variável global x local?</b></span><span class="bk">Global é declarada fora das funções e mantém o valor. Local é declarada dentro e é recriada a cada chamada.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o delay trava o programa?</b></span><span class="bk">Porque é uma pausa bloqueante: o processador espera, sem fazer mais nada.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a diferença de sintaxe C++ x Python?</b></span><span class="bk">C++ usa chaves e ponto e vírgula; Python usa indentação.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">Guardamos valores em variáveis. Que tipos existem, e como imprimir cada um do jeito certo?</div><p>Tipos, strings, operadores e printf.</p></div>
+</section>
+
+</article>
+</body>
+</html>

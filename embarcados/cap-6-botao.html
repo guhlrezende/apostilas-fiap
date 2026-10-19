@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Entradas: o botão, o pull-up e o delay que trava | Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/emb.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Aula 6</div>
+  <h1>Entradas: o botão, o pull-up e o delay que trava</h1>
+  <p class="sub">Ler um botão com INPUT_PULLUP, entender a lógica invertida e ver por que delay perde toques.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">pull-up e toques perdidos</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Nos capítulos anteriores o ESP32 só mandou sinais (<code>OUTPUT</code>). Agora ele <b>lê</b>: um botão. É o primeiro passo de uma lição maior: sensor é entrada, atuador é saída, e a lógica decide a ponte entre eles.</div>
+<section class="sec" id="pullup">
+  <h2><span class="sn">1</span>O botão e o INPUT_PULLUP</h2>
+  <p class="gancho">Apertar dá LOW. Sim, ao contrário.</p>
+  <p>Um botão simples liga ou desliga um caminho elétrico. Se ele for ligado entre o pino e o <b>GND</b>, apertá-lo puxa o pino para 0 V. Mas e quando está solto? O pino fica "no ar", e um pino sem ligação definida <b>flutua</b>, captando ruído. A solução é o <b>resistor de pull-up</b>, que mantém o pino em HIGH quando nada o puxa. O ESP32 já tem um interno: basta <code>pinMode(pino, INPUT_PULLUP)</code>.</p>
+  <div class="demo" data-demo="botao"></div>
+  <p>Resultado: <b>solto = HIGH, pressionado = LOW</b>. A lógica fica <b>invertida</b>, e é o ponto que mais derruba quem está começando. O botão não precisa de resistor externo; o LED, sim. <i>Complemento:</i> no ESP32, os GPIOs 34, 35, 36 e 39 (só entrada) <b>não têm pull-up interno</b>; para um botão neles, use um resistor externo.</p>
+<pre><code><span class="k">#define</span> LED_PIN 26
+<span class="k">#define</span> BTN_PIN 21
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BTN_PIN, INPUT_PULLUP);       <span class="c">// entrada com pull-up interno</span>
+}
+
+<span class="k">void</span> loop() {
+  <span class="k">if</span> (digitalRead(BTN_PIN) == LOW) {    <span class="c">// LOW = botão pressionado</span>
+    Serial.println("Botão pressionado!");
+    digitalWrite(LED_PIN, HIGH);
+  } <span class="k">else</span> {
+    digitalWrite(LED_PIN, LOW);
+  }
+  delay(50);
+}</code></pre>
+  <p>Aqui as estruturas condicionais saem da teoria: o <code>if/else</code> decide a partir de uma <b>leitura do mundo real</b>.</p>
+</section>
+
+<section class="sec" id="delay">
+  <h2><span class="sn">2</span>O preço do delay</h2>
+  <p class="gancho">Quando o processador dorme, o mundo continua.</p>
+  <p>Um código típico faz o LED piscar quando o botão é apertado, com <code>delay(1000)</code> duas vezes (aceso e apagado). Durante esses 2 segundos o ESP32 está <b>"surdo"</b>: não lê o botão. Quanto isso custa? A demo simula um botão apertado a cada 0,7 s por 10 s (cada toque dura 150 ms) e mostra quantos toques o programa percebe, conforme o intervalo entre leituras:</p>
+  <div class="demo" data-demo="bloqueio"></div>
+  <div class="nota lembra"><span class="lbl">Complemento: millis() e debounce</span>A saída é <b>não bloquear</b>: em vez de <code>delay</code>, guarde o instante da última ação e compare com <code>millis()</code> (milissegundos desde que a placa ligou):<pre><code>unsigned long ultimo = 0;
+const unsigned long INTERVALO = 500;
+bool ledLigado = false;
+
+void loop() {
+  unsigned long agora = millis();
+  if (agora - ultimo &gt;= INTERVALO) {     <span class="c">// passou 500 ms?</span>
+    ultimo = agora;
+    ledLigado = !ledLigado;
+    digitalWrite(LED_PIN, ledLigado);
+  }
+  <span class="c">// o loop segue livre: dá para ler o botão a cada volta</span>
+}</code></pre>O LED pisca igual, mas o <code>loop()</code> continua rodando e lendo o botão. E um botão mecânico "quica" por alguns milissegundos ao ser apertado (<i>bounce</i>), o que pode gerar vários cliques de um só: o <i>debounce</i> ignora mudanças muito próximas no tempo.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">3</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Entrada</b>: <code>pinMode(pino, INPUT_PULLUP)</code> e <code>digitalRead(pino)</code>.</li><li>Com pull-up: <b>solto = HIGH, apertado = LOW</b> (lógica invertida). Sem pull-up, o pino <b>flutua</b> e lê valores aleatórios.</li><li>O botão não precisa de resistor externo com <code>INPUT_PULLUP</code>; o LED precisa do dele.</li><li><code>delay</code> deixa o ESP32 <b>surdo</b>: toques entre leituras se perdem. Solução: <code>millis()</code> (complemento), e debounce para o 'quique' do botão.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Com INPUT_PULLUP, qual o valor lido quando o botão está solto?</p>
+    <div class="opts"><button data-k="a">HIGH.</button><button data-k="b">LOW.</button><button data-k="c">Aleatório.</button></div>
+    <div class="fb">O resistor interno mantém o pino em HIGH; apertar liga ao GND e dá LOW.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">O que acontece se você usar INPUT puro, sem resistor externo, com o botão solto?</p>
+    <div class="opts"><button data-k="a">Lê sempre LOW.</button><button data-k="b">Lê sempre HIGH.</button><button data-k="c">O pino flutua e a leitura é imprevisível.</button></div>
+    <div class="fb">Sem referência, o pino capta ruído. Por isso o pull-up.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Por que um delay(2000) no loop() faz o programa perder toques do botão?</p>
+    <div class="opts"><button data-k="a">Porque o botão tem defeito.</button><button data-k="b">Porque durante o delay o processador não lê o pino.</button><button data-k="c">Porque o delay desliga o pull-up.</button></div>
+    <div class="fb">O delay é bloqueante: nada mais roda enquanto ele espera.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que apertar o botão dá LOW?</b></span><span class="bk">O botão liga o pino ao GND, e o pull-up interno mantém HIGH quando solto.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um pino flutuando?</b></span><span class="bk">Um pino sem nível definido, que capta ruído e lê valores aleatórios.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o millis()?</b></span><span class="bk">Devolve os milissegundos desde que a placa ligou: serve para medir tempo sem bloquear.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é debounce?</b></span><span class="bk">Ignorar mudanças muito próximas no tempo, causadas pelo 'quique' mecânico do botão.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">Do botão (liga/desliga) para o sensor de verdade, que mede números do ambiente.</div><p>O DHT22.</p></div>
+</section>
+
+</article>
+</body>
+</html>

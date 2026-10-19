@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: Programar o ESP32: C++, build e ambiente | Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/emb.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aulas 1 e 2</div>
+  <h1>Programar o ESP32: C++, build e ambiente</h1>
+  <p class="sub">Por que C++ compilado muda a forma de errar, e como montar o ambiente de desenvolvimento.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">em que etapa cada erro aparece</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 você conheceu a placa. Agora o programa que roda nela: <b>C++</b>, uma linguagem <b>compilada</b>. Isso muda como os erros aparecem, e é o que este capítulo mostra, junto com as ferramentas do ambiente de desenvolvimento.</div>
+<section class="sec" id="compilado">
+  <h2><span class="sn">1</span>Compilado x interpretado</h2>
+  <p class="gancho">Em C++, o programa inteiro precisa estar certo antes de rodar.</p>
+  <p>Em <b>Python</b> (interpretado), o código é executado <b>linha a linha</b>: se há um erro, o interpretador para e aponta a linha. Em <b>C/C++</b> (compilado), um <b>compilador</b> converte o programa <b>inteiro</b> em código de máquina (um <code>.exe</code> no Windows; um <code>.elf</code> ou <code>.bin</code> para um ESP32). <b>O código só é executado se compilar sem erros.</b> O arquivo de programa de uma placa ESP32 usa a extensão <code>.ino</code>.</p>
+  <h3>As três etapas do build</h3>
+  <ol>
+    <li><b>Pré-processamento</b>: as diretivas <code>#include</code> e <code>#define</code> são resolvidas antes de qualquer compilação (por exemplo, trazem as bibliotecas).</li>
+    <li><b>Compilação</b>: o código-fonte vira código-objeto.</li>
+    <li><b>Linkagem</b>: as bibliotecas usadas são vinculadas ao seu código e gera-se o binário final.</li>
+  </ol>
+  <p>Escolha um erro e veja em que etapa ele aparece (ou se fica escondido):</p>
+  <div class="demo" data-demo="compila"></div>
+  <div class="nota cuidado"><span class="lbl">Sempre salve o arquivo</span>O compilador usa o arquivo <b>salvo em disco</b>, e não o que está na tela. Rodar sem salvar é rodar a versão anterior. É o erro mais bobo e um dos mais frequentes.</div>
+</section>
+
+<section class="sec" id="ambiente">
+  <h2><span class="sn">2</span>O ambiente: VSCode, PlatformIO e Wokwi</h2>
+  <p class="gancho">Três ferramentas, cada uma com um papel.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Ferramenta</th><th>Papel</th></tr>
+    <tr><td><b>VSCode</b></td><td>Editor de código. Vira um ambiente de desenvolvimento conforme as extensões instaladas.</td></tr>
+    <tr><td><b>PlatformIO</b> (extensão)</td><td>O <i>toolchain</i>: baixa o compilador do ESP32 e o framework Arduino, resolve dependências e <b>gera o binário</b> (<code>firmware.elf</code> e <code>firmware.bin</code>).</td></tr>
+    <tr><td><b>Wokwi</b> (extensão)</td><td>O <b>simulador</b>: pega o binário do PlatformIO e o executa em uma placa ESP32 virtual, com Monitor Serial e os componentes desenhados em um arquivo de circuito.</td></tr>
+  </table></div>
+  <p><b>PlatformIO compila, Wokwi simula.</b> Sem compilar antes, o simulador não tem o que executar. (O Wokwi também tem uma versão web, ótima para começar, mas a execução local evita limites de tempo e deixa o projeto em arquivos que você versiona.) O Wokwi pede uma licença gratuita para a extensão local. Alternativas: a Arduino IDE, mais simples, ou uma placa física, que exige o toolchain instalado.</p>
+  <h3>Os arquivos mínimos de um projeto</h3>
+<pre><code>meu-projeto/
+├── src/
+│   └── meuProjeto.ino     <span class="c"># o código</span>
+├── platformio.ini         <span class="c"># placa, plataforma e framework</span>
+├── diagram.json           <span class="c"># o circuito virtual do Wokwi</span>
+└── wokwi.toml             <span class="c"># aponta o Wokwi para o binário compilado</span></code></pre>
+<pre><code><span class="c"># platformio.ini</span>
+[env:esp32]
+platform = espressif32     <span class="c"># a família de chips (toolchain da Espressif)</span>
+framework = arduino        <span class="c"># usa a API Arduino: setup(), loop(), Serial, pinMode...</span>
+board = esp32dev           <span class="c"># placa genérica ESP32 DevKit</span>
+
+<span class="c"># wokwi.toml: a ponte entre as duas extensões</span>
+[wokwi]
+version = 1
+elf = ".pio/build/esp32/firmware.elf"
+firmware = ".pio/build/esp32/firmware.bin"</code></pre>
+  <p>No <code>diagram.json</code> ficam as peças e as ligações. Para o Monitor Serial aparecer, o circuito precisa ligar <code>esp:TX</code> a <code>$serialMonitor:RX</code> e <code>esp:RX</code> a <code>$serialMonitor:TX</code>. Sem essas duas ligações, o <code>Serial.println()</code> roda, mas você não vê nada.</p>
+</section>
+
+<section class="sec" id="checklist">
+  <h2><span class="sn">3</span>Checklist de depuração do ambiente</h2>
+  <p class="gancho">Quando "não funciona", comece por aqui.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Sintoma</th><th>Causa provável</th></tr>
+    <tr><td>Monitor Serial mudo</td><td><code>Serial.begin()</code> esquecido, velocidade diferente de 115200 no monitor, ou faltam as ligações TX/RX no <code>diagram.json</code></td></tr>
+    <tr><td>"firmware not found" no Wokwi</td><td>não compilou antes, ou o VSCode foi aberto na pasta errada (o <code>wokwi.toml</code> precisa estar na raiz)</td></tr>
+    <tr><td>Simulador não inicia</td><td>licença do Wokwi não ativada</td></tr>
+    <tr><td>A mudança não aparece</td><td>arquivo não salvo, ou salvou e não recompilou</td></tr>
+    <tr><td>Erro que parece estranho depois de reaproveitar um projeto</td><td>faça um <b>Clean</b> e depois um <b>Build</b> no PlatformIO</td></tr>
+  </table></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>C++ é compilado</b>: o programa inteiro precisa compilar antes de rodar. Python é interpretado, linha a linha.</li><li><b>Build em 3 etapas</b>: pré-processamento, compilação, linkagem. Erros de lógica e esquecimentos só aparecem na execução.</li><li><b>VSCode</b> edita, <b>PlatformIO</b> compila, <b>Wokwi</b> simula. Arquivos: <code>.ino</code>, <code>platformio.ini</code>, <code>diagram.json</code>, <code>wokwi.toml</code>.</li><li>Sempre <b>salvar</b> antes de compilar. Em dúvida, <b>Clean</b> e <b>Build</b>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Em que etapa aparece o erro 'DHT.h: No such file or directory'?</p>
+    <div class="opts"><button data-k="a">Na execução, no ESP32.</button><button data-k="b">No pré-processamento: o #include não encontra a biblioteca.</button><button data-k="c">Na linkagem.</button></div>
+    <div class="fb">É o #include que falha, e ele é resolvido na primeira etapa do build.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual a função do PlatformIO neste ambiente?</p>
+    <div class="opts"><button data-k="a">Simular o circuito.</button><button data-k="b">Escrever o código.</button><button data-k="c">Compilar o programa e gerar o binário.</button></div>
+    <div class="fb">O Wokwi simula; o PlatformIO compila. Sem compilar, o simulador não acha o firmware.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Você esqueceu o pinMode(pino, OUTPUT). O que acontece?</p>
+    <div class="opts"><button data-k="a">Compila normalmente, mas o LED não acende: é um erro silencioso.</button><button data-k="b">O compilador mostra um erro na linha.</button><button data-k="c">O ESP32 reinicia.</button></div>
+    <div class="fb">O compilador só pega erros de escrita. Esquecimentos aparecem no comportamento da placa.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a diferença entre compilar e interpretar?</b></span><span class="bk">Compilar converte o programa inteiro em binário antes de rodar. Interpretar executa linha a linha.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o wokwi.toml?</b></span><span class="bk">Aponta o Wokwi para o binário gerado pelo PlatformIO.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que sempre salvar o arquivo?</b></span><span class="bk">O compilador usa a versão salva em disco, e não a que aparece na tela.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um 'erro silencioso'?</b></span><span class="bk">Um erro que compila sem avisos mas faz a placa se comportar errado, como esquecer o pinMode.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">O código compila, mas a placa é feita de pinos. Quais usar, e como ligar um LED sem queimá-lo?</div><p>Conhecendo os GPIOs e fazendo a conta do resistor.</p></div>
+</section>
+
+</article>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: GPIO, LED e resistor | Apostila de Sistemas Embarcados com ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/emb.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Aulas 1, 2 e 6</div>
+  <h1>GPIO, LED e resistor</h1>
+  <p class="sub">Que pinos usar, como ligar um LED com o resistor certo e o primeiro programa de saída digital.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">mapa de pinos e calculadora de resistor</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Com o ambiente pronto, falta ligar algo ao ESP32. Este capítulo trata dos <b>pinos (GPIO)</b>, de como acender um <b>LED</b> sem queimá-lo e do primeiro programa de saída digital.</div>
+<section class="sec" id="gpio">
+  <h2><span class="sn">1</span>GPIO: os pinos de uso geral</h2>
+  <p class="gancho">Nem todo pino serve para tudo.</p>
+  <p><b>GPIO</b> significa <i>General Purpose Input/Output</i>: pinos que o programa pode configurar como <b>entrada</b> (ler um sinal) ou <b>saída</b> (emitir um sinal). A placa usada na disciplina tem <b>30 pinos</b>, divididos nos dois lados, mas há restrições. Clique nos pinos e teste uma combinação:</p>
+  <div class="demo" data-demo="gpio"></div>
+  <ul>
+    <li><b>Somente entrada</b>: GPIO <b>34, 35, 36 e 39</b>. São entradas analógicas (ADC1), usadas para medir sensores.</li>
+    <li><b>Reservados, não use</b>: GPIO <b>6 a 11</b>. Ligados à memória flash.</li>
+    <li><b>Serial do console</b>: GPIO <b>1 (TX)</b> e <b>3 (RX)</b>. Usá-los para outra função atrapalha o Monitor Serial.</li>
+    <li><b>GPIO 2</b>: ligado ao LED embutido da placa.</li>
+    <li><b>PWM no boot</b>: GPIO <b>0, 5, 13 e 14</b>. Cuidado com o que estiver ligado neles ao ligar a placa.</li>
+    <li>Todos os demais são livres, como entrada ou saída.</li>
+  </ul>
+</section>
+
+<section class="sec" id="led">
+  <h2><span class="sn">2</span>O LED: polaridade e resistor</h2>
+  <p class="gancho">Um LED é um diodo: tem lado certo, e não aguenta corrente livre.</p>
+  <p>O LED tem <b>anodo (+)</b>, a perna longa, e <b>catodo (−)</b>, a perna curta (lado chanfrado). Ele só conduz do anodo para o catodo. Ligado ao contrário, <b>não acende e não dá erro nenhum</b>, o que o torna um dos bugs mais chatos de achar. O lado positivo vem do pino do ESP32 (que "liga e desliga"); o negativo vai ao <b>GND</b>, um fio comum a todo o circuito, como um barramento.</p>
+  <p>O <b>resistor em série</b> é obrigatório: ele limita a corrente. Pela lei de Ohm, <code>R = (V_pino − V_LED) / I</code>. Com um LED vermelho (queda de cerca de 2,0 V) em um pino de 3,3 V e um resistor de 220 Ω, a corrente é <code>(3,3 − 2,0) / 220 ≈ 5,9 mA</code>: segura para o pino e suficiente para o brilho. Calcule o seu:</p>
+  <div class="demo" data-demo="ohm"></div>
+</section>
+
+<section class="sec" id="pisca">
+  <h2><span class="sn">3</span>O primeiro programa: pisca-pisca</h2>
+  <p class="gancho">Três passos que valem para qualquer saída.</p>
+  <ol>
+    <li><b>Definir o pino</b> do atuador, antes do <code>setup()</code>.</li>
+    <li><b>Configurar o pino</b> no <code>setup()</code>: <code>OUTPUT</code> para um atuador, <code>INPUT</code> para um sensor.</li>
+    <li><b>Usar o pino</b> no <code>loop()</code>.</li>
+  </ol>
+<pre><code><span class="k">#define</span> LED 22              <span class="c">// o pré-processador troca LED por 22 antes de compilar</span>
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(LED, OUTPUT);       <span class="c">// sem esta linha, o LED não acende</span>
+  Serial.println("Sistema de controle de LED");
+}
+
+<span class="k">void</span> loop() {
+  digitalWrite(LED, HIGH);    <span class="c">// HIGH = 3,3 V no pino: acende</span>
+  delay(500);                 <span class="c">// espera 500 ms</span>
+  digitalWrite(LED, LOW);     <span class="c">// LOW = 0 V: apaga</span>
+  delay(500);
+}</code></pre>
+  <p>O período completo é 500 ms aceso + 500 ms apagado = <b>1 s</b>, ou seja, <b>1 Hz</b>. <code>digitalWrite</code> só escreve dois estados, HIGH e LOW (para brilho intermediário seria PWM). O <code>#define</code> <b>não cria uma variável</b>: troca o texto antes de compilar e não ocupa RAM. Sem o <code>delay</code>, o ESP32 (240 MHz) alternaria o LED rápido demais para o olho perceber.</p>
+  <div class="nota cuidado"><span class="lbl">Cuidado: o delay não é "a velocidade da simulação"</span>É uma <b>pausa que trava o processador</b> pelo tempo indicado. Enquanto ele espera, o ESP32 não faz mais nada. O Capítulo 6 mostra o que isso custa.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>GPIO</b>: pinos de entrada ou saída. <b>34, 35, 36, 39</b> só entrada; <b>6 a 11</b> reservados (flash); <b>1 e 3</b> são o serial; <b>2</b> é o LED embutido.</li><li>LED: <b>anodo (+)</b> perna longa, <b>catodo (−)</b> perna curta ao GND. Invertido não acende e não avisa.</li><li>Resistor: <code>R = (V_pino − V_LED)/I</code>. Vermelho + 220 Ω + 3,3 V ≈ 5,9 mA.</li><li>Saída digital: <code>pinMode(pino, OUTPUT)</code> e <code>digitalWrite(pino, HIGH/LOW)</code>. <code>#define</code> troca texto, sem RAM.</li><li><code>delay</code> <b>bloqueia</b> o processador.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Você quer usar o GPIO 34 como saída para acender um LED. Funciona?</p>
+    <div class="opts"><button data-k="a">Não: o GPIO 34 é somente entrada.</button><button data-k="b">Sim, qualquer GPIO serve.</button><button data-k="c">Sim, mas só com um resistor maior.</button></div>
+    <div class="fb">Os GPIOs 34, 35, 36 e 39 são só entrada (ADC1).</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual a corrente de um LED vermelho (2,0 V) em 3,3 V com resistor de 220 Ω?</p>
+    <div class="opts"><button data-k="a">Cerca de 15 mA.</button><button data-k="b">Cerca de 60 mA.</button><button data-k="c">Cerca de 5,9 mA: (3,3 − 2,0) / 220.</button></div>
+    <div class="fb">Lei de Ohm: 1,3 V sobre 220 Ω dá 5,9 mA.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O que faz o #define LED 22?</p>
+    <div class="opts"><button data-k="a">Cria uma variável do tipo int que ocupa RAM.</button><button data-k="b">Faz o pré-processador trocar o texto LED por 22 antes de compilar.</button><button data-k="c">Liga o LED.</button></div>
+    <div class="fb">É substituição de texto, sem variável nem RAM.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o GND?</b></span><span class="bk">O fio comum de referência (0 V) a que o negativo de todos os componentes se liga.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o LED precisa de resistor?</b></span><span class="bk">Para limitar a corrente. Sem ele, o LED e o pino podem queimar.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>HIGH e LOW?</b></span><span class="bk">HIGH = 3,3 V no pino; LOW = 0 V.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que acontece se o LED for ligado ao contrário?</b></span><span class="bk">Não acende, e não aparece nenhum erro.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">O LED pisca, mas o programa que o controla ainda é uma caixa preta. Como o setup, o loop e o Serial funcionam?</div><p>Vamos abrir o modelo de execução.</p></div>
+</section>
+
+</article>
+</body>
+</html>
