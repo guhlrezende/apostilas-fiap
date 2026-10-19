@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: Estatística: o mapa | Apostila de Estatística com R e Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/est.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 1</div>
+  <h1>Estatística: o mapa</h1>
+  <p class="sub">O que é estatística, de onde veio e como se organiza um estudo.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">classifique dado, informação e amostra</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo: o mapa do território. Não pressupõe nada. Ao fim, você sabe o que é estatística, de onde ela veio, em que ordem se faz um estudo e a diferença entre população e amostra, vocabulário que os próximos capítulos usam o tempo todo.</div>
+<section class="sec" id="o-que-e">
+  <h2><span class="sn">1</span>O que é estatística</h2>
+  <p class="gancho">Uma ferramenta de Estado que virou ferramenta de todo mundo.</p>
+  <p>A palavra <b>estatística</b> vem do latim <i>statisticum</i>, ligada a "estadista": nasceu como instrumento do Estado para contar e registrar a população. Hoje é o ramo da ciência que desenvolve métodos para <b>coletar, organizar, analisar, interpretar e apresentar dados</b>, com três objetivos: <b>descrever</b> fenômenos, fazer <b>inferências</b> e apoiar <b>decisões em condições de incerteza</b>.</p>
+  <p>A relação com a matemática é a de um ramo aplicado: a matemática é mais antiga e ampla (a palavra grega <i>máthema</i> é interpretada, no material da aula, como "decodificar" (em geral, o termo significa "aprendizado" ou "conhecimento")), e a estatística é a parte dela voltada a lidar com dados e incerteza.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se nasceu para contar gente, como chegou a ser uma ciência?</div><p>Com uma enfermeira e um gráfico.</p></div>
+</section>
+
+<section class="sec" id="historia">
+  <h2><span class="sn">2</span>Uma história curta</h2>
+  <p class="gancho">Do censo à rosa de Nightingale.</p>
+  <div class="tl rv">
+    <div class="ev"><b>Antiguidade</b><span>Povos organizados em Estados (egípcios, babilônios, chineses, romanos...) faziam levantamentos censitários.</span></div>
+    <div class="ev"><b>Séc. XVII</b><span>Pascal, Fermat e Huygens dão os primeiros passos da teoria da probabilidade.</span></div>
+    <div class="ev"><b>1858</b><span>Florence Nightingale publica relatórios com gráficos e mostra que doença evitável matava mais soldados que ferimento em batalha.</span></div>
+    <div class="ev"><b>Fim do séc. XIX</b><span>Galton, Edgeworth, Karl Pearson e Yule consolidam a estatística moderna.</span></div>
+    <div class="ev"><b>2011 a 2016</b><span>A "Indústria 4.0" e a explosão de dados trazem a estatística para o centro de IA e ciência de dados.</span></div>
+  </div>
+  <p>O ponto da história de Nightingale é prático: o <b>gráfico bem escolhido convenceu quem decidia</b>, e a saúde militar mudou. Estatística, no fim, é a ponte entre números e ação.</p>
+  <div class="nota lembra"><span class="lbl">Por que a agricultura aparece nessa história</span>A matemática primitiva se apoiou em <b>clima, agricultura, comércio e registro</b>: quem planta precisa de calendário, medida de terra e controle de estoque. Sociedades sedentárias tinham mais necessidade desse conhecimento do que as nômades.</div>
+</section>
+
+<section class="sec" id="dikw">
+  <h2><span class="sn">3</span>Dado, informação, conhecimento, sabedoria</h2>
+  <p class="gancho">Número solto não decide nada.</p>
+  <p>A pirâmide <b>DIKW</b> mostra o que acontece quando se sobe de nível de abstração: <b>dado</b> (observação bruta) → <b>informação</b> (dado organizado e com contexto) → <b>conhecimento</b> (informação interpretada, com padrão ou relação) → <b>sabedoria</b> (conhecimento aplicado com julgamento, que diz o que fazer). Classifique:</p>
+  <div class="card sorter rv" data-demo="sorter" data-opts="d:Dado|i:Informação|c:Conhecimento|s:Sabedoria">
+    <div class="item" data-ans="d"><p><b>37,8</b></p><span class="why">Dado: uma observação bruta, sem contexto nenhum.</span></div>
+    <div class="item" data-ans="i"><p>A temperatura média de hoje foi <b>37,8 °C</b>, a mais alta do mês.</p><span class="why">Informação: o dado ganhou unidade, data e comparação.</span></div>
+    <div class="item" data-ans="c"><p>Nos dias acima de 37 °C, as vendas de ventilador <b>sobem</b> bastante.</p><span class="why">Conhecimento: uma relação entre duas coisas, extraída de várias informações.</span></div>
+    <div class="item" data-ans="s"><p>Reforçar o estoque de ventiladores <b>antes</b> da próxima onda de calor prevista.</p><span class="why">Sabedoria: o conhecimento virou decisão, com julgamento sobre custo e risco.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+</section>
+
+<section class="sec" id="etapas">
+  <h2><span class="sn">4</span>As etapas de um estudo estatístico</h2>
+  <p class="gancho">Uma ordem que se repete em quase todo projeto de dados.</p>
+  <ol>
+    <li><b>Identificar o problema e o objetivo.</b> Sem pergunta, qualquer número serve.</li>
+    <li><b>Coletar e tratar os dados</b>, respeitando a <b>LGPD</b> (tema do Capítulo 2).</li>
+    <li><b>Análise univariada</b>: estatística descritiva de cada variável sozinha (Capítulos 3 a 5).</li>
+    <li><b>Estatística inferencial</b>: concluir sobre a população a partir da amostra.</li>
+    <li><b>Análise bivariada</b>: correlação e associação entre duas variáveis (Capítulo 6).</li>
+    <li><b>Análise multivariada</b>: predição, classificação e agrupamento (é onde entra o machine learning).</li>
+  </ol>
+  <p>A lista não é rígida: outras etapas podem entrar conforme a natureza do estudo. Quanto à origem dos dados, o <b>dado primário</b> é coletado por você para responder à sua pergunta, e o <b>dado secundário</b> já foi coletado por outros. No Brasil, o <b>IBGE</b> é a referência pública para dados secundários, tanto brutos quanto já tratados.</p>
+</section>
+
+<section class="sec" id="populacao">
+  <h2><span class="sn">5</span>População, amostra, unidade e censo</h2>
+  <p class="gancho">Quase nunca dá para perguntar a todo mundo.</p>
+  <ul>
+    <li><b>População</b>: o conjunto inteiro que interessa estudar (finito ou infinito).</li>
+    <li><b>Amostra</b>: um subconjunto da população.</li>
+    <li><b>Unidade estatística</b>: cada elemento individual (uma pessoa, uma peça, um dia).</li>
+    <li><b>Censo</b>: quando o estudo abrange <b>todos</b> os elementos.</li>
+  </ul>
+  <p>Amostras são preferidas por razão de <b>custo e tempo</b>: ouvir todo mundo costuma ser caro e demorado. O preço é a incerteza, e a estatística inferencial existe para medi-la.</p>
+  <div class="card sorter rv" data-demo="sorter" data-opts="pop:População|am:Amostra|cen:Censo">
+    <div class="item" data-ans="pop"><p>Todos os 12 mil funcionários de uma empresa.</p><span class="why">É o conjunto inteiro de interesse: a população.</span></div>
+    <div class="item" data-ans="am"><p>300 funcionários sorteados para responder a pesquisa de clima.</p><span class="why">Um subconjunto da população: amostra.</span></div>
+    <div class="item" data-ans="cen"><p>O IBGE visitando todos os domicílios do país em um recenseamento.</p><span class="why">Abrange todos os elementos: censo.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+</section>
+
+<section class="sec" id="ia">
+  <h2><span class="sn">6</span>Estatística e inteligência artificial</h2>
+  <p class="gancho">O alicerce que ninguém vê no produto final.</p>
+  <p>O termo <i>Industrie 4.0</i> foi apresentado em 2011 na Feira de Hannover, e em 2016 ganhou destaque no Fórum Econômico Mundial, em Davos. O resultado foi um <b>aumento enorme no volume de dados</b>. Os "três Vs" do <b>Big Data</b> resumem o problema: <b>volume</b>, <b>variedade</b> e <b>velocidade</b>. <b>Ciência de dados</b> combina estatística, matemática e computação para extrair informação útil; <b>inteligência artificial</b> cria sistemas que aprendem padrões a partir de dados em vez de serem programados caso a caso.</p>
+  <p>Em outras palavras, o machine learning que você vê em outras disciplinas é, em boa parte, <b>estatística aplicada em escala</b>. Entender população, amostra, variável e incerteza é o que separa usar uma biblioteca de entender o que ela devolve.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">7</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Estatística</b>: coletar, organizar, analisar, interpretar e apresentar dados para descrever, inferir e decidir sob incerteza.</li><li>Nasceu do Estado (<i>statisticum</i>); a visualização de Nightingale (1858) é um marco de uso para decisão.</li><li><b>DIKW</b>: dado → informação → conhecimento → sabedoria, cada nível mais abstrato.</li><li><b>Etapas</b>: problema → coleta (LGPD) → univariada → inferência → bivariada → multivariada.</li><li><b>População</b> x <b>amostra</b> x <b>unidade</b> x <b>censo</b>. Dado <b>primário</b> (você coleta) x <b>secundário</b> (outros coletaram; IBGE).</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Qual das opções é um exemplo de dado secundário?</p>
+    <div class="opts"><button data-k="a">Respostas de um questionário que você mesmo aplicou.</button><button data-k="b">Uma tabela de população por município baixada do IBGE.</button><button data-k="c">Uma medição feita por você com um termômetro.</button></div>
+    <div class="fb">Secundário é o que já foi coletado por outra pessoa ou instituição.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Por que quase sempre se usa amostra em vez de censo?</p>
+    <div class="opts"><button data-k="a">Por custo e tempo: coletar de todos costuma ser caro e demorado.</button><button data-k="b">Porque o censo é proibido.</button><button data-k="c">Porque a amostra é sempre mais precisa.</button></div>
+    <div class="fb">A amostra troca um pouco de precisão por economia, e a inferência mede essa troca.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Qual é o nível mais alto da pirâmide DIKW?</p>
+    <div class="opts"><button data-k="a">Conhecimento.</button><button data-k="b">Informação.</button><button data-k="c">Sabedoria: conhecimento aplicado com julgamento.</button></div>
+    <div class="fb">Cada nível acrescenta contexto e abstração; no topo está o saber o que fazer.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma unidade estatística?</b></span><span class="bk">Cada elemento individual da população (uma pessoa, uma peça, um dia).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Dado primário x secundário?</b></span><span class="bk">Primário: coletado por você para o seu estudo. Secundário: já coletado por outros.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que são os três Vs do Big Data?</b></span><span class="bk">Volume, variedade e velocidade.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais as etapas de um estudo estatístico?</b></span><span class="bk">Problema, coleta, univariada, inferência, bivariada e multivariada.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Todo estudo começa nos dados. De onde eles vêm, e como não estragar a base antes de analisar?</div><p>Planejando a pesquisa, o questionário e a amostra.</p></div>
+</section>
+
+</article>
+</body>
+</html>

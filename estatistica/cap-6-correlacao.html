@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Correlação e o que vem depois (complemento) | Apostila de Estatística com R e Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/est.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Complemento</div>
+  <h1>Correlação e o que vem depois (complemento)</h1>
+  <p class="sub">Correlação de Pearson, regressão simples, R² e o quarteto de Anscombe.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">o quarteto de Anscombe ao vivo</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Até aqui cada variável foi analisada sozinha (<b>univariada</b>). Este último capítulo, também um complemento, dá o passo seguinte: <b>duas variáveis juntas</b>, a etapa bivariada do Capítulo 1. É a ponte entre a estatística descritiva e a regressão, que é a base de boa parte do machine learning.</div>
+<section class="sec" id="correlacao">
+  <h2><span class="sn">1</span>Correlação de Pearson</h2>
+  <p class="gancho">Um número entre −1 e 1 que resume a relação linear entre duas variáveis.</p>
+  <p>O <b>coeficiente de correlação de Pearson</b> (<b>r</b>) mede a força e o sentido da relação <b>linear</b> entre duas variáveis quantitativas. <b>r = 1</b>: relação linear perfeita crescente. <b>r = −1</b>: perfeita decrescente. <b>r ≈ 0</b>: nenhuma relação <b>linear</b> (pode haver relação curva!). Ele compara o quanto x e y variam juntos com o quanto cada um varia sozinho: <code>r = Σ(x − x̄)(y − ȳ) / √[Σ(x − x̄)² · Σ(y − ȳ)²]</code>.</p>
+  <h3>A reta de regressão e o R²</h3>
+  <p>A <b>reta de mínimos quadrados</b> <code>ŷ = a + b·x</code> é a que minimiza a soma dos quadrados dos erros. Sua inclinação é <code>b = Sxy / Sxx</code> e o intercepto <code>a = ȳ − b·x̄</code>. O <b>R²</b> (no caso simples, igual a r²) diz a <b>fatia da variação de y explicada pela reta</b>.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: 5 pontos</span>
+    <div class="l"><div><code>x = 1, 2, 3, 4, 5</code> e <code>y = 2, 4, 5, 4, 5</code>. Médias: <code>x̄ = 3</code> e <code>ȳ = 4</code>.</div></div>
+    <div class="l"><div><code>Sxy = Σ(x − 3)(y − 4) = (−2)(−2) + (−1)(0) + 0·1 + 1·0 + 2·1 = <b>6</b></code>. <code>Sxx = 4 + 1 + 0 + 1 + 4 = <b>10</b></code>. <code>Syy = 4 + 0 + 1 + 0 + 1 = <b>6</b></code>.</div></div>
+    <div class="l"><div>Inclinação <code>b = 6/10 = <b>0,6</b></code>; intercepto <code>a = 4 − 0,6·3 = <b>2,2</b></code>. A reta é <code>ŷ = 2,2 + 0,6x</code>.</div></div>
+    <div class="l"><div><code>r = 6 / √(10·6) = 6 / 7,746 = <b>0,775</b></code> e <code>R² = 0,775² = <b>0,60</b></code>: a reta explica 60% da variação de y.</div></div>
+  </div>
+<pre><code><span class="k">import</span> numpy <span class="k">as</span> np
+x = np.array([1, 2, 3, 4, 5]); y = np.array([2, 4, 5, 4, 5])
+np.corrcoef(x, y)[0, 1]     <span class="c"># 0.7746</span>
+np.polyfit(x, y, 1)         <span class="c"># [0.6, 2.2]  inclinação e intercepto</span>
+
+<span class="c"># R</span>
+x &lt;- c(1, 2, 3, 4, 5); y &lt;- c(2, 4, 5, 4, 5)
+cor(x, y)                   <span class="c"># 0.7745967</span>
+lm(y ~ x)                   <span class="c"># modelo linear: intercepto 2.2 e inclinação 0.6</span></code></pre>
+</section>
+
+<section class="sec" id="anscombe">
+  <h2><span class="sn">2</span>Sempre olhe o gráfico: o quarteto de Anscombe</h2>
+  <p class="gancho">Quatro conjuntos, os mesmos números, desenhos completamente diferentes.</p>
+  <p>Em 1973, o estatístico Francis Anscombe construiu quatro conjuntos de 11 pontos com <b>praticamente as mesmas estatísticas</b>: média de y em 7,5, <b>r ≈ 0,816</b> e a mesma reta <code>ŷ ≈ 3 + 0,5x</code>. Alterne entre eles (e brinque com o ruído dos dados gerados):</p>
+  <div class="demo" data-demo="correlacao"></div>
+  <p>O I é uma nuvem linear comum. O II é uma <b>curva</b>: a reta é o modelo errado. O III é uma reta perfeita estragada por <b>um outlier</b>. No IV, todos os x são iguais menos um, e <b>um ponto sozinho</b> cria a correlação. A lição é a do Capítulo 5 (a média pode mentir): um número resume, mas pode esconder. <b>Resuma e desenhe, nessa ordem.</b></p>
+</section>
+
+<section class="sec" id="causa">
+  <h2><span class="sn">3</span>Correlação não é causalidade</h2>
+  <p class="gancho">Correlacionar não prova que um causa o outro.</p>
+  <p>Duas variáveis podem andar juntas porque <b>uma causa a outra</b>, porque <b>uma terceira causa as duas</b> (a <i>variável de confusão</i>) ou por <b>coincidência</b>. O clássico: vendas de sorvete e afogamentos sobem juntos no verão; o calor é a causa comum, e proibir sorvete não salvaria ninguém. Como vimos no Capítulo 2, só o <b>experimento</b> (variáveis controladas e manipuladas) sustenta causa e efeito; um questionário permite falar em <b>associação</b>.</p>
+  <div class="nota lembra"><span class="lbl">O mesmo problema no machine learning</span>Um modelo que aprende "fundo verde = cachorro" aprendeu uma correlação que não tem relação com o conceito. É a variável de confusão disfarçada de feature, o tema do Capítulo 2 da apostila de Redes Neurais.</div>
+</section>
+
+<section class="sec" id="adiante">
+  <h2><span class="sn">4</span>O caminho até o machine learning</h2>
+  <p class="gancho">A estatística do segundo semestre é a base do modelo que você já usa.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Tema</th><th>Pergunta que responde</th><th>Aparece no machine learning como</th></tr>
+    <tr><td><b>Probabilidade e distribuições</b></td><td>quão provável é cada resultado?</td><td>saídas de probabilidade, ruído, incerteza</td></tr>
+    <tr><td><b>Inferência</b> (testes, p-valor)</td><td>o que a amostra diz sobre a população?</td><td>validação, intervalos de confiança de métricas</td></tr>
+    <tr><td><b>Regressão linear simples e múltipla</b></td><td>como y depende de x (ou de vários x)?</td><td>regressão linear, o modelo-base</td></tr>
+    <tr><td><b>Regressão logística</b></td><td>qual a chance de pertencer a uma classe?</td><td>classificação binária (a sigmoide do neurônio)</td></tr>
+  </table></div>
+  <p>Descrever, entender a incerteza, inferir, relacionar, prever: é o percurso clássico. A regressão linear que você acabou de calcular à mão é o mesmo modelo que o scikit-learn ajusta em uma linha, e o neurônio com ativação linear das redes neurais é, no fundo, a mesma conta.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>r</b> de Pearson: de −1 a 1, mede relação <b>linear</b>. <b>R² = r²</b>: fatia da variação de y explicada pela reta.</li><li>Reta de mínimos quadrados: <code>b = Sxy/Sxx</code>, <code>a = ȳ − b·x̄</code>. No exemplo: ŷ = 2,2 + 0,6x, r = 0,775, R² = 0,60.</li><li><b>Anscombe</b>: mesmos r e reta (r ≈ 0,816, ŷ ≈ 3 + 0,5x), formas diferentes. Sempre olhe o gráfico.</li><li><b>Correlação ≠ causalidade</b>: causa comum, coincidência. Só experimento sustenta causa.</li><li>Probabilidade, inferência, regressão e regressão logística formam a ponte para o machine learning.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">r = 0 significa que as variáveis não têm nenhuma relação?</p>
+    <div class="opts"><button data-k="a">Sim, nenhuma.</button><button data-k="b">Não: significa nenhuma relação linear. Pode haver uma relação curva.</button><button data-k="c">Sim, e o R² também é 1.</button></div>
+    <div class="fb">O Pearson só mede o componente linear; o conjunto II de Anscombe é curvo e tem r alto, e uma parábola simétrica pode ter r próximo de 0.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">No exemplo resolvido, R² = 0,60. O que isso quer dizer?</p>
+    <div class="opts"><button data-k="a">Que 60% dos pontos estão sobre a reta.</button><button data-k="b">Que o erro é de 60%.</button><button data-k="c">Que a reta explica 60% da variação de y.</button></div>
+    <div class="fb">R² é a fração da variância de y que o modelo linear explica.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Vendas de sorvete e afogamentos sobem juntos. A melhor explicação é...</p>
+    <div class="opts"><button data-k="a">Uma terceira variável (o calor) que afeta as duas.</button><button data-k="b">Sorvete causa afogamento.</button><button data-k="c">Afogamento aumenta a venda de sorvete.</button></div>
+    <div class="fb">É o exemplo clássico de variável de confusão: correlação sem causalidade direta.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é R²?</b></span><span class="bk">A fração da variação de y explicada pelo modelo (no caso simples, r²).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o quarteto de Anscombe ensina?</b></span><span class="bk">Que estatísticas iguais podem esconder dados muito diferentes: sempre desenhe o gráfico.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma variável de confusão?</b></span><span class="bk">Uma terceira variável que influencia as duas que você observa e cria uma correlação aparente.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Que comando calcula a correlação em R e em Python?</b></span><span class="bk">R: cor(x, y). Python: np.corrcoef(x, y) ou df.corr().</span></button></div>
+  <div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Do dado à relação entre duas variáveis.</div><p>Se algum cálculo ficou nebuloso, refaça o exemplo resolvido no papel e confira na demo. Fazer a conta à mão uma vez é o que faz a linha de código deixar de ser mágica.</p></div>
+</section>
+
+</article>
+</body>
+</html>

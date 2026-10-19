@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: Pesquisa, questionário e amostra | Apostila de Estatística com R e Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/est.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aula 2</div>
+  <h1>Pesquisa, questionário e amostra</h1>
+  <p class="sub">Planejar a pesquisa, montar um bom questionário, respeitar a LGPD e calcular a amostra.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">calculadora de tamanho de amostra</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 você viu as etapas de um estudo, e a segunda é <b>coletar e tratar os dados</b>. Este capítulo é essa etapa: como planejar a pesquisa, escrever um questionário que não enviese as respostas, respeitar a LGPD e definir <b>quantas pessoas</b> entrevistar.</div>
+<section class="sec" id="etapas-pesquisa">
+  <h2><span class="sn">1</span>Pesquisa é processo, não improviso</h2>
+  <div class="nota lembra"><span class="lbl">O que é complemento neste capítulo</span>A fórmula do tamanho da amostra (e a correção para população finita), os detalhes da LGPD, a escala Likert (1932) e a conta do NPS vêm de pesquisa complementar, e não do slide da aula. O resto (etapas, método, técnica, questionário) é da aula.</div>
+  <p class="gancho">Dado ruim na entrada, conclusão ruim na saída.</p>
+  <p><b>Pesquisa</b> é um <b>processo sistemático de investigação</b>, feito de um conjunto de atividades organizadas, com a finalidade de descobrir, produzir ou ampliar conhecimento. As palavras importantes são <i>sistemático</i> e <i>organizado</i>. As <b>11 etapas</b> de uma pesquisa formam a espinha dorsal de qualquer trabalho:</p>
+  <div class="tl rv">
+    <div class="ev"><b>1 e 2</b><span>Objeto de estudo e problema de pesquisa</span></div>
+    <div class="ev"><b>3 e 4</b><span>Hipótese e objetivo</span></div>
+    <div class="ev"><b>5 e 6</b><span>Referencial teórico e tipo de pesquisa</span></div>
+    <div class="ev"><b>7</b><span>Metodologia (método e técnicas)</span></div>
+    <div class="ev"><b>8 a 10</b><span>Resultados, discussão e conclusões</span></div>
+    <div class="ev"><b>11</b><span>Referências</span></div>
+  </div>
+  <p>Cada etapa alimenta a seguinte. Pular uma costuma gerar um projeto sem lastro metodológico.</p>
+</section>
+
+<section class="sec" id="metodo">
+  <h2><span class="sn">2</span>Método x técnica, quantitativo x qualitativo</h2>
+  <p class="gancho">A metodologia é onde você decide como vai coletar e analisar.</p>
+  <ul>
+    <li><b>Método</b>: a forma geral de organizar a investigação (quantitativo, qualitativo ou misto).</li>
+    <li><b>Técnica</b>: o procedimento prático de coleta (observação, entrevista, questionário, pesquisa bibliográfica, experimento).</li>
+  </ul>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Quantitativo</th><th>Qualitativo</th></tr>
+    <tr><td><b>Foco</b></td><td>medir, comparar, testar hipóteses</td><td>compreender experiências, causas, valores</td></tr>
+    <tr><td><b>Amostra</b></td><td>grande, aleatória, para representar a população</td><td>menor, escolhida por relevância</td></tr>
+    <tr><td><b>Coleta</b></td><td>questionário, formulário, experimento</td><td>entrevistas, grupos focais, observação</td></tr>
+    <tr><td><b>Análise</b></td><td>tabelas, gráficos, inferência estatística</td><td>análise de conteúdo ou de discurso</td></tr>
+    <tr><td><b>Pesquisador</b></td><td>procura não interferir</td><td>participa da interpretação</td></tr>
+  </table></div>
+  <p>Vantagens do quantitativo: tempo de resposta mais rápido, objetividade, validade e confiabilidade, amostras aleatórias que o tornam representativo. Desvantagens: negligencia o contexto social e cultural, não capta emoção e sentimento, depende de variáveis que podem ser definidas de forma arbitrária. A tensão entre essas listas é o argumento clássico a favor do <b>método misto</b>.</p>
+  <div class="nota lembra"><span class="lbl">Experimento x questionário</span>As duas técnicas quantitativas são o <b>experimento</b> (controla e manipula variáveis para verificar <b>causa e efeito</b>) e o <b>questionário</b> (<i>survey</i>: série ordenada de perguntas respondidas sem entrevistador). Só o experimento sustenta falar em <b>causalidade</b>; o questionário permite falar em <b>associação</b>. O Capítulo 6 volta a isso.</div>
+</section>
+
+<section class="sec" id="questionario">
+  <h2><span class="sn">3</span>O questionário</h2>
+  <p class="gancho">Tão longo quanto necessário, tão curto quanto possível.</p>
+  <p><b>Ciclo de vida</b>: elaborar → <b>validar</b> (para corrigir e ajustar) → enviar → o participante preenche → devolução pelo mesmo meio → encerrado o prazo, o pesquisador <b>valida e organiza a base</b> para análise. Ferramentas comuns: Google Forms, Microsoft Forms, Qualtrics, SurveyMonkey.</p>
+  <div class="grid2">
+    <div class="card rv"><b>Vantagens</b><p>Rapidez, precisão e custo menor; alcance amplo e geograficamente diverso; anonimato; menos interferência do pesquisador; flexibilidade para o respondente; uniformidade (todos veem as mesmas perguntas na mesma ordem).</p></div>
+    <div class="card rv"><b>Desvantagens</b><p>Baixa taxa de retorno; ninguém esclarece dúvida durante o preenchimento; risco de resposta superficial; falta de controle sobre quem responde e em que condições; não serve a quem não lê.</p></div>
+  </div>
+  <h3>A estrutura em três páginas</h3>
+  <ol>
+    <li><b>Apresentação e consentimento</b>: objetivo, importância, número de perguntas e tempo médio, segurança e anonimato, contato do responsável e o <b>termo de aceite</b> ("concordo / não concordo").</li>
+    <li><b>Perguntas de perfil</b> (idade, escolaridade...): caracterizam os participantes e permitem comparar grupos.</li>
+    <li><b>Perguntas de conteúdo</b>: o tema investigado.</li>
+  </ol>
+  <div class="nota cuidado"><span class="lbl">LGPD: o mínimo que você precisa saber</span>A Lei nº 13.709/2018 (sancionada em 14/08/2018, em vigor desde 18/09/2020) foi muito inspirada no GDPR europeu. Para pesquisa: o <b>consentimento</b> deve ser <b>livre, informado e inequívoco</b>, para uma finalidade determinada; evite caixas pré-marcadas; guarde como provar que o participante aceitou. Dados como saúde, religião, origem racial e opinião política são <b>dados pessoais sensíveis</b>, e pedem cuidado redobrado: só colete se o objetivo exigir.</div>
+</section>
+
+<section class="sec" id="perguntas">
+  <h2><span class="sn">4</span>Tipos de pergunta</h2>
+  <p class="gancho">O tipo de pergunta define o tipo de dado que você vai ter.</p>
+  <ul>
+    <li><b>Dicotômica</b>: duas opções ("gosto / não gosto").</li>
+    <li><b>Múltipla escolha</b>: uma opção entre várias (normalmente até cinco, mais "outro").</li>
+    <li><b>Escala Likert</b>: grau de concordância ou satisfação, de 5 ou 7 pontos (criada por Rensis Likert em 1932).</li>
+    <li><b>Escala de classificação</b>: ordenar itens por importância.</li>
+    <li><b>Escala numérica</b>: um valor, como o NPS (0 a 10).</li>
+  </ul>
+  <div class="card sorter rv" data-demo="sorter" data-opts="d:Dicotômica|m:Múltipla escolha|l:Likert|n:Numérica">
+    <div class="item" data-ans="d"><p>"Você já comprou neste site? (sim / não)"</p><span class="why">Duas opções: dicotômica.</span></div>
+    <div class="item" data-ans="l"><p>"O atendimento foi rápido": discordo totalmente ... concordo totalmente.</p><span class="why">Grau de concordância em 5 pontos: Likert.</span></div>
+    <div class="item" data-ans="n"><p>"De 0 a 10, qual a chance de você recomendar a empresa?"</p><span class="why">Valor numérico: escala numérica (é a pergunta do NPS).</span></div>
+    <div class="item" data-ans="m"><p>"Qual seu sabor favorito? Calabresa, mussarela, frango, portuguesa, outro."</p><span class="why">Uma escolha entre várias: múltipla escolha.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: calculando um NPS</span>
+    <div class="l"><div>Em 100 respostas à pergunta de 0 a 10: <b>50</b> notas 9 ou 10 (<b>promotores</b>), <b>30</b> notas 7 ou 8 (<b>neutros</b>) e <b>20</b> notas de 0 a 6 (<b>detratores</b>).</div></div>
+    <div class="l"><div><code>NPS = % promotores − % detratores = 50% − 20% = <b>30</b></code>. Os neutros não entram na conta, mas contam no total.</div></div>
+  </div>
+  <p>Boa prática na Likert: número <b>ímpar</b> de pontos quando se quer permitir posição neutra, rótulos simétricos nas extremidades e a mesma direção em todas as afirmações.</p>
+</section>
+
+<section class="sec" id="amostra">
+  <h2><span class="sn">5</span>Quantas pessoas entrevistar?</h2>
+  <p class="gancho">O tamanho da amostra é calculado, não chutado.</p>
+  <p>Para populações grandes ou indefinidas, a fórmula clássica é <code>n = Z² · p · q / e²</code>, em que <b>Z</b> é o escore do nível de confiança (90% → 1,645; 95% → 1,96; 99% → 2,576), <b>p</b> é a proporção esperada do evento (use 0,5 se não souber, o cenário mais conservador), <b>q = 1 − p</b> e <b>e</b> é a margem de erro. Para população <b>finita</b> de tamanho N, corrige-se: <code>n ajustado = n / (1 + (n − 1)/N)</code>.</p>
+  <div class="demo" data-demo="amostra"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: o 385 que aparece em todo lugar</span>
+    <div class="l"><div>Confiança 95% (Z = 1,96), p = q = 0,5, margem de erro 5% (e = 0,05).</div></div>
+    <div class="l"><div><code>n = 1,96² · 0,5 · 0,5 / 0,05² = 3,8416 · 0,25 / 0,0025 = <b>384,16</b></code>, que se arredonda <b>para cima</b>: <b>385</b> (as fontes às vezes dizem 384 ou 385).</div></div>
+    <div class="l"><div>Com população finita de 1.000 pessoas: <code>384,16 / (1 + 383,16/1000) = 277,7</code> → <b>278</b>. Perceba como a população pequena exige menos.</div></div>
+    <div class="l"><div>Com margem de 2,5% em vez de 5%, o n vai a <b>1.537</b>: <b>metade da margem, quatro vezes a amostra</b>.</div></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>A fórmula supõe amostra <b>aleatória</b> da população. Se só quem tem tempo e interesse responde (autosseleção), o n pode ser enorme e a amostra ainda assim não representar ninguém. Tamanho não corrige viés de seleção.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Pesquisa</b> é processo sistemático; as 11 etapas vão de objeto e problema até referências.</li><li><b>Método</b> (quanti, quali, misto) x <b>técnica</b> (questionário, entrevista, experimento...). Só o <b>experimento</b> sustenta causalidade.</li><li><b>Questionário</b>: 3 páginas (consentimento, perfil, conteúdo), validado antes do envio; vantagens (custo, alcance, anonimato) e desvantagens (retorno baixo, resposta superficial).</li><li><b>LGPD</b> (Lei 13.709/2018): consentimento livre, informado e inequívoco; dados sensíveis pedem cuidado redobrado.</li><li><b>n = Z²·p·q/e²</b>: 95%, p = 0,5, e = 5% → 385. Metade da margem, quádruplo da amostra. Aleatoriedade vale mais que tamanho.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Qual técnica permite falar em causa e efeito, e não só em associação?</p>
+    <div class="opts"><button data-k="a">O questionário.</button><button data-k="b">A entrevista.</button><button data-k="c">O experimento, que controla e manipula variáveis.</button></div>
+    <div class="fb">Sem controle das variáveis não dá para separar causa de coincidência.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Com confiança 95%, p = 0,5 e margem de 5%, qual a amostra mínima para uma população grande?</p>
+    <div class="opts"><button data-k="a">385 (384,16 arredondado para cima).</button><button data-k="b">96.</button><button data-k="c">1.000.</button></div>
+    <div class="fb">1,96² × 0,25 / 0,05² = 384,16, arredondado para cima.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O que acontece com o n se você reduzir a margem de erro de 5% para 2,5%?</p>
+    <div class="opts"><button data-k="a">Dobra.</button><button data-k="b">Quadruplica.</button><button data-k="c">Não muda.</button></div>
+    <div class="fb">A margem entra elevada ao quadrado no denominador: metade da margem, quatro vezes a amostra.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é consentimento na LGPD?</b></span><span class="bk">Manifestação livre, informada e inequívoca do titular, para uma finalidade determinada.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que são promotores e detratores no NPS?</b></span><span class="bk">Promotores dão 9 ou 10, detratores dão de 0 a 6. NPS = % promotores − % detratores.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que usar p = 0,5 quando não se sabe a proporção?</b></span><span class="bk">Porque é o cenário mais conservador: dá o maior n possível.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Método x técnica?</b></span><span class="bk">Método é a forma geral de investigar. Técnica é o procedimento de coleta (questionário, entrevista...).</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">Com a base coletada, o que dá para fazer com ela? Primeiro, entender o que cada coluna é.</div><p>Classificando variáveis e montando tabelas de frequência.</p></div>
+</section>
+
+</article>
+</body>
+</html>

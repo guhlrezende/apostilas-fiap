@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: Variáveis, tabelas e gráficos (complemento) | Apostila de Estatística com R e Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/est.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Complemento</div>
+  <h1>Variáveis, tabelas e gráficos (complemento)</h1>
+  <p class="sub">Que tipo de coluna é cada uma, como montar a tabela de frequência e o histograma.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">3 demos · 3 testes · 4 flashcards</span><span class="chip">tabela de frequência e histograma ao vivo</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>A pesquisa do Capítulo 2 produz uma base: linhas com respondentes e colunas com respostas. Antes de calcular qualquer coisa, é preciso saber <b>que tipo de coluna</b> é cada uma, porque isso decide quais contas e gráficos fazem sentido. Este capítulo é um complemento: é a etapa descritiva da ementa, ainda sem anotação de aula.</div>
+<section class="sec" id="tipos">
+  <h2><span class="sn">1</span>Tipos de variável</h2>
+  <p class="gancho">Nem todo número é número.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Tipo</th><th>Subtipo</th><th>Exemplo</th><th>O que dá para fazer</th></tr>
+    <tr><td rowspan="2"><b>Qualitativa</b> (categorias)</td><td>nominal</td><td>cidade, time, cor</td><td>contar, moda</td></tr>
+    <tr><td>ordinal</td><td>escolaridade, satisfação (Likert)</td><td>contar, moda, mediana (há ordem)</td></tr>
+    <tr><td rowspan="2"><b>Quantitativa</b> (números)</td><td>discreta</td><td>nº de filhos, nº de compras</td><td>tudo acima, mais média e desvio</td></tr>
+    <tr><td>contínua</td><td>idade, altura, salário</td><td>tudo acima, em qualquer precisão</td></tr>
+  </table></div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="nom:Qualitativa nominal|ord:Qualitativa ordinal|dis:Quantitativa discreta|con:Quantitativa contínua">
+    <div class="item" data-ans="nom"><p>Cidade de moradia do respondente.</p><span class="why">Categorias sem ordem: nominal.</span></div>
+    <div class="item" data-ans="ord"><p>Nível de escolaridade (fundamental, médio, superior).</p><span class="why">Categorias com ordem natural: ordinal.</span></div>
+    <div class="item" data-ans="dis"><p>Número de filhos.</p><span class="why">Contagem: só assume valores inteiros, é discreta.</span></div>
+    <div class="item" data-ans="con"><p>Altura em metros.</p><span class="why">Medida: pode assumir qualquer valor num intervalo, é contínua.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado: número que é categoria</span>CEP, número de telefone e código de produto parecem números, mas são <b>nominais</b>: somar CEPs não significa nada. E a média de uma escala Likert (por exemplo 3,7) é discutível, porque a distância entre "concordo" e "concordo totalmente" não é necessariamente igual à distância entre os outros pontos.</div>
+</section>
+
+<section class="sec" id="frequencia">
+  <h2><span class="sn">2</span>Tabela de frequência</h2>
+  <p class="gancho">A primeira coisa que se faz com uma coluna.</p>
+  <p>Cada categoria ganha quatro números: <b>fi</b> (frequência absoluta: quantas vezes apareceu), <b>fr</b> (relativa: fi dividido pelo total, em %), <b>Fi</b> (acumulada: soma das fi até ali) e <b>Fr</b> (acumulada relativa). Clique em + e − para mudar as respostas e veja tudo se recalcular:</p>
+  <div class="demo" data-demo="freq"></div>
+  <p>No exemplo inicial, são 40 respostas: 2, 5, 9, 16 e 8. A moda é "Satisfeito" (16 respostas, 40,0%), e <b>24 de 40 (60%)</b> estão satisfeitos ou muito satisfeitos. A mediana cai em "Satisfeito" porque é nessa categoria que a frequência acumulada passa de 20 (a metade de 40): 2 + 5 + 9 = 16 está abaixo, 16 + 16 = 32 está acima.</p>
+</section>
+
+<section class="sec" id="histograma">
+  <h2><span class="sn">3</span>Variável contínua: classes e histograma</h2>
+  <p class="gancho">Para números contínuos, a categoria é um intervalo.</p>
+  <p>Idade ou salário têm muitos valores diferentes. A tabela de frequência vira uma tabela por <b>classes</b> (intervalos), e o gráfico correspondente é o <b>histograma</b>: barras coladas, porque o eixo é contínuo. Quantas classes? Uma regra prática é a de <b>Sturges</b>: <code>k ≈ 1 + 3,322 · log₁₀(n)</code>. Mexa no controle e compare:</p>
+  <div class="demo" data-demo="histograma"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: 40 idades em 6 classes</span>
+    <div class="l"><div>Menor idade 19, maior 52: <b>amplitude = 52 − 19 = 33</b>.</div></div>
+    <div class="l"><div>Sturges para n = 40: <code>log₁₀(40) = 1,602</code>, então <code>k = 1 + 3,322·1,602 = <b>6,32</b></code>, ou seja, <b>6 classes</b>.</div></div>
+    <div class="l"><div>Largura: <code>33 / 6 = 5,5</code>; arredondando para cima para inteiros, <b>6 anos</b> por classe.</div></div>
+    <div class="l"><div>Contagem: 19 a 24 → <b>13</b>; 25 a 30 → <b>15</b>; 31 a 36 → <b>8</b>; 37 a 42 → <b>2</b>; 43 a 48 → <b>1</b>; 49 a 54 → <b>1</b>. Soma: 40. Acumulada: 13, 28, 36, 38, 39, 40.</div></div>
+    <div class="l"><div>Leitura: a distribuição é <b>assimétrica à direita</b>: a maioria está entre 19 e 30, e poucas pessoas mais velhas esticam a "cauda" para a direita. Por isso (em geral, é a regra prática) a <b>média (28,4)</b> fica acima da <b>mediana (27)</b>.</div></div>
+  </div>
+</section>
+
+<section class="sec" id="graficos">
+  <h2><span class="sn">4</span>Qual gráfico usar</h2>
+  <p class="gancho">A pergunta que decide o gráfico é: o que eu quero mostrar?</p>
+  <div class="tablewrap"><table>
+    <tr><th>Quero mostrar...</th><th>Use</th></tr>
+    <tr><td>comparar categorias</td><td>barras (ordene as barras)</td></tr>
+    <tr><td>a forma da distribuição de uma variável contínua</td><td>histograma ou boxplot</td></tr>
+    <tr><td>evolução no tempo</td><td>linhas</td></tr>
+    <tr><td>relação entre duas variáveis quantitativas</td><td>dispersão (Capítulo 6)</td></tr>
+    <tr><td>partes de um todo, com poucas categorias</td><td>pizza (ou, melhor, barras)</td></tr>
+  </table></div>
+  <div class="nota cuidado"><span class="lbl">Erro comum</span>Barras com o eixo vertical <b>cortado</b> (começando em 90, por exemplo) exageram diferenças pequenas. Em gráfico de barras, o zero deve estar no eixo. Histograma, por sua vez, não é gráfico de barras: as barras são coladas e a <b>largura</b> da classe importa.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Qualitativa</b> (nominal, ordinal) x <b>quantitativa</b> (discreta, contínua). O tipo decide as contas e gráficos permitidos.</li><li><b>Tabela de frequência</b>: fi, fr, Fi e Fr. Em ordinal use moda e mediana, não média.</li><li><b>Contínua</b>: classes e histograma. Sturges: <code>k ≈ 1 + 3,322·log₁₀(n)</code> (n = 40 → 6 classes).</li><li>As 40 idades: 13, 15, 8, 2, 1 e 1 pessoas por classe; assimetria à direita; média 28,4 &gt; mediana 27.</li><li>Barras para categorias (com zero no eixo), histograma para contínuas, linhas para tempo, dispersão para duas variáveis.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O CEP de uma pessoa é uma variável de qual tipo?</p>
+    <div class="opts"><button data-k="a">Quantitativa contínua.</button><button data-k="b">Qualitativa nominal: parece número, mas é um código sem ordem nem soma com sentido.</button><button data-k="c">Quantitativa discreta.</button></div>
+    <div class="fb">Não faz sentido somar nem tirar média de CEPs; ele só identifica uma categoria.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Em uma pergunta Likert, qual medida de tendência central é a mais segura?</p>
+    <div class="opts"><button data-k="a">A média.</button><button data-k="b">O desvio padrão.</button><button data-k="c">A moda e a mediana, por ser uma variável ordinal.</button></div>
+    <div class="fb">A ordem existe, mas as distâncias entre os pontos não são garantidamente iguais.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Com n = 100 observações, pela regra de Sturges, quantas classes (aprox.) usar?</p>
+    <div class="opts"><button data-k="a">Cerca de 8 (1 + 3,322 × 2 = 7,64).</button><button data-k="b">Cerca de 100.</button><button data-k="c">Cerca de 2.</button></div>
+    <div class="fb">log₁₀(100) = 2, então k ≈ 1 + 3,322 × 2 = 7,6, arredondando para 8.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é fr?</b></span><span class="bk">Frequência relativa: fi dividido pelo total, em proporção ou %.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o histograma tem barras coladas?</b></span><span class="bk">Porque o eixo é contínuo: uma classe termina onde a próxima começa.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é assimetria à direita?</b></span><span class="bk">Cauda longa para os valores altos; em geral, a média fica acima da mediana.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Discreta x contínua?</b></span><span class="bk">Discreta resulta de contagem (inteiros). Contínua resulta de medida (qualquer valor num intervalo).</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">Para transformar a base em números e gráficos você precisa de uma ferramenta. Vamos a ela.</div><p>Python e R, lado a lado.</p></div>
+</section>
+
+</article>
+</body>
+</html>
