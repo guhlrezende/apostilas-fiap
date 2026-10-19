@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: DNS: a agenda da internet | Apostila de Cibersegurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cyber.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Aula 2</div>
+  <h1>DNS: a agenda da internet</h1>
+  <p class="sub">Como um nome vira um endereço, passo a passo, e o que cada servidor da hierarquia sabe.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">consulta DNS real</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 2 você viu que o IP identifica cada máquina por um número. Só que ninguém digita <code>142.250.78.46</code> para abrir um site: digitamos <code>google.com</code>. Alguém precisa traduzir o nome para o número, e esse alguém é uma hierarquia inteira de servidores.</div>
+<section class="sec" id="o-que-e">
+  <h2><span class="sn">1</span>DNS: de nome para endereço</h2>
+  <p class="gancho">A agenda de contatos da internet.</p>
+  <p>O <b>DNS</b> (<i>Domain Name System</i>) é o sistema que <b>aponta nomes de domínio para endereços IP</b>. Sem ele, você teria de decorar o IP de cada site. É uma <b>hierarquia de servidores</b> organizada em árvore, e nenhum servidor sozinho sabe tudo. Ao digitar um endereço, o computador faz uma <b>consulta DNS</b>: pergunta ao servidor DNS mais próximo, que responde com o IP ou <b>encaminha</b> a pergunta a outro servidor que possa saber.</p>
+  <h3>Os três níveis (e o que cada um sabe)</h3>
+  <div class="grid3">
+    <div class="card rv"><b>1. Raiz</b><p>Não conhece os sites: conhece <b>quem cuida de cada TLD</b> (.com, .org, .br...). (Há 13 identidades de servidores raiz, cada uma replicada em centenas de locais.)</p></div>
+    <div class="card rv"><b>2. TLD</b><p>O servidor do domínio de topo (<i>.com</i>, <i>.br</i>). Conhece <b>quem é autoritativo</b> para cada domínio sob ele.</p></div>
+    <div class="card rv"><b>3. Autoritativo</b><p>Guarda os <b>registros finais</b> do domínio e <b>responde diretamente</b>. É o fim da cadeia: tem o IP de verdade.</p></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>É comum ver os três níveis descritos com o mesmo texto, como se todos guardassem "os TLDs". Não é: <b>raiz</b> conhece os TLDs, <b>TLD</b> conhece os autoritativos, <b>autoritativo</b> tem o IP final.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como essas três perguntas acontecem, em ordem, quando você abre um site?</div><p>Acompanhe passo a passo.</p></div>
+</section>
+
+<section class="sec" id="resolucao">
+  <h2><span class="sn">2</span>A consulta, passo a passo</h2>
+  <p class="gancho">Descobrir <code>www.exemplo.com.br</code> numa cache vazia.</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Você pergunta ao resolvedor</b><p>O navegador pergunta ao <b>resolvedor</b> (o servidor DNS configurado, geralmente o do provedor ou um público): "qual o IP de <code>www.exemplo.com.br</code>?". Antes, ele confere o <b>cache</b>: se já sabe e a resposta ainda é válida, responde na hora e acabou.</p></div>
+      <div class="st"><b>2. O resolvedor consulta a raiz</b><p>Sem cache, ele pergunta a um servidor <b>raiz</b>. A raiz não sabe o IP, mas responde: "para <code>.br</code>, pergunte a estes servidores".</p></div>
+      <div class="st"><b>3. Consulta ao TLD</b><p>O servidor de <code>.br</code> também não sabe o IP, mas sabe quem é <b>autoritativo</b> por <code>exemplo.com.br</code> e indica.</p></div>
+      <div class="st"><b>4. Consulta ao autoritativo</b><p>O servidor autoritativo tem o <b>registro A</b> e responde com o IP.</p></div>
+      <div class="st"><b>5. A resposta volta e vai para o cache</b><p>O resolvedor devolve o IP ao seu computador e <b>guarda</b> a resposta pelo tempo do <b>TTL</b>. A próxima pessoa que perguntar a mesma coisa recebe a resposta pronta.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <p>Agora faça você uma consulta de verdade. Troque o domínio e o tipo de registro e observe o <b>TTL</b>:</p>
+  <div class="demo" data-demo="dnsquery"></div>
+</section>
+
+<section class="sec" id="registros">
+  <h2><span class="sn">3</span>Registros, cache e tipos de DNS</h2>
+  <p class="gancho">O "registro DNS" é a informação guardada no servidor autoritativo.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Registro</th><th>O que faz</th><th>Exemplo</th></tr>
+    <tr><td><code>A</code></td><td>aponta um nome para um endereço <b>IPv4</b></td><td><code>exemplo.com → 203.0.113.7</code></td></tr>
+    <tr><td><code>AAAA</code></td><td>aponta um nome para um endereço <b>IPv6</b></td><td>(complemento)</td></tr>
+    <tr><td><code>CNAME</code></td><td>cria um <b>alias</b>: um nome que aponta para outro nome</td><td><code>www → exemplo.com</code></td></tr>
+    <tr><td><code>MX</code></td><td>diz <b>qual servidor de e-mail</b> recebe as mensagens do domínio</td><td><code>exemplo.com → mail.exemplo.com</code></td></tr>
+    <tr><td><code>NS</code></td><td>indica os servidores de nomes <b>autoritativos</b> do domínio</td><td></td></tr>
+    <tr><td><code>TXT</code></td><td>guarda texto livre: <b>verificação de domínio</b>, chaves públicas, regras anti-spam</td><td></td></tr>
+  </table></div>
+  <ul>
+    <li><b>Cache DNS</b>: armazena respostas recentes para <b>acelerar</b> as consultas seguintes, sem precisar perguntar ao autoritativo toda vez. Cada resposta tem um <b>TTL</b> (tempo de vida); ao expirar, é perguntada de novo. É por isso que uma mudança de DNS leva tempo para "propagar".</li>
+    <li><b>DNS público</b> (Google 8.8.8.8, Cloudflare 1.1.1.1, OpenDNS): servidores abertos a qualquer pessoa, geralmente gratuitos. <b>DNS privado</b>: de uso interno de uma empresa ou organização, que controla os nomes da própria rede.</li>
+  </ul>
+  <h3>Duas ferramentas do dia a dia (ARP e tracert)</h3>
+<pre><code>nslookup google.com      <span class="c"># pergunta ao DNS (Windows, Linux e macOS)</span>
+arp -a                   <span class="c"># mostra a tabela ARP: IP → MAC dos vizinhos da rede local</span>
+tracert google.com.br    <span class="c"># Windows  (traceroute no Linux/macOS): lista os roteadores do caminho</span></code></pre>
+  <p>O <b>ARP</b> (<i>Address Resolution Protocol</i>) mapeia um IP ao MAC de um dispositivo <b>na rede local</b>: antes de falar com alguém, o host consulta a própria tabela ARP e, se não houver entrada, envia um <i>ARP Request</i>. O <b>tracert</b> rastreia o caminho de um pacote até o destino e mostra os IPs de todos os roteadores intermediários, o que ajuda a achar onde há atraso ou falha.</p>
+  <div class="nota exemplo"><span class="lbl">Atividade prática da aula (no seu computador)</span>Subir um servidor web local com <code>python -m http.server 8080</code>, capturar o tráfego com o <b>Wireshark</b> e observar o que passa em HTTP. Faça isso <b>só na sua própria máquina e rede</b>: capturar tráfego de terceiros sem autorização é crime. O Capítulo 4 usa essa prática para explicar o ataque.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>DNS</b> traduz nome em IP, numa hierarquia: <b>raiz</b> (conhece os TLDs) → <b>TLD</b> (conhece os autoritativos) → <b>autoritativo</b> (tem o IP).</li><li>Registros: <b>A</b> (IPv4), <b>AAAA</b> (IPv6), <b>CNAME</b> (alias), <b>MX</b> (e-mail), <b>NS</b> (servidores de nomes), <b>TXT</b> (texto/verificação).</li><li><b>Cache</b> acelera; o <b>TTL</b> diz por quanto tempo a resposta vale.</li><li><b>Público</b> (aberto a todos) x <b>privado</b> (interno de uma organização).</li><li><b>ARP</b>: IP → MAC na rede local. <b>tracert</b>: mostra o caminho dos pacotes.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Qual servidor DNS tem o registro final com o IP de um domínio?</p>
+    <div class="opts"><button data-k="a">O autoritativo.</button><button data-k="b">O servidor raiz.</button><button data-k="c">O servidor de TLD.</button></div>
+    <div class="fb">A raiz indica o TLD, o TLD indica o autoritativo, e o autoritativo responde com o IP.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 2</span><p class="qq">Para que serve o registro MX?</p>
+    <div class="opts"><button data-k="a">Apontar um nome para um IP.</button><button data-k="b">Indicar qual servidor de e-mail recebe as mensagens do domínio.</button><button data-k="c">Guardar uma chave de verificação.</button></div>
+    <div class="fb">MX vem de <i>Mail eXchange</i>. O registro que aponta para um IP é o A, e o TXT guarda textos como verificações.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Por que uma mudança de DNS demora a 'propagar'?</p>
+    <div class="opts"><button data-k="a">Porque o DNS é lento.</button><button data-k="b">Porque os servidores raiz precisam aprovar.</button><button data-k="c">Porque os resolvedores guardam a resposta antiga em cache até o TTL expirar.</button></div>
+    <div class="fb">Cada resolvedor reaproveita a resposta pelo tempo do TTL. Só depois que ela expira é que ele pergunta de novo e vê o valor novo.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o cache DNS?</b></span><span class="bk">Guarda respostas recentes para acelerar consultas futuras, até o TTL expirar.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>CNAME em uma frase?</b></span><span class="bk">Um alias: um nome que aponta para outro nome.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o ARP resolve?</b></span><span class="bk">Descobre o MAC address de um dispositivo a partir do IP, na rede local.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o tracert mostra?</b></span><span class="bk">Os roteadores por onde o pacote passa até o destino, com os tempos de cada salto.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">O DNS confia em quem responde. O que acontece se alguém mentir?</div><p>É o assunto do próximo capítulo.</p></div>
+</section>
+
+</article>
+</body>
+</html>

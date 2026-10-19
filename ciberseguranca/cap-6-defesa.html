@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Defesa: criptografia, hash e camadas | Apostila de Cibersegurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cyber.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Complemento</div>
+  <h1>Defesa: criptografia, hash e camadas</h1>
+  <p class="sub">Os três objetivos da segurança, as ferramentas por trás das defesas e como empilhá-las.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 5 você viu o catálogo de ataques. Cada um sugeriu uma defesa pontual (HTTPS, backup, parametrizar, 2FA). Este capítulo, que é <b>complemento</b> (não foi dado em aula), junta as defesas em um quadro só e explica as ferramentas por trás delas: criptografia e hash.</div>
+<section class="sec" id="cia">
+  <h2><span class="sn">1</span>O que estamos protegendo: a tríade CIA</h2>
+  <p class="gancho">Segurança não é "ninguém entra". São três objetivos.</p>
+  <div class="grid3">
+    <div class="card rv"><b style="color:var(--c0)">Confidencialidade</b><p>Só quem tem permissão <b>lê</b> a informação. Violada por vazamento, espionagem, MITM.</p></div>
+    <div class="card rv"><b style="color:var(--c1)">Integridade</b><p>A informação <b>não é alterada</b> sem autorização. Violada por adulteração de dados ou resposta DNS falsa.</p></div>
+    <div class="card rv"><b style="color:var(--c2)">Disponibilidade</b><p>O sistema está <b>acessível</b> quando precisa. Violada por DDoS e ransomware.</p></div>
+  </div>
+  <p>Todo ataque do Capítulo 5 fere um (ou mais) dos três. Perguntar "qual dos três está em risco?" ajuda a escolher a defesa certa.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Para proteger a confidencialidade, como esconder o conteúdo de quem não deve ver?</div><p>Com criptografia.</p></div>
+</section>
+
+<section class="sec" id="cripto">
+  <h2><span class="sn">2</span>Criptografia: simétrica e assimétrica</h2>
+  <p class="gancho">Embaralhar de um jeito que só a chave desfaz.</p>
+  <p><b>Criptografar</b> é transformar um dado legível (texto claro) em um ilegível (texto cifrado) com um algoritmo e uma <b>chave</b>; <b>decifrar</b> é o caminho inverso. Veja a ideia na cifra mais antiga e simples, a de César, que também mostra por que ela é fraca:</p>
+  <div class="demo" data-demo="cesar"></div>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Simétrica</th><th>Assimétrica</th></tr>
+    <tr><td><b>Chave</b></td><td><b>uma só</b>, a mesma para cifrar e decifrar</td><td>um <b>par</b>: chave <b>pública</b> (cifra) e chave <b>privada</b> (decifra)</td></tr>
+    <tr><td><b>Velocidade</b></td><td>rápida</td><td>mais lenta</td></tr>
+    <tr><td><b>Problema</b></td><td>como combinar a chave com segurança?</td><td>resolve a troca de chaves, mas custa mais</td></tr>
+    <tr><td><b>Exemplos</b></td><td>AES</td><td>RSA, curvas elípticas</td></tr>
+  </table></div>
+  <p>No dia a dia as duas trabalham juntas. No <b>HTTPS</b> (TLS), a assimétrica serve para <b>autenticar o servidor</b> (o certificado) e combinar uma chave com segurança; depois, a conversa inteira corre com uma chave <b>simétrica</b>, mais rápida. É por isso que o cadeado cobre as duas coisas: <i>com quem</i> você fala e <i>o sigilo</i> do que fala.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E a senha? Se o site a guarda cifrada, quem tem a chave lê todas.</div><p>Por isso as senhas não se cifram: usa-se hash.</p></div>
+</section>
+
+<section class="sec" id="hash">
+  <h2><span class="sn">3</span>Hash: a impressão digital que não tem volta</h2>
+  <p class="gancho">Conferir sem guardar.</p>
+  <p>Uma <b>função de hash</b> transforma qualquer entrada em um resumo de <b>tamanho fixo</b>, de um jeito que <b>não dá para reverter</b> e em que uma mudança mínima altera tudo (o <i>efeito avalanche</i>). Use o SHA-256 do próprio navegador e compare:</p>
+  <div class="demo" data-demo="hash"></div>
+  <p>Daí o uso para <b>senhas</b>: o sistema guarda só o hash. No login, calcula o hash do que você digitou e compara. Quem rouba o banco não tem as senhas, apenas hashes. Mas há dois cuidados:</p>
+  <ul>
+    <li><b>Sal (<i>salt</i>)</b>: um texto aleatório, diferente por usuário, misturado à senha antes do hash. Sem ele, senhas iguais geram hashes iguais, e tabelas prontas de hashes (<i>rainbow tables</i>) quebram as comuns.</li>
+    <li><b>Hash lento de propósito</b>: para senhas, use algoritmos desenhados para serem <b>caros</b> (bcrypt, scrypt, Argon2), e não o SHA-256 puro, que é rápido demais e facilita a força bruta (lembra da calculadora do capítulo anterior?).</li>
+  </ul>
+  <div class="nota cuidado"><span class="lbl">Hash também serve à integridade</span>Sites de download publicam o hash do arquivo. Você calcula o hash do que baixou: se bater, o arquivo não foi adulterado no caminho.</div>
+</section>
+
+<section class="sec" id="camadas">
+  <h2><span class="sn">4</span>Defesa em profundidade</h2>
+  <p class="gancho">Nenhuma defesa sozinha basta. Empilhe.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Camada de defesa</th><th>Protege contra</th><th>Prática</th></tr>
+    <tr><td><b>Pessoas</b></td><td>phishing, engenharia social</td><td>treinamento, confirmação por outro canal, nunca passar códigos</td></tr>
+    <tr><td><b>Identidade</b></td><td>força bruta, roubo de senha</td><td>senhas longas e únicas, <b>2FA/MFA</b>, gerenciador de senhas</td></tr>
+    <tr><td><b>Dispositivo</b></td><td>malware</td><td>atualizações, antivírus, menos programas instalados</td></tr>
+    <tr><td><b>Rede</b></td><td>MITM, DDoS, tráfego malicioso</td><td>firewall, segmentação, HTTPS, VPN, DNS seguro</td></tr>
+    <tr><td><b>Aplicação</b></td><td>SQL injection, XSS</td><td>consultas parametrizadas, escape de saída, validação</td></tr>
+    <tr><td><b>Dados</b></td><td>vazamento, ransomware</td><td>criptografia, <b>backup 3-2-1</b> (3 cópias, 2 mídias, 1 fora do local)</td></tr>
+    <tr><td><b>Acesso</b></td><td>abuso interno, conta comprometida</td><td><b>menor privilégio</b>: cada um só pode o que precisa</td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">2FA em uma linha</span>Combina <i>algo que você sabe</i> (senha) com <i>algo que você tem</i> (celular, chave física) ou <i>algo que você é</i> (biometria). Mesmo que a senha vaze, falta o segundo fator. Prefira aplicativo autenticador ou chave física a SMS, que pode ser desviado.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Tríade CIA</b>: confidencialidade, integridade, disponibilidade. Todo ataque fere pelo menos um.</li><li><b>Simétrica</b>: uma chave, rápida (AES). <b>Assimétrica</b>: par público/privada (RSA). O <b>TLS</b> usa as duas.</li><li><b>Hash</b>: resumo de tamanho fixo, <b>sem volta</b>, com efeito avalanche. Para senhas: <b>sal</b> + hash lento (bcrypt, Argon2).</li><li><b>Defesa em profundidade</b>: várias camadas (pessoas, identidade, dispositivo, rede, aplicação, dados, acesso).</li><li><b>Backup 3-2-1</b> e <b>menor privilégio</b> reduzem o estrago quando algo falha.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Por que senhas devem ser guardadas como hash, e não cifradas?</p>
+    <div class="opts"><button data-k="a">Porque o hash é mais fácil de ler.</button><button data-k="b">Porque cifrar é proibido.</button><button data-k="c">Porque o hash não tem volta: quem rouba o banco não obtém as senhas, e a conferência se faz comparando hashes.</button></div>
+    <div class="fb">Se a senha fosse cifrada, quem tivesse a chave (ou a roubasse junto) leria todas. O hash elimina essa possibilidade.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Qual a função do sal (salt) no armazenamento de senhas?</p>
+    <div class="opts"><button data-k="a">Fazer com que senhas iguais gerem hashes diferentes e inutilizar tabelas prontas de hashes.</button><button data-k="b">Deixar o hash menor.</button><button data-k="c">Cifrar a senha.</button></div>
+    <div class="fb">O sal é aleatório e único por usuário, e é guardado junto ao hash.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">No HTTPS, para que serve a criptografia assimétrica?</p>
+    <div class="opts"><button data-k="a">Cifrar todo o conteúdo da conversa, por ser mais rápida.</button><button data-k="b">Autenticar o servidor e combinar com segurança a chave simétrica usada na conversa.</button><button data-k="c">Compactar os dados.</button></div>
+    <div class="fb">A assimétrica é mais lenta. Ela abre a conversa; a simétrica, mais rápida, leva o conteúdo.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é a tríade CIA?</b></span><span class="bk">Confidencialidade, integridade e disponibilidade: os três objetivos da segurança da informação.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Simétrica x assimétrica?</b></span><span class="bk">Simétrica usa uma chave para cifrar e decifrar. Assimétrica usa um par: pública cifra, privada decifra.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o efeito avalanche?</b></span><span class="bk">Uma mudança mínima na entrada altera quase todo o hash.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é backup 3-2-1?</b></span><span class="bk">3 cópias, em 2 tipos de mídia, com 1 delas fora do local.</span></button></div><div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Você percorreu o caminho do dado e o do ataque.</div><p>Volte à visão geral e refaça os testes sem olhar as respostas.</p></div>
+</section>
+
+</article>
+</body>
+</html>

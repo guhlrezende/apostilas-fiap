@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: Ataques à rede e ao DNS | Apostila de Cibersegurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cyber.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aulas 2 e 6</div>
+  <h1>Ataques à rede e ao DNS</h1>
+  <p class="sub">Três formas de explorar a confiança da rede, e como cada uma é detectada e evitada.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">foco defensivo</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 você viu que o DNS responde com o que o servidor guarda, e que o resolvedor <b>acredita</b> na resposta e a guarda em cache. Essa confiança é o ponto fraco. Neste capítulo, três maneiras de explorá-la, e as defesas.</div>
+<section class="sec" id="spoofing">
+  <h2><span class="sn">1</span>DNS spoofing: a resposta falsa</h2>
+  <p class="gancho">Você digitou o endereço certo e foi parar no site errado.</p>
+  <p>O <b>DNS spoofing</b> (ou envenenamento de cache) <b>corrompe as informações guardadas no cache DNS</b> para redirecionar o tráfego a um site malicioso. O atacante <b>intercepta as consultas</b> entre o usuário e o servidor DNS e envia <b>respostas falsas</b>; a vítima passa a acessar o site do atacante, que costuma ser uma cópia do original, para <b>roubar senhas ou dados financeiros</b>. É justamente o <b>cache</b> que é envenenado.</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>Normal</b><p>Você pergunta o IP de <code>banco.exemplo</code>. O DNS responde <code>203.0.113.7</code> (o IP verdadeiro). Você acessa o site real.</p></div>
+      <div class="st"><b>1. O atacante se posiciona</b><p>Ele fica onde enxerga ou influencia as consultas (uma rede Wi-Fi aberta, um roteador comprometido).</p></div>
+      <div class="st"><b>2. A resposta falsa chega primeiro</b><p>Ele responde à sua consulta com <code>198.51.100.66</code> (o IP do <b>site falso</b>). O resolvedor aceita e <b>guarda em cache</b>.</p></div>
+      <div class="st"><b>3. Você é enganado</b><p>Você digitou o endereço certo, e o navegador mostra uma página igual à do banco. Se você digitar a senha, o atacante a recebe.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <p><b>Defesas:</b> <b>HTTPS</b> com certificado válido (o site falso não consegue um certificado do banco, e o navegador avisa); <b>DNSSEC</b> (as respostas DNS são assinadas digitalmente, e o resolvedor confere a assinatura); <b>DNS cifrado</b> (DoH e DoT); e nunca ignorar o aviso de certificado do navegador. Um IoT simples também pode checar o IP devolvido contra um IP de referência conhecido.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se o atacante nem quisesse enganar você, e sim usar o DNS como um cano para sair da rede?</div><p>É o DNS tunneling.</p></div>
+</section>
+
+<section class="sec" id="tunneling">
+  <h2><span class="sn">2</span>DNS tunneling: o túnel dentro do DNS</h2>
+  <p class="gancho">O tráfego que quase ninguém inspeciona.</p>
+  <p>O <b>DNS tunneling</b> esconde dados e comandos dentro do tráfego DNS, usando o protocolo como um <b>canal secreto</b> entre uma máquina comprometida e um servidor do atacante. O ataque não depende de uma falha do protocolo, e sim de um hábito de configuração: a maioria dos firewalls <b>não filtra nem inspeciona o DNS de saída</b>, porque ele é visto como tráfego de infraestrutura, essencial para tudo funcionar.</p>
+  <ol>
+    <li><b>Comprometimento:</b> a vítima instala um malware.</li>
+    <li><b>Infraestrutura:</b> o atacante registra um domínio e configura um servidor de nomes autoritativo próprio para ele.</li>
+    <li><b>Codificação:</b> o malware coloca os dados <b>dentro de subdomínios</b> de consultas DNS (em base32 ou base64).</li>
+    <li><b>Tráfego "normal":</b> as consultas saem como DNS comum, passam pelo resolvedor e chegam ao servidor do atacante, que decodifica o dado e responde com novos comandos escondidos (por exemplo, em registros TXT).</li>
+  </ol>
+  <p>Usos: <b>comando e controle (C2)</b>, <b>exfiltração de dados</b> e entrega de novos payloads. Veja como um texto vira consultas (o domínio é fictício):</p>
+  <div class="demo" data-demo="tunel"></div>
+  <div class="nota lembra"><span class="lbl">Dois ângulos do mesmo ponto cego</span>O <b>spoofing</b> ataca o <b>cache</b> (envenena o que já está guardado). O <b>tunneling</b> ataca a <b>confiança implícita</b> que a rede dá ao protocolo. Em ambos, a defesa começa em <b>não tratar o DNS como inofensivo</b>: monitorar volume, tamanho e aparência dos nomes consultados.</div>
+</section>
+
+<section class="sec" id="mitm">
+  <h2><span class="sn">3</span>ARP spoofing e man in the middle</h2>
+  <p class="gancho">Quando o atacante vira o carteiro.</p>
+  <p>No <b>man in the middle</b> (MITM), o atacante se coloca <b>entre</b> você e o servidor e passa a ler (ou alterar) o que trafega. Formas comuns: um <b>Wi-Fi público falso</b>, o <b>DNS spoofing</b> e o <b>ARP spoofing</b>. Neste último, o atacante responde a pedidos ARP dizendo "o IP do roteador é <i>este MAC</i>" (o dele), e os dispositivos da rede local passam a mandar o tráfego para ele em vez de para o roteador.</p>
+  <p>E é aqui que a atividade prática da aula fecha o ciclo. O servidor <code>python -m http.server</code> usa <b>HTTP</b>, que trafega em <b>texto aberto</b>. Na captura do Wireshark, tudo que entra e sai (URLs, formulários, senhas) aparece legível. Com <b>HTTPS</b>, o conteúdo é cifrado com TLS, e quem está no meio vê só bytes sem sentido.</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>HTTP</th><th>HTTPS</th></tr>
+    <tr><td><b>Conteúdo para quem captura</b></td><td>legível (texto aberto)</td><td>cifrado (só dá para ver com quem se comunica e quanto)</td></tr>
+    <tr><td><b>Identidade do servidor</b></td><td>não verificada</td><td>verificada por <b>certificado</b></td></tr>
+    <tr><td><b>Um atacante no meio pode alterar?</b></td><td>sim, sem ninguém notar</td><td>não, sem que o navegador avise</td></tr>
+  </table></div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>O cadeado não diz que o site é <b>confiável</b>, só que a conexão é <b>cifrada</b> e o certificado confere com o domínio. Um site de phishing também pode ter HTTPS. Confira sempre o <b>domínio</b>.</div>
+  <p><b>Defesas:</b> HTTPS sempre, <b>nunca</b> ignorar aviso de certificado, VPN em Wi-Fi público, e em redes corporativas, recursos como <i>Dynamic ARP Inspection</i> nos switches.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>DNS spoofing</b>: resposta DNS falsa (cache envenenado) leva a um site do atacante. Defesas: HTTPS, <b>DNSSEC</b>, DNS cifrado (DoH/DoT).</li><li><b>DNS tunneling</b>: dados escondidos em subdomínios. Explora a falta de inspeção do DNS de saída. Sinais: nomes longos e aleatórios, volume alto, muitos TXT.</li><li><b>ARP spoofing</b>: o atacante diz ser o roteador na rede local, e vira um MITM.</li><li><b>MITM</b>: ler ou alterar o que trafega. Com <b>HTTP</b> dá para ler tudo; com <b>HTTPS</b> não.</li><li>O cadeado indica conexão cifrada, e <b>não</b> site confiável.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que o DNS tunneling passa por muitos firewalls?</p>
+    <div class="opts"><button data-k="a">Porque o DNS é cifrado por padrão.</button><button data-k="b">Porque o DNS de saída costuma ser liberado e pouco inspecionado.</button><button data-k="c">Porque o atacante quebra o firewall.</button></div>
+    <div class="fb">É uma falha de configuração, e não do protocolo: o DNS é essencial, então fica liberado e sem inspeção profunda.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">O que o HTTPS impede, no cenário do Wireshark?</p>
+    <div class="opts"><button data-k="a">Que alguém tenha acesso à rede.</button><button data-k="b">Que o site exista.</button><button data-k="c">Que quem captura o tráfego leia o conteúdo.</button></div>
+    <div class="fb">O TLS cifra a conversa. Quem captura vê só bytes sem sentido, e não as URLs, formulários ou senhas.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual a diferença central entre spoofing e tunneling de DNS?</p>
+    <div class="opts"><button data-k="a">Spoofing engana a vítima com uma resposta falsa; tunneling usa o DNS como canal escondido para dados e comandos.</button><button data-k="b">Nenhuma: são o mesmo ataque.</button><button data-k="c">Spoofing só funciona em IPv6.</button></div>
+    <div class="fb">O spoofing ataca o que o resolvedor guarda; o tunneling aproveita que o DNS é raramente inspecionado.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é DNSSEC?</b></span><span class="bk">Um conjunto de extensões que assina digitalmente as respostas DNS, para o resolvedor poder verificar que não foram forjadas.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Sinais de DNS tunneling?</b></span><span class="bk">Subdomínios longos e aleatórios, muitas consultas a um só domínio, muitas respostas TXT, domínio recém-registrado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é ARP spoofing?</b></span><span class="bk">Responder pedidos ARP com o MAC do atacante para desviar o tráfego da rede local para ele.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O cadeado garante um site confiável?</b></span><span class="bk">Não: garante conexão cifrada e certificado compatível com o domínio. Phishing também pode usar HTTPS.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">Esses ataques miram a rede. Quais miram a pessoa, a máquina e a aplicação?</div><p>O próximo capítulo faz o catálogo completo.</p></div>
+</section>
+
+</article>
+</body>
+</html>

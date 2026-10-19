@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: Redes e o modelo OSI | Apostila de Cibersegurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cyber.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 1</div>
+  <h1>Redes e o modelo OSI</h1>
+  <p class="sub">As sete camadas, como a mensagem desce e sobe por elas, e os endereços que cada uma usa.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">1 demo · 1 jogo · 1 teste · 4 flashcards</span><span class="chip">animação do encapsulamento</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo, então você não precisa saber nada de redes. Basta já ter usado a internet. A ideia de toda a apostila: <b>para se defender, é preciso entender como as coisas funcionam</b>. E tudo na internet é feito por protocolos.</div>
+<section class="sec" id="osi">
+  <h2><span class="sn">1</span>O modelo OSI: sete camadas, uma responsabilidade cada</h2>
+  <p class="gancho">Como organizar algo tão complexo quanto a internet?</p>
+  <p>O <b>modelo OSI</b> foi desenvolvido pela <b>ISO</b> (<i>International Organization for Standardization</i>) na <b>década de 1980</b>. É um modelo <b>teórico, de referência</b>: serve para descrever como os dados são transmitidos e recebidos e, principalmente, para <mark class="hl">diagnosticar problemas</mark> de rede camada a camada ("o cabo está ligado? o IP está certo? a porta está aberta?").</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Camada</th><th>Responsabilidade</th><th>Exemplos</th></tr>
+    <tr><td>7</td><td><b>Aplicação</b></td><td>interface com o software final: e-mail, navegação, transferência de arquivos</td><td>HTTP, SMTP, DNS</td></tr>
+    <tr><td>6</td><td><b>Apresentação</b></td><td>converte formatos e <b>criptografa</b> os dados</td><td>JPEG, AES, TLS</td></tr>
+    <tr><td>5</td><td><b>Sessão</b></td><td>abre, gerencia e encerra sessões; autenticação</td><td>SSH, RPC</td></tr>
+    <tr><td>4</td><td><b>Transporte</b></td><td>controla a transferência entre dispositivos: entrega, fluxo, segmentação</td><td>TCP, UDP</td></tr>
+    <tr><td>3</td><td><b>Rede</b></td><td>endereça e <b>roteia</b> dados entre redes diferentes</td><td>IP, OSPF</td></tr>
+    <tr><td>2</td><td><b>Enlace</b></td><td>entrega dentro da rede local, em quadros, com detecção de erro e controle de fluxo</td><td>Ethernet, Wi-Fi</td></tr>
+    <tr><td>1</td><td><b>Física</b></td><td>transmite os bits pelo meio: sinais elétricos, ópticos ou de rádio</td><td>cabos, fibra, Wi-Fi, Bluetooth</td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">Macete (complemento)</span>Para decorar de cima para baixo (7 a 1): <b>A</b>plicação, <b>A</b>presentação, <b>S</b>essão, <b>T</b>ransporte, <b>R</b>ede, <b>E</b>nlace, <b>F</b>ísica. Há várias frases mnemônicas; invente a sua. O importante não é a ordem decorada, é saber <i>o que cada camada resolve</i>.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se cada camada cuida de uma coisa, como a mensagem passa por todas elas?</div><p>Cada camada embrulha a mensagem com o seu cabeçalho. É o encapsulamento.</p></div>
+</section>
+
+<section class="sec" id="encapsulamento">
+  <h2><span class="sn">2</span>Encapsulamento: a mensagem desce e sobe</h2>
+  <p class="gancho">Como uma carta numa série de envelopes.</p>
+  <p>Quem envia começa na camada de <b>aplicação</b> e desce até a <b>física</b>; a cada camada, a mensagem ganha um <b>cabeçalho</b> (<i>header</i>) com a informação que aquela camada precisa (portas, endereços IP, endereços MAC). Quem recebe faz o caminho inverso, e cada camada <b>retira</b> o seu cabeçalho e entrega o restante à de cima.</p>
+  <div class="demo" data-demo="osi"></div>
+  <div class="nota exemplo"><span class="lbl">Por que isso importa para segurança</span>Um ataque costuma <b>escolher uma camada</b>. DNS spoofing e SQL injection atuam na aplicação; ARP spoofing, no enlace; um DDoS pode sobrecarregar a rede ou o transporte. Saber a camada ajuda a saber <b>onde</b> defender: um firewall que só olha a camada 3 (IP) não enxerga o conteúdo de uma requisição HTTP maliciosa.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Duas camadas usam endereços: a de enlace (MAC) e a de rede (IP). Qual a diferença?</div><p>Uma serve para a rede local, outra para o mundo.</p></div>
+</section>
+
+<section class="sec" id="mac">
+  <h2><span class="sn">3</span>MAC, NIC.br e sistemas autônomos (o que ficou pendente)</h2>
+  <p class="gancho">Três nomes que apareceram em aula e merecem uma explicação.</p>
+  <div class="grid3">
+    <div class="card rv"><b>MAC address</b><p>Endereço físico de <b>48 bits</b>, gravado de fábrica na placa de rede (NIC), escrito em 12 hexadecimais (<code>00:1A:2B:3C:4D:5E</code>). Vive na <b>camada 2</b>: serve para a entrega <b>dentro da rede local</b>. O <b>IP</b> (camada 3) resolve o caminho entre redes, e o <b>ARP</b> faz a ponte (descobre o MAC de um IP).</p></div>
+    <div class="card rv"><b>Sistema Autônomo (AS)</b><p>Uma rede (ou conjunto) sob <b>uma administração técnica</b>, com sua própria política de roteamento e blocos de IP: uma operadora, uma universidade, um grande provedor. Cada AS tem um número, o <b>ASN</b>. É entre ASNs que o protocolo <b>BGP</b> troca rotas, e a internet é, no fundo, uma rede de ASNs.</p></div>
+    <div class="card rv"><b>NIC.br</b><p>Núcleo de Informação e Coordenação do Ponto BR: executa as decisões do <b>CGI.br</b>. Mantém o <b>Registro.br</b> (domínios .br), o <b>IX.br</b> (os PTTs, pontos onde as redes se interligam), o <b>CERT.br</b> (resposta a incidentes) e o <b>CETIC.br</b> (pesquisas).</p></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Sobre ByteByteGo e Miro</span>Os dois nomes citados em aula não são conceitos de rede: <b>ByteByteGo</b> é uma marca de conteúdo educacional sobre arquitetura de sistemas e redes, conhecida por diagramas didáticos, e o <b>Miro</b> é uma ferramenta de quadro branco colaborativo online, usada para desenhar diagramas.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>OSI</b>: 7 camadas (aplicação, apresentação, sessão, transporte, rede, enlace, física). Modelo de <b>referência</b>, útil para diagnosticar.</li><li><b>Encapsulamento</b>: cada camada acrescenta o seu cabeçalho ao descer, e o retira ao subir.</li><li><b>MAC</b> (48 bits, camada 2, rede local) x <b>IP</b> (camada 3, entre redes). O <b>ARP</b> liga os dois.</li><li><b>AS/ASN</b>: rede sob uma administração; o <b>BGP</b> troca rotas entre ASNs.</li><li><b>NIC.br</b> mantém Registro.br, IX.br, CERT.br e CETIC.br.</li><li>Saber a <b>camada</b> de um ataque ajuda a escolher a defesa.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="card sorter rv" data-demo="sorter" data-opts="l7:Aplicação (7)|l4:Transporte (4)|l3:Rede (3)|l2:Enlace (2)">
+    <div class="item" data-ans="l4"><p><b>TCP</b>: controla a entrega confiável entre dois dispositivos.</p><span class="why">Transporte: TCP e UDP vivem na camada 4.</span></div>
+    <div class="item" data-ans="l3"><p><b>IP</b>: endereça e roteia pacotes entre redes diferentes.</p><span class="why">Rede: é a camada do IP.</span></div>
+    <div class="item" data-ans="l2"><p><b>Ethernet / MAC address</b>: entrega dentro da rede local.</p><span class="why">Enlace: quadros e endereços físicos.</span></div>
+    <div class="item" data-ans="l7"><p><b>HTTP</b>: a conversa entre o navegador e o servidor web.</p><span class="why">Aplicação: a interface com o software final.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que o modelo OSI é chamado de modelo de referência?</p>
+    <div class="opts"><button data-k="a">Porque é obrigatório em toda rede.</button><button data-k="b">Porque descreve uma organização em camadas para entender e diagnosticar redes, mesmo que as redes reais (como o TCP/IP) não o sigam ao pé da letra.</button><button data-k="c">Porque só existe no papel e ninguém o usa.</button></div>
+    <div class="fb">Na prática a internet usa a pilha TCP/IP (mais enxuta). O OSI continua sendo o vocabulário comum para falar de problemas por camada.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é encapsulamento?</b></span><span class="bk">Cada camada acrescenta o seu cabeçalho à mensagem ao descer; no destino, cada uma retira o seu ao subir.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>MAC x IP?</b></span><span class="bk">MAC é o endereço físico de 48 bits, para a rede local (camada 2). IP é o endereço lógico, para rotear entre redes (camada 3).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um sistema autônomo?</b></span><span class="bk">Uma rede sob uma única administração técnica, identificada por um ASN, que troca rotas com outras via BGP.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o ARP?</b></span><span class="bk">Descobre o MAC address de um dispositivo a partir do IP, na rede local.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">O OSI organiza as camadas. Como cada dispositivo é endereçado e como os dados viajam de fato?</div><p>Com o IP, o TCP e o UDP.</p></div>
+</section>
+
+</article>
+</body>
+</html>

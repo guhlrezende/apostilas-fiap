@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: Catálogo de ataques | Apostila de Cibersegurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="../banco-de-dados/bases.js"></script>
+<script src="demos/cyber.js"></script>
+<script src="../banco-de-dados/demos/cap-8.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Aula 6</div>
+  <h1>Catálogo de ataques</h1>
+  <p class="sub">Phishing, malware, DDoS, força bruta, SQL injection e XSS, organizados por quem eles atacam.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">3 demos · 1 jogo · 3 testes</span><span class="chip">SQL injection de verdade</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Os capítulos 1 a 4 deram a base de rede e dois ataques (DNS spoofing e MITM). Agora o mapa completo. Um jeito fácil de organizar: alguns ataques miram a <b>pessoa</b>, outros o <b>computador</b>, outros a <b>rede</b> e outros a <b>aplicação</b>.</div>
+<section class="sec" id="visao">
+  <h2><span class="sn">1</span>O mapa dos ataques</h2>
+  <p class="gancho">Antes de decorar nomes, pergunte: o que está sendo atacado?</p>
+  <div class="tablewrap"><table>
+    <tr><th>Ataque</th><th>Alvo</th><th>Em uma frase</th></tr>
+    <tr><td>Phishing</td><td>Pessoa</td><td>mensagem falsa para roubar senha ou dado</td></tr>
+    <tr><td>Spear phishing / whaling</td><td>Pessoa</td><td>phishing sob medida para uma pessoa ou um executivo</td></tr>
+    <tr><td>Engenharia social</td><td>Pessoa</td><td>manipular alguém para ele mesmo abrir a porta</td></tr>
+    <tr><td>Malware, ransomware, trojan</td><td>Máquina</td><td>programa malicioso; o ransomware sequestra os arquivos</td></tr>
+    <tr><td>DoS / DDoS</td><td>Rede / serviço</td><td>derrubar um serviço com excesso de requisições</td></tr>
+    <tr><td>Man in the middle, DNS spoofing</td><td>Rede</td><td>ficar no meio da conversa, ou desviar com resposta falsa (Capítulo 4)</td></tr>
+    <tr><td>Força bruta</td><td>Aplicação</td><td>testar senhas até acertar</td></tr>
+    <tr><td>SQL injection / XSS</td><td>Aplicação</td><td>injetar código por um campo do site</td></tr>
+  </table></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O elo mais fraco costuma ser a pessoa. Como ela é atacada?</div><p>Começamos por ela.</p></div>
+</section>
+
+<section class="sec" id="pessoa">
+  <h2><span class="sn">2</span>Ataques contra a pessoa</h2>
+  <p class="gancho">Quebrar um sistema é difícil. Convencer alguém é mais fácil.</p>
+  <h3>Phishing</h3>
+  <p>Mensagem que <b>finge ser de alguém confiável</b> (banco, escola, Correios) para você clicar num link, baixar um anexo ou digitar a senha. Por e-mail é o phishing; por SMS, <i>smishing</i>; por ligação, <i>vishing</i>. <b>Sinais:</b> urgência ("sua conta será bloqueada hoje"), remetente ou link com domínio estranho, pedido de senha ou de código de verificação. <b>Defesa:</b> desconfiar da urgência, conferir o domínio antes de clicar, <b>nunca</b> passar código de verificação, usar 2FA.</p>
+  <h3>Spear phishing e whaling</h3>
+  <p>O <b>spear phishing</b> é phishing <b>direcionado</b>: o atacante pesquisa a vítima (redes sociais) e escreve uma mensagem que parece real, citando nome, cargo e colegas. O <b>whaling</b> mira <b>executivos</b> (o "peixe grande"): o clássico é o e-mail "do CEO" pedindo uma transferência urgente. <b>Defesa:</b> confirmar pedidos de pagamento ou de dados por <b>outro canal</b> (ligar para a pessoa).</p>
+  <h3>Engenharia social</h3>
+  <p>Explorar a <b>confiança, o medo ou a vontade de ajudar</b> em vez de quebrar o sistema. O phishing é um tipo. Outros exemplos: alguém liga dizendo ser do suporte e pede a sua senha; alguém entra no prédio <b>atrás de você</b>, sem crachá (<i>tailgating</i>); um pen drive "esquecido" no estacionamento. <b>Defesa:</b> treinamento, regra de nunca passar senha, conferir identidade.</p>
+  <p>Treine o olho. Esta mensagem é legítima ou suspeita?</p>
+  <div class="card sorter rv" data-demo="sorter" data-opts="ok:Legítima|sus:Suspeita">
+    <div class="item" data-ans="sus"><p>"URGENTE: sua conta foi bloqueada. Confirme seus dados em <b>banco-seguro-login.exemplo</b> em até 2 horas ou será encerrada."</p><span class="why">Suspeita: urgência, ameaça e um domínio que não é o do banco. O banco real não pede dados por link.</span></div>
+    <div class="item" data-ans="ok"><p>Você abriu o app do banco, pediu um boleto e recebeu no e-mail cadastrado o boleto com o valor e o vencimento que você escolheu.</p><span class="why">Legítima: foi <b>você</b> quem iniciou a ação, e a mensagem confere com o que você pediu.</span></div>
+    <div class="item" data-ans="sus"><p>Mensagem "do diretor financeiro": "Estou em reunião e não posso falar. Faça agora uma transferência para este novo fornecedor e me confirme."</p><span class="why">Suspeita: é o padrão de whaling. Pressão de tempo, canal único e mudança de dados de pagamento. Confirme por outro canal.</span></div>
+    <div class="item" data-ans="sus"><p>"Passei na frente do seu prédio: me manda o código de 6 dígitos que chegou no seu celular para eu confirmar sua entrega."</p><span class="why">Suspeita: <b>código de verificação nunca se passa</b> a ninguém. É o 2FA sendo roubado por engenharia social.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+</section>
+
+<section class="sec" id="maquina-rede">
+  <h2><span class="sn">3</span>Contra a máquina e contra a rede</h2>
+  <p class="gancho">Programas maliciosos e excesso de tráfego.</p>
+  <h3>Malware, ransomware e trojan</h3>
+  <p><b>Malware</b> é o nome geral de software malicioso. O <b>trojan</b> (cavalo de Troia) parece um programa legítimo (crack de jogo, "atualização") mas traz o código malicioso junto. O <b>ransomware</b> <b>criptografa</b> os arquivos e cobra resgate para devolver a chave. <b>Defesa:</b> não instalar de fonte duvidosa, manter o sistema atualizado, antivírus e, acima de tudo, <b>backup offline</b>: uma cópia desconectada não é atingida e permite restaurar sem pagar. Muito malware usa o <b>DNS tunneling</b> (Capítulo 4) para falar com o atacante.</p>
+  <h3>DoS e DDoS</h3>
+  <p><b>DoS</b> (<i>Denial of Service</i>) sobrecarrega um serviço até ele parar de responder. <b>DDoS</b> é o mesmo vindo de <b>milhares de máquinas</b> ao mesmo tempo, geralmente uma <b>botnet</b> (computadores e câmeras IoT infectados). Não rouba dado: o objetivo é <b>derrubar</b> (site fora do ar é prejuízo). <b>Defesa:</b> serviços de mitigação e CDN (Cloudflare, AWS Shield), limite de requisições.</p>
+</section>
+
+<section class="sec" id="aplicacao">
+  <h2><span class="sn">4</span>Contra a aplicação</h2>
+  <p class="gancho">O site que pede senha e aceita comentários.</p>
+  <h3>Força bruta</h3>
+  <p>Testar combinações de senha até acertar. Variações: <b>dicionário</b> (lista de senhas comuns) e <i>credential stuffing</i> (usar senhas vazadas de outro site). <b>Defesa:</b> senha longa, bloqueio após várias tentativas, CAPTCHA e 2FA. Veja quanto o <b>tamanho</b> pesa:</p>
+  <div class="demo" data-demo="senha"></div>
+  <h3>SQL injection</h3>
+  <p>O atacante digita <b>código SQL</b> num campo do site, e o sistema o executa no banco. Se o programa monta a consulta <b>colando</b> o texto do usuário, a senha <code>' OR '1'='1</code> transforma a consulta em algo sempre verdadeiro, e o login passa sem senha. Teste na demo abaixo, que roda de verdade num banco de exemplo (a mesma da apostila de Bancos de Dados):</p>
+  <div class="demo" data-demo="inject"></div>
+  <p><b>Defesa:</b> <b>consultas parametrizadas</b> (nunca concatenar texto do usuário no SQL), validação de entrada e <b>menor privilégio</b> para o usuário do banco.</p>
+  <h3>XSS (Cross-Site Scripting)</h3>
+  <p>O atacante injeta <b>JavaScript</b> numa página (por exemplo, num comentário), e ele roda no navegador de <b>quem abrir a página</b>, podendo roubar a sessão. <b>Defesa:</b> <b>escapar</b> o HTML do que o usuário digita (tratar como texto, e não como marcação) e usar <i>Content Security Policy</i>.</p>
+  <div class="demo" data-demo="xss"></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Organize por <b>alvo</b>: pessoa (phishing, engenharia social), máquina (malware), rede (DDoS, MITM), aplicação (força bruta, SQL injection, XSS).</li><li><b>Spear phishing</b> é direcionado; <b>whaling</b> mira executivos. Confirme pedidos por <b>outro canal</b>.</li><li><b>Ransomware</b> criptografa e cobra resgate. A defesa-chave é o <b>backup offline</b>.</li><li><b>DDoS</b> não rouba dados: derruba o serviço, com uma botnet.</li><li><b>SQL injection</b>: use consultas parametrizadas. <b>XSS</b>: escape a saída.</li><li><b>Código de verificação nunca se passa</b> a ninguém.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que o backup offline é a principal defesa contra ransomware?</p>
+    <div class="opts"><button data-k="a">Porque impede o vírus de entrar.</button><button data-k="b">Porque uma cópia desconectada não é criptografada, e permite restaurar sem pagar.</button><button data-k="c">Porque o antivírus não funciona.</button></div>
+    <div class="fb">O ransomware criptografa o que está acessível. O que está fora do alcance dele sobrevive.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual a diferença entre phishing e spear phishing?</p>
+    <div class="opts"><button data-k="a">Nenhuma.</button><button data-k="b">O spear phishing só acontece por telefone.</button><button data-k="c">O phishing é genérico e em massa; o spear phishing é direcionado e usa informações reais da vítima.</button></div>
+    <div class="fb">Quanto mais sob medida, mais convincente. Whaling é o spear phishing contra executivos.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">A defesa certa contra SQL injection é:</p>
+    <div class="opts"><button data-k="a">Consultas parametrizadas, sem concatenar o texto do usuário.</button><button data-k="b">Proibir aspas nos formulários.</button><button data-k="c">Esconder o nome das tabelas.</button></div>
+    <div class="fb">Filtrar caracteres falha. Separar o código SQL do dado digitado é o que resolve de verdade.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>DoS x DDoS?</b></span><span class="bk">DoS vem de uma origem; DDoS vem de milhares (uma botnet). Ambos buscam derrubar o serviço.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um trojan?</b></span><span class="bk">Programa que parece legítimo, mas traz código malicioso junto.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é credential stuffing?</b></span><span class="bk">Testar em um site senhas vazadas de outro, apostando que a pessoa reutilizou a senha.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como o XSS é evitado?</b></span><span class="bk">Escapando o que o usuário digita ao exibir (texto, e não HTML) e com Content Security Policy.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">Conhecer o ataque é metade do caminho. Como me defendo?</div><p>Com criptografia, hash, autenticação forte e camadas de defesa.</p></div>
+</section>
+
+</article>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: IP, TCP e UDP | Apostila de Cibersegurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cyber.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aula 1</div>
+  <h1>IP, TCP e UDP</h1>
+  <p class="sub">Como um endereço é feito, como se divide em redes e como duas máquinas combinam a conversa.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">calculadora de IP</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 você viu as camadas do OSI e que a camada de rede usa o <b>IP</b> e a de transporte usa o <b>TCP</b> ou o <b>UDP</b>. Agora abrimos essas três peças: como um endereço IP é feito, e como duas máquinas combinam a conversa.</div>
+<section class="sec" id="ip">
+  <h2><span class="sn">1</span>O protocolo IP e os endereços</h2>
+  <p class="gancho">Cada pacote sabe de onde vem e para onde vai.</p>
+  <p>O <b>IP</b> é um protocolo <b>sem conexão</b>: não há estabelecimento prévio. Cada pacote carrega o <b>endereço de origem</b>, o <b>de destino</b> e a sequência dos dados, e é tratado de forma <b>independente</b> dos demais. É a tecnologia que entrega os dados ao destino correto <i>independentemente da rede física</i> por baixo. Existem duas versões em uso:</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>IPv4</th><th>IPv6</th></tr>
+    <tr><td><b>Tamanho</b></td><td>32 bits</td><td>128 bits</td></tr>
+    <tr><td><b>Endereços</b></td><td>cerca de 4,3 bilhões (4.294.967.296)</td><td>mais de 340 undecilhões (3,4 × 10³⁸)</td></tr>
+    <tr><td><b>Escrita</b></td><td><code>192.168.10.77</code> (4 números de 0 a 255)</td><td><code>2001:db8::1</code> (hexadecimal, em grupos)</td></tr>
+    <tr><td><b>Por que existe</b></td><td>a <b>escassez</b> de endereços motivou o IPv6</td><td>mais endereços, roteamento mais eficiente, segurança e QoS integrados</td></tr>
+  </table></div>
+  <p>Cada um dos 4 números do IPv4 ocupa 8 bits (1 byte), e por isso vai de 0 a 255. Você pode testar a sua conexão IPv6 em <i>test-ipv6.com</i>. E há um detalhe vital para redes: os primeiros bits do endereço dizem <b>qual rede</b>, e os restantes <b>qual dispositivo</b> dentro dela. A <b>máscara</b> (ou prefixo, como <code>/24</code>) marca onde termina uma parte e começa a outra. Mexa:</p>
+  <div class="demo" data-demo="ipcalc"></div>
+  <div class="nota lembra"><span class="lbl">Complemento: IPs privados e NAT</span>Três faixas são <b>privadas</b>, só valem dentro da sua rede: <code>10.0.0.0/8</code>, <code>172.16.0.0/12</code> e <code>192.168.0.0/16</code>. O seu roteador faz <b>NAT</b>: troca o IP privado dos seus dispositivos pelo IP público dele ao sair para a internet. Foi uma das soluções que adiou o esgotamento do IPv4.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O IP só entrega pacotes soltos, sem garantia. Quem organiza uma conversa de verdade?</div><p>A camada de transporte, com TCP e UDP.</p></div>
+</section>
+
+<section class="sec" id="tcp-udp">
+  <h2><span class="sn">2</span>TCP e UDP: confiável ou rápido</h2>
+  <p class="gancho">Dois jeitos de conversar. Cada um tem o seu preço.</p>
+  <div class="grid2">
+    <div class="card rv"><b>TCP</b> (<i>Transmission Control Protocol</i>)<p><b>Orientado à conexão</b> e <b>confiável</b>, fim a fim. Estabelece a conexão com o <b>three-way handshake</b>, confirma o que chegou, reenvia o que se perdeu e entrega na ordem. Usado em web, e-mail, transferência de arquivos.</p></div>
+    <div class="card rv"><b>UDP</b> (<i>User Datagram Protocol</i>)<p><b>Sem conexão</b>, rápido, <b>sem garantia</b> de entrega nem de ordem. Usado quando a <b>latência</b> importa mais que a precisão: jogos online, streaming de vídeo e voz, onde perder um pacote não faz diferença.</p></div>
+  </div>
+  <h3>O handshake de três vias</h3>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>Antes de tudo</b><p>Cliente e servidor ainda não têm conexão. O cliente quer abrir uma com o servidor (por exemplo, na porta 443 do HTTPS).</p></div>
+      <div class="st"><b>1. SYN</b><p>O cliente envia uma mensagem de <b>sincronização</b> ao servidor: "quero abrir uma conexão".</p></div>
+      <div class="st"><b>2. SYN-ACK</b><p>O servidor <b>responde</b> confirmando o pedido e sincronizando o seu lado: "recebi, e eu também quero".</p></div>
+      <div class="st"><b>3. ACK</b><p>O cliente envia uma <b>confirmação</b> de volta. Agora a conexão está estabelecida e os dados podem fluir.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Complemento: portas</span>O IP leva o pacote até a <b>máquina</b>; a <b>porta</b> (número de 0 a 65535) escolhe o <b>serviço</b> naquela máquina. Algumas conhecidas: <b>80</b> HTTP, <b>443</b> HTTPS, <b>22</b> SSH, <b>25</b> SMTP, <b>53</b> DNS (que usa UDP para consultas curtas). Uma porta aberta é uma "porta de entrada" para um atacante, daí a ideia de expor <b>só</b> o que é necessário.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">3</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>IP</b>: sem conexão; cada pacote leva origem, destino e dados, e é independente dos outros.</li><li><b>IPv4</b>: 32 bits, ~4,3 bilhões de endereços. <b>IPv6</b>: 128 bits, mais de 340 undecilhões.</li><li>A <b>máscara</b> (/24 etc.) separa a parte de <b>rede</b> da parte do <b>dispositivo</b>. Hosts = 2^(32 − prefixo) − 2.</li><li><b>TCP</b>: conexão, confiável, ordenada (handshake SYN → SYN-ACK → ACK). <b>UDP</b>: sem conexão, rápido, sem garantia.</li><li><b>Portas</b> escolhem o serviço: 80 HTTP, 443 HTTPS, 22 SSH, 53 DNS.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Por que o streaming de vídeo costuma usar UDP?</p>
+    <div class="opts"><button data-k="a">Porque o UDP é mais seguro.</button><button data-k="b">Porque o UDP garante a entrega de todos os pacotes.</button><button data-k="c">Porque a latência importa mais, e perder um pacote ocasional quase não faz diferença.</button></div>
+    <div class="fb">O UDP não confirma nem reenvia, e por isso é mais rápido. Para vídeo ao vivo, esperar um pacote perdido seria pior que ignorá-lo.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Uma rede 192.168.10.0/24 comporta quantos dispositivos?</p>
+    <div class="opts"><button data-k="a">254 (256 menos o endereço da rede e o de broadcast).</button><button data-k="b">256</button><button data-k="c">24</button></div>
+    <div class="fb">O /24 deixa 8 bits para dispositivos: 2⁸ = 256 endereços, dois reservados. Teste na calculadora.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Qual a ordem do handshake do TCP?</p>
+    <div class="opts"><button data-k="a">ACK, SYN, SYN-ACK</button><button data-k="b">SYN, SYN-ACK, ACK</button><button data-k="c">SYN-ACK, SYN, ACK</button></div>
+    <div class="fb">O cliente pede (SYN), o servidor responde confirmando (SYN-ACK) e o cliente confirma de volta (ACK).</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o IPv6 existe?</b></span><span class="bk">Porque os 4,3 bilhões de endereços do IPv4 acabaram. O IPv6 tem 128 bits.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>TCP x UDP?</b></span><span class="bk">TCP: conexão e confiabilidade. UDP: velocidade, sem garantia.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que a máscara faz?</b></span><span class="bk">Separa os bits da rede dos bits do dispositivo dentro do endereço IP.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma porta?</b></span><span class="bk">Um número que escolhe qual serviço da máquina recebe o pacote.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">Ninguém decora números de IP. Como um nome como google.com vira um endereço?</div><p>Com o DNS, a agenda da internet.</p></div>
+</section>
+
+</article>
+</body>
+</html>
