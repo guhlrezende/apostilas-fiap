@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: Do neurônio à rede | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 2</div>
+  <h1>Do neurônio à rede</h1>
+  <p class="sub">A estrutura de uma rede neural: neurônios, pesos, ativações e camadas.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">mexa em um neurônio</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo. Você não precisa saber nada de redes neurais: basta ter visto a ideia de que um modelo de machine learning aprende com exemplos. Daqui em diante, cada capítulo abre com a pergunta que o anterior deixou em aberto.</div>
+<section class="sec" id="o-que-e">
+  <h2><span class="sn">1</span>O que é uma rede neural</h2>
+  <p class="gancho">Um modelo de matemática, vagamente inspirado em um cérebro.</p>
+  <p>Uma <b>rede neural artificial</b> é um modelo matemático inspirado, <i>de forma bem simplificada</i>, nos neurônios biológicos. Ela recebe dados de entrada, processa por várias <b>camadas</b> de neurônios artificiais ligados por <b>pesos</b> e produz uma saída: uma previsão, uma classificação, um número. O <mark class="hl">aprendizado</mark> é o processo de ajustar esses pesos, repetidamente, até a rede acertar (ou chegar perto) nos dados de treino.</p>
+  <p>A aula organiza o assunto seguindo o fluxo real: <b>como o dado entra e é processado</b> (estrutura), <b>como a rede responde</b> (inferência), <b>como aprende com o erro</b> (treinamento) e <b>quais os riscos</b>. Este capítulo cobre a estrutura.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Qual é a menor peça dessa máquina?</div><p>O neurônio.</p></div>
+</section>
+
+<section class="sec" id="neuronio">
+  <h2><span class="sn">2</span>O neurônio: soma, pesos e ativação</h2>
+  <p class="gancho">Três passos, sempre os mesmos.</p>
+  <ol>
+    <li><b>Receber</b> uma ou mais entradas.</li>
+    <li><b>Multiplicar</b> cada entrada pelo <b>peso</b> da conexão, <b>somar</b> tudo e acrescentar o <b>bias</b> (viés): <code>z = x₁·w₁ + x₂·w₂ + ... + b</code>.</li>
+    <li>Passar <code>z</code> pela <b>função de ativação</b> e <b>repassar</b> o resultado à próxima camada.</li>
+  </ol>
+  <p>Mexa em tudo e acompanhe a conta:</p>
+  <div class="demo" data-demo="neuronio"></div>
+  <div class="tablewrap"><table>
+    <tr><th>Neurônio biológico</th><th>Neurônio artificial</th></tr>
+    <tr><td>Dendritos</td><td>Entradas (x₁, x₂, ...)</td></tr>
+    <tr><td>Sinapses</td><td>Pesos (w₁, w₂, ...)</td></tr>
+    <tr><td>Corpo celular (soma)</td><td>Somatório: <code>z = Σ wᵢxᵢ + b</code></td></tr>
+    <tr><td>Axônio (dispara se passa de um limiar)</td><td>Função de ativação → saída</td></tr>
+  </table></div>
+  <div class="grid2">
+    <div class="card rv"><b>Peso</b><p>O número que multiplica o sinal de cada conexão. É o principal parâmetro <b>aprendido</b>: peso grande (em valor absoluto) = a conexão influencia muito a decisão. No começo, costuma ser pequeno e aleatório.</p></div>
+    <div class="card rv"><b>Bias</b><p>Um valor somado ao final. Desloca a decisão: pense nos pesos como "o quanto cada informação conta" e no bias como "a nota de corte". (O Capítulo 4 mostra o que acontece sem ele.)</p></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">A função de ativação decide o formato da saída. Quais existem, e por que ela é indispensável?</div><p>Veja as mais comuns.</p></div>
+</section>
+
+<section class="sec" id="ativacoes">
+  <h2><span class="sn">3</span>Funções de ativação</h2>
+  <p class="gancho">Sem elas, mil camadas valem uma só.</p>
+  <div class="demo" data-demo="ativacoes"></div>
+  <div class="tablewrap"><table>
+    <tr><th>Função</th><th>O que faz</th><th>Onde se usa</th></tr>
+    <tr><td><b>Degrau</b></td><td>1 se z ≥ 0, senão 0</td><td>o Perceptron clássico (Capítulo 3)</td></tr>
+    <tr><td><b>ReLU</b></td><td>zera o negativo, mantém o positivo</td><td>camadas ocultas: simples e eficiente</td></tr>
+    <tr><td><b>Sigmoide</b></td><td>comprime para (0, 1)</td><td>saída de classificação binária (probabilidade)</td></tr>
+    <tr><td><b>Tanh</b></td><td>comprime para (−1, 1), centrada em zero</td><td>camadas ocultas de redes menores (aparece no experimento do Capítulo 5)</td></tr>
+    <tr><td><b>Sigmoide (ou logística)</b></td><td colspan="2">é a mesma função: o scikit-learn a chama de <code>logistic</code></td></tr>
+    <tr><td><b>Softmax</b></td><td>generaliza a sigmoide: várias saídas que somam 1</td><td>saída de classificação com várias classes ("83% gato, 17% cachorro")</td></tr>
+    <tr><td><b>Linear / identidade</b></td><td>devolve z, sem alterar</td><td>saída de <b>regressão</b> (prever um número)</td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">Por que não linear em tudo?</span>Uma conta linear aplicada a outra conta linear continua sendo <b>uma</b> conta linear. Sem uma ativação <b>não linear</b> nas camadas ocultas, a rede inteira se comporta como uma única camada e perde a capacidade de aprender curvas. A última ativação define o <b>formato da saída</b>: linear para números, sigmoide ou softmax para probabilidades.</div>
+</section>
+
+<section class="sec" id="camadas">
+  <h2><span class="sn">4</span>Camadas, parâmetros e hiperparâmetros</h2>
+  <p class="gancho">Quem aprende, e quem é escolhido por você?</p>
+  <ul>
+    <li><b>Camada de entrada</b>: recebe os dados brutos (e não calcula nada).</li>
+    <li><b>Camadas ocultas</b>: processamento intermediário. Quanto mais fundas, mais abstratas as características que extraem (daí o <i>deep</i> learning: muitas camadas).</li>
+    <li><b>Camada de saída</b>: o resultado.</li>
+    <li>Os <b>filamentos</b> são as conexões: por elas o sinal flui, multiplicado pelo peso de cada uma.</li>
+  </ul>
+  <div class="grid2">
+    <div class="card rv"><b>Parâmetros</b><p>O que a rede <b>aprende</b>: os <b>pesos</b> e os <b>vieses</b> de todos os neurônios. Uma rede com 1 entrada, 8 neurônios ocultos e 1 saída tem (1×8) + 8 + (8×1) + 1 = <b>25</b> parâmetros.</p></div>
+    <div class="card rv"><b>Hiperparâmetros</b><p>O que <b>você escolhe</b> antes de treinar: número de camadas e neurônios, função de ativação, <b>taxa de aprendizado</b>, número de épocas.</p></div>
+  </div>
+  <p>Antes de entrar na rede, o dado costuma ser <b>pré-processado</b> (redimensionado, normalizado para uma escala padrão como 0 a 1). A qualidade e a representatividade da entrada definem em grande parte o que a rede consegue aprender: um padrão acidental no dado (como o fundo de uma foto) pode ser aprendido no lugar do conceito desejado. O Capítulo 2 mostra um caso real.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Neurônio</b>: <code>z = Σ wᵢxᵢ + b</code>, depois <b>ativação</b>. <b>Peso</b> diz o quanto cada entrada conta; <b>bias</b> é a nota de corte.</li><li><b>Ativação não linear</b> (ReLU, sigmoide, softmax...) é o que dá à rede capacidade de aprender curvas. Sem ela, a rede é uma conta linear só.</li><li>A ativação da <b>saída</b> define o formato: linear (número), sigmoide (probabilidade), softmax (várias classes).</li><li><b>Parâmetros</b> (pesos e vieses) são aprendidos. <b>Hiperparâmetros</b> (camadas, taxa de aprendizado, épocas) são escolhidos por você.</li><li>Camadas: entrada, ocultas (mais fundas, mais abstratas) e saída.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que uma rede de várias camadas sem função de ativação não linear não é melhor que uma camada só?</p>
+    <div class="opts"><button data-k="a">Porque as camadas ocultas não têm pesos.</button><button data-k="b">Porque compor contas lineares dá, no fim, uma única conta linear.</button><button data-k="c">Porque a saída sempre é zero.</button></div>
+    <div class="fb">Linear de linear continua linear. A não linearidade entre as camadas é o que permite aprender curvas.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual ativação usar na saída de uma rede que prevê o preço de uma casa?</p>
+    <div class="opts"><button data-k="a">Sigmoide.</button><button data-k="b">Softmax.</button><button data-k="c">Linear (sem limitar a saída).</button></div>
+    <div class="fb">Preço é um número contínuo, que não deve ser 'espremido' entre 0 e 1.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Quantos parâmetros tem uma rede 3-5-2 (3 entradas, 5 neurônios ocultos, 2 saídas)?</p>
+    <div class="opts"><button data-k="a">(3×5 + 5) + (5×2 + 2) = 32.</button><button data-k="b">3 + 5 + 2 = 10.</button><button data-k="c">3 × 5 × 2 = 30.</button></div>
+    <div class="fb">Cada camada tem pesos (entradas × neurônios) e um bias por neurônio: 15 + 5 + 10 + 2 = 32.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um peso?</b></span><span class="bk">O número que multiplica o sinal de uma conexão. É o que a rede aprende.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Parâmetro x hiperparâmetro?</b></span><span class="bk">Parâmetro é aprendido (pesos e vieses). Hiperparâmetro é escolhido por quem treina.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve a ReLU?</b></span><span class="bk">Zera o negativo e mantém o positivo: ativação simples e eficiente para camadas ocultas.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que a softmax devolve?</b></span><span class="bk">Probabilidades para várias classes, que somam 1.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">A rede está montada. Mas como ela descobre os pesos certos, e como errar sem perceber?</div><p>Pelo erro: ela prevê, mede o quanto errou e se corrige.</p></div>
+</section>
+
+</article>
+</body>
+</html>

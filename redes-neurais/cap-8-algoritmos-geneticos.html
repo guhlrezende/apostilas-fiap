@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 8: Algoritmos Genéticos (complemento) | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="8" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 8 · Complemento</div>
+  <h1>Algoritmos Genéticos (complemento)</h1>
+  <p class="sub">Seleção, cruzamento e mutação: otimizar sem gradiente.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 2 testes · 4 flashcards</span><span class="chip">evolua uma população</span></div>
+  <span class="num">8</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Tudo até aqui ajustava pesos descendo um gradiente. Mas há problemas sem derivada útil, como escolher uma rota, uma escala de horários ou um desenho de peça. Este capítulo, o último e também um complemento, mostra um jeito diferente de otimizar: <b>imitar a evolução</b>.</div>
+<section class="sec" id="ideia">
+  <h2><span class="sn">1</span>A ideia</h2>
+  <p class="gancho">Gerar muitas soluções, deixar as melhores se reproduzirem.</p>
+  <p>Um <b>algoritmo genético</b> mantém uma <b>população</b> de soluções candidatas e repete ciclos de seleção e variação:</p>
+  <ol>
+    <li><b>Avaliar</b> cada indivíduo com uma função de <b>aptidão</b> (<i>fitness</i>): quão boa é essa solução?</li>
+    <li><b>Selecionar</b> os mais aptos como pais (torneio, roleta...).</li>
+    <li><b>Cruzar</b> (<i>crossover</i>): misturar partes de dois pais para formar filhos.</li>
+    <li><b>Mutar</b>: alterar aleatoriamente uma pequena parte, para manter a diversidade.</li>
+    <li><b>Elitismo</b> (opcional): manter os melhores intactos para não perdê-los.</li>
+    <li>Repetir por várias <b>gerações</b>.</li>
+  </ol>
+  <div class="demo" data-demo="genetico"></div>
+  <p>Na demo, cada indivíduo é uma frase de letras sorteadas e a aptidão é quantas letras coincidem com o alvo. Só os 20% melhores da população viram pais, o filho pega o começo de um pai e o fim do outro (cruzamento de um ponto) e cada letra pode mudar ao acaso (mutação). Mude a taxa de mutação e o tamanho da população e observe: <b>sem mutação</b>, a população fica presa sem novidade; <b>mutação muito alta</b> faz a busca virar quase aleatória (o efeito aparece melhor com um alvo longo).</p>
+</section>
+
+<section class="sec" id="vs">
+  <h2><span class="sn">2</span>Gradiente x algoritmo genético</h2>
+  <p class="gancho">Cada um para um tipo de problema.</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Gradiente (redes neurais)</th><th>Algoritmo genético</th></tr>
+    <tr><td>Precisa de derivada?</td><td>sim</td><td>não: só precisa avaliar a aptidão</td></tr>
+    <tr><td>Tipo de problema</td><td>funções suaves, muitos parâmetros</td><td>combinatórios, descontínuos, de desenho</td></tr>
+    <tr><td>Custo</td><td>um passo barato, milhões de passos</td><td>muitas avaliações por geração</td></tr>
+    <tr><td>Garantia</td><td>mínimo local</td><td>nenhuma: boa solução, não necessariamente a melhor</td></tr>
+  </table></div>
+  <div class="ex rv"><span class="t">Um caso conhecido</span>
+    <div class="l"><div>A NASA usou algoritmos evolutivos para projetar a antena da missão Space Technology 5 (lançada em 2006). O formato, torto e pouco intuitivo para um engenheiro, foi encontrado pela busca e atendia aos requisitos da missão.</div></div>
+  </div>
+  <p>Outros usos: rotas e escalas de trabalho, alocação de recursos, ajuste de hiperparâmetros e até a estrutura de redes neurais (neuroevolução). Uma dica prática: se o seu problema tem derivadas e muitos dados, comece pelo gradiente; se é um quebra-cabeça de escolhas discretas, considere um algoritmo genético ou outra heurística.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">3</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Algoritmo genético: <b>população → aptidão → seleção → cruzamento → mutação → nova geração</b>.</li><li><b>Mutação</b> mantém a diversidade; <b>elitismo</b> preserva os melhores.</li><li>Não precisa de derivada: serve para problemas combinatórios e de desenho.</li><li>Não garante o ótimo, só boas soluções. Redes neurais usam gradiente; algoritmos genéticos, evolução.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Qual a função da mutação em um algoritmo genético?</p>
+    <div class="opts"><button data-k="a">Calcular a aptidão.</button><button data-k="b">Escolher os pais.</button><button data-k="c">Manter a diversidade, introduzindo pequenas alterações aleatórias.</button></div>
+    <div class="fb">Sem mutação a população tende a ficar presa em soluções parecidas.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Para qual problema um algoritmo genético é mais natural que o gradiente?</p>
+    <div class="opts"><button data-k="a">Escolher uma sequência de rotas, onde não há derivada.</button><button data-k="b">Ajustar os pesos de uma MLP suave.</button><button data-k="c">Calcular uma média.</button></div>
+    <div class="fb">Quando só dá para avaliar a qualidade de uma solução completa, a busca evolutiva funciona.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é aptidão (fitness)?</b></span><span class="bk">Uma nota que diz o quão boa é uma solução candidata.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é cruzamento?</b></span><span class="bk">Combinar partes de dois pais para gerar filhos.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é elitismo?</b></span><span class="bk">Copiar os melhores indivíduos intactos para a próxima geração.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O algoritmo genético garante o ótimo?</b></span><span class="bk">Não: costuma achar boas soluções, sem garantia.</span></button></div>
+  <div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Do neurônio à evolução.</div><p>Se algum ponto ficou solto, volte ao capítulo correspondente e refaça a demo. A repetição ativa é o que fixa.</p></div>
+</section>
+
+</article>
+</body>
+</html>

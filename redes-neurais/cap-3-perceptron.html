@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: O Perceptron | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Aulas 3 e 4</div>
+  <h1>O Perceptron</h1>
+  <p class="sub">O primeiro neurônio que aprende, como ele ajusta os pesos e por que o XOR o derrota.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">treine AND, OR e XOR</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 2 você viu o ciclo de treino da rede inteira. Para enxergar cada peça com clareza, vamos voltar ao começo da história: o <b>Perceptron</b>, um único neurônio com ativação degrau e uma regra de aprendizado que cabe em duas linhas.</div>
+<section class="sec" id="historia">
+  <h2><span class="sn">1</span>Uma história curta</h2>
+  <p class="gancho">A ideia tem mais de 80 anos, e já quebrou o coração dos pesquisadores uma vez.</p>
+  <div class="tl rv">
+    <div class="ev"><b>1943</b><span>McCulloch e Pitts: o primeiro modelo matemático do neurônio.</span></div>
+    <div class="ev"><b>1958</b><span>Rosenblatt: o Perceptron, o primeiro "neurônio" que aprende.</span></div>
+    <div class="ev"><b>1969</b><span>Minsky e Papert provam o limite do XOR no livro <i>Perceptrons</i>; começa o primeiro "inverno da IA" (anos 1970).</span></div>
+    <div class="ev"><b>1986</b><span>Rumelhart, Hinton e Williams: o backpropagation viabiliza as redes de várias camadas.</span></div>
+    <div class="ev"><b>2012</b><span>AlexNet vence o ImageNet: o deep learning chega à visão computacional.</span></div>
+    <div class="ev"><b>2017+</b><span>Transformers e os grandes modelos de linguagem.</span></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Um fato recente</span>Em 2024, o Nobel de Física foi para John Hopfield e Geoffrey Hinton pelos fundamentos das redes neurais artificiais, e o de Química para Demis Hassabis e John Jumper (AlphaFold) e David Baker (design de proteínas). A área saiu do laboratório para a ciência de ponta e para os negócios.</div>
+</section>
+
+<section class="sec" id="arquitetura">
+  <h2><span class="sn">2</span>O Perceptron por dentro</h2>
+  <p class="gancho">Entradas → pesos → soma → degrau → saída.</p>
+<pre><code>z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b      <span class="c"># soma ponderada</span>
+ŷ = f(z),   f(z) = 1 se z ≥ 0, senão 0  <span class="c"># função degrau</span></code></pre>
+  <p>É exatamente o neurônio do Capítulo 1, com a ativação degrau. E a <b>fronteira de decisão</b> é a reta onde <code>z = 0</code>: de um lado a saída é 1, do outro, 0. O bias <b>desloca</b> essa reta; sem ele, ela seria obrigada a passar pela origem.</p>
+  <h3>A regra de aprendizado</h3>
+  <p>Para cada exemplo, o Perceptron prevê e compara com a resposta certa. <b>Só se errar</b>, ajusta:</p>
+  <div class="formula">wᵢ ← wᵢ + η · (y − ŷ) · xᵢ<br>b  ← b  + η · (y − ŷ)<small>η é a taxa de aprendizado, y a resposta correta, ŷ a previsão e (y − ŷ) o erro.</small></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: treinando a porta AND</span>
+    <div class="l"><div>Estado inicial: <code>w₁ = 0</code>, <code>w₂ = 0</code>, <code>b = 0</code>, <code>η = 0,1</code>. Exemplo: <b>(x₁ = 1, x₂ = 0)</b>, resposta correta <b>y = 0</b>.</div></div>
+    <div class="l"><div><code>z = 0·1 + 0·0 + 0 = 0</code>. Como <code>z ≥ 0</code>, a previsão é <b>ŷ = 1</b>. Errou, porque y = 0.</div></div>
+    <div class="l"><div>Erro: <code>y − ŷ = 0 − 1 = −1</code>.</div></div>
+    <div class="l"><div><code>w₁ ← 0 + 0,1·(−1)·1 = <b>−0,1</b></code>; <code>w₂ ← 0 + 0,1·(−1)·0 = <b>0</b></code>; <code>b ← 0 + 0,1·(−1) = <b>−0,1</b></code>.</div></div>
+    <div class="l"><div>O ciclo se repete por todos os exemplos, por várias <b>épocas</b>, até parar de errar.</div></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Ele aprende AND. Aprende tudo?</div><p>Teste você.</p></div>
+</section>
+
+<section class="sec" id="porta">
+  <h2><span class="sn">3</span>Treine você: AND, OR e o problema do XOR</h2>
+  <p class="gancho">Duas portas funcionam. A terceira não tem solução.</p>
+  <div class="demo" data-demo="perceptron"></div>
+  <p><b>AND</b> e <b>OR</b> são <b>linearmente separáveis</b>: uma única reta separa os 0 dos 1. O <b>XOR</b> ("um ou outro, mas não os dois") <b>não é</b>: não existe uma reta que separe (0,0) e (1,1) de (0,1) e (1,0). Por mais épocas que você rode, o Perceptron nunca zera os erros no XOR. Foi essa prova, de Minsky e Papert (1969), que <b>paralisou a pesquisa</b> em redes neurais por anos. A saída, décadas depois: <b>empilhar neurônios em camadas</b>, o assunto do Capítulo 5.</p>
+  <div class="nota cuidado"><span class="lbl">Cuidado: > ou ≥?</span>Algumas fontes usam <code>z &gt; 0</code> para disparar, e outras <code>z ≥ 0</code>. A diferença só aparece quando <code>z</code> é exatamente zero. Neste capítulo e nos notebooks da aula a regra é <b>z ≥ 0</b>. Em planilha, confira qual comparação a fórmula usa.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Perceptron</b> (Rosenblatt, 1958): <code>z = Σ wᵢxᵢ + b</code> e degrau. Um neurônio que <b>aprende</b>.</li><li><b>Regra</b>: <code>w ← w + η·(y − ŷ)·x</code> e <code>b ← b + η·(y − ŷ)</code>, só quando erra.</li><li>A <b>fronteira de decisão</b> é uma reta; o bias a desloca.</li><li><b>AND</b> e <b>OR</b> são linearmente separáveis. <b>XOR</b> não é: o Perceptron nunca converge (livro <i>Perceptrons</i>, 1969; primeiro inverno da IA nos anos 1970).</li><li>A saída: empilhar camadas (MLP) com backpropagation (1986).</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Com w₁ = w₂ = 0, b = 0, η = 0,1, a entrada (1, 1) e resposta y = 0, o Perceptron (degrau com ≥ 0) acerta?</p>
+    <div class="opts"><button data-k="a">Sim, a previsão é 0.</button><button data-k="b">Não: z = 0 dispara 1, o erro é −1 e os pesos viram −0,1, −0,1 e bias −0,1.</button><button data-k="c">Não muda nada.</button></div>
+    <div class="fb">z = 0 e, com ≥ 0, a saída é 1. O erro (0 − 1) = −1 corrige cada peso em η·erro·x = −0,1, e o bias em −0,1.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Por que o XOR não pode ser aprendido por um Perceptron simples?</p>
+    <div class="opts"><button data-k="a">Porque tem poucos exemplos.</button><button data-k="b">Porque a taxa de aprendizado é fixa.</button><button data-k="c">Porque nenhuma reta separa os casos 0 dos casos 1.</button></div>
+    <div class="fb">O Perceptron só desenha uma fronteira reta. O XOR exige uma fronteira curva ou duas retas.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Quando o Perceptron atualiza os pesos?</p>
+    <div class="opts"><button data-k="a">Apenas quando erra a previsão.</button><button data-k="b">Sempre, a cada exemplo.</button><button data-k="c">Só no fim da época.</button></div>
+    <div class="fb">Se o erro (y − ŷ) é zero, os termos de ajuste são zero e nada muda.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma fronteira de decisão?</b></span><span class="bk">A linha onde z = 0: de um lado o neurônio responde 1, do outro 0.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é linearmente separável?</b></span><span class="bk">Quando uma única reta separa as classes (como AND e OR).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que foi o inverno da IA?</b></span><span class="bk">O período de queda de interesse e verba depois da prova de que o Perceptron não resolve o XOR.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma época?</b></span><span class="bk">Uma passada completa por todos os exemplos de treino.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">O Perceptron aprende. Mas para que serve o bias, e o que acontece numa decisão de negócio?</div><p>Treinar à mão, linha a linha, e depois isolar o papel do bias.</p></div>
+</section>
+
+</article>
+</body>
+</html>

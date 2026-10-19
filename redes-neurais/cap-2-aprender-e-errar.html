@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: Como a rede aprende (e erra) | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aula 2</div>
+  <h1>Como a rede aprende (e erra)</h1>
+  <p class="sub">O ciclo de treino, o tamanho do passo e a armadilha de decorar ou de aprender o atalho errado.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">gradiente e overfitting interativos</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 a rede foi montada: neurônios, pesos, camadas e ativações. Mas os pesos começam aleatórios, e uma rede aleatória não serve para nada. Este capítulo mostra como os pesos são ajustados, e o risco central do aprendizado: <b>acertar o treino sem entender o problema</b>.</div>
+<section class="sec" id="inferencia">
+  <h2><span class="sn">1</span>Prever: o caminho de ida</h2>
+  <p class="gancho">O dado entra, atravessa as camadas e sai uma resposta.</p>
+  <p>O <b>predict</b> é o momento em que o modelo já treinado recebe um dado <b>novo</b> e produz a saída com os parâmetros já ajustados. Duas formas de saída:</p>
+  <div class="grid2">
+    <div class="card rv"><b>Regressão: um número</b><p>A saída é <b>linear</b>, qualquer valor real (preço de uma casa, consumo de energia).</p></div>
+    <div class="card rv"><b>Classificação: probabilidades</b><p>A saída aplica <b>sigmoide</b> (2 classes) ou <b>softmax</b> (várias): "83% gato, 17% cachorro". A classe prevista é a de maior probabilidade. (O nome <i>regressão logística</i>, apesar da palavra, é classificação.)</p></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Probabilidade alta <b>não garante</b> que o modelo aprendeu o conceito certo. Ele pode estar confiante por ter aprendido um atalho do conjunto de treino. É o assunto da seção 4.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E quando o palpite está errado? Como a rede se corrige?</div><p>Medindo o erro e andando na direção que o reduz.</p></div>
+</section>
+
+<section class="sec" id="treino">
+  <h2><span class="sn">2</span>Aprender: erro, gradiente e taxa de aprendizado</h2>
+  <p class="gancho">Errou? Descubra qual peso mais contribuiu e mexa nele.</p>
+  <p>O ciclo de treino repete, muitas vezes: <b>(1)</b> a rede <b>prevê</b>; <b>(2)</b> compara com o valor real e calcula um <b>erro</b> (a <i>perda</i>, ou <i>loss</i>); <b>(3)</b> o algoritmo de <b>backpropagation</b> (retropropagação) calcula o quanto <b>cada peso</b> contribuiu para o erro, da saída para a entrada; <b>(4)</b> um otimizador, como o <b>gradiente descendente</b>, ajusta cada peso <b>na direção que reduz o erro</b>. Todo o capítulo 6 destrincha esses passos com números.</p>
+  <p>A intuição cabe numa imagem: o erro como uma <b>paisagem</b>, e o treino como descer a ladeira. A <b>taxa de aprendizado</b> (<i>learning rate</i>) é o <b>tamanho do passo</b>. Experimente passos de tamanhos diferentes:</p>
+  <div class="demo" data-demo="gradiente"></div>
+  <div class="grid2">
+    <div class="card rv"><b>Taxa muito alta</b><p>Passos grandes demais: a rede "pula" em torno do ponto ótimo ou diverge.</p></div>
+    <div class="card rv"><b>Taxa muito baixa</b><p>Aprende devagar demais, e pode empacar em soluções ruins ou gastar tempo e recursos à toa.</p></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Treinar mais é sempre melhor? O erro de treino cai sempre. E o de teste?</div><p>Nem sempre.</p></div>
+</section>
+
+<section class="sec" id="overfit">
+  <h2><span class="sn">3</span>Overfitting: decorar não é aprender</h2>
+  <p class="gancho">A rede acertou 100% do treino e falhou na vida real.</p>
+  <p>O <b>overfitting</b> (sobreajuste) acontece quando o modelo se ajusta <i>demais</i> às particularidades do treino, inclusive ao <b>ruído</b>, em vez de aprender o padrão geral. O sintoma: acurácia ou erro excelentes no treino e ruins em dados novos. Visualize com um modelo mais simples de ver, polinômios sobre pontos de uma curva com ruído. Aumente o grau (a complexidade) e compare o erro de treino com o de teste:</p>
+  <div class="demo" data-demo="overfit"></div>
+  <p>Formas de reduzir o overfitting: <b>mais dados, e mais diversos</b> (não só quantidade, mas variedade de situações); <b>regularização</b> (penalizar pesos muito grandes); <b>dropout</b> (desligar neurônios ao acaso durante o treino); e <b>early stopping</b> (parar antes de começar a memorizar). E, claro, a regra do Capítulo 2 de Machine Learning: avaliar sempre em dados que o modelo <b>nunca viu</b>.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Existe um erro mais traiçoeiro: aquele em que o modelo "generaliza" bem, mas aprendeu a coisa errada.</div><p>O experimento do gato e do cachorro mostra.</p></div>
+</section>
+
+<section class="sec" id="features">
+  <h2><span class="sn">4</span>Features e o viés de confundimento</h2>
+  <p class="gancho">A rede escolhe o atalho mais fácil, e não o mais inteligente.</p>
+  <p><b>Features</b> (características) são os padrões que a rede extrai dos dados ao longo das camadas: em uma imagem, bordas e texturas nas primeiras camadas, e combinações mais abstratas (como "orelha pontuda") nas mais profundas. O ponto crucial: a rede <b>não escolhe features de forma "inteligente" ou alinhada à nossa intuição</b>. Ela escolhe <b>qualquer padrão estatístico</b> que reduza o erro no treino, mesmo que seja um atalho.</p>
+  <div class="ex rv"><span class="t">O experimento do Teachable Machine</span>
+    <div class="l"><div>Uma rede foi treinada para separar <b>gato</b> de <b>cachorro</b> com cerca de 40 imagens. Nas fotos de cachorro, o fundo era, em geral, um gramado verde.</div></div>
+    <div class="l"><div>Ao testar com imagens novas, o modelo errava justamente quando o <b>fundo</b> contrariava o padrão: ele tinha aprendido "fundo verde = cachorro".</div></div>
+    <div class="l"><div>Isso não é "decorar as 40 fotos". É o <b>viés de confundimento</b> (<i>confounding</i>): um padrão <b>correlacionado</b> com a resposta no dataset, mas sem relação com o conceito real. Acertou o treino e o teste parecido, e falhou na realidade.</div></div>
+  </div>
+  <p>Como o Teachable Machine usa <i>transfer learning</i> (a maior parte dos pesos vem pré-treinada de um modelo genérico, e só as últimas camadas se ajustam às suas classes), ele pode também herdar sensibilidade a padrões de fundo. A defesa é a <b>diversidade dos dados</b>: se os cachorros aparecem em fundos variados, o fundo deixa de ser um atalho útil.</p>
+  <div class="nota exemplo"><span class="lbl">Complemento: salvar o modelo</span>Depois do treino, o modelo (a arquitetura e os pesos ajustados) precisa ser guardado, para não treinar tudo de novo. Em Python, um formato comum é o <b>pickle</b> (<code>.pkl</code>): <code>pickle.dump(modelo, arquivo)</code> salva e <code>pickle.load(arquivo)</code> recupera. Treina-se uma vez (caro) e reutiliza-se quantas vezes quiser, indo direto ao <i>predict</i>. Atenção de segurança: <b>nunca carregue um <code>.pkl</code> de fonte desconhecida</b>, porque o pickle pode executar código ao ser carregado.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Ciclo de treino: <b>prever → medir o erro → backpropagation → ajustar os pesos</b>, muitas vezes.</li><li><b>Gradiente descendente</b>: descer a ladeira do erro. <b>Taxa de aprendizado</b> = tamanho do passo (alta: diverge; baixa: lenta).</li><li><b>Overfitting</b>: erro baixo no treino, alto no teste. Combate: mais dados diversos, regularização, dropout, early stopping.</li><li><b>Viés de confundimento</b>: a rede aprende um atalho correlacionado (o fundo), e não o conceito. Defesa: dados diversos.</li><li>Salvar o modelo: <code>pickle</code> (<code>.pkl</code>). Nunca carregue de fonte desconhecida.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Uma rede tem erro de treino quase zero e erro de teste alto. O que isso indica?</p>
+    <div class="opts"><button data-k="a">Underfitting.</button><button data-k="b">Que a taxa de aprendizado está baixa.</button><button data-k="c">Overfitting: ela decorou o treino e não generaliza.</button></div>
+    <div class="fb">O sintoma clássico do sobreajuste é a distância entre o desempenho no treino e no teste.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">No experimento gato x cachorro, o que explica o modelo errar quando o fundo mudava?</p>
+    <div class="opts"><button data-k="a">Ele aprendeu o fundo (um padrão correlacionado) em vez do animal.</button><button data-k="b">Ele decorou as 40 imagens.</button><button data-k="c">A taxa de aprendizado era alta.</button></div>
+    <div class="fb">Foi viés de confundimento: o atalho funcionava no dataset, mas não tinha relação com o conceito.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O que acontece com uma taxa de aprendizado alta demais?</p>
+    <div class="opts"><button data-k="a">A rede aprende mais rápido e sempre melhor.</button><button data-k="b">Ela pode oscilar em torno do ponto ótimo ou divergir.</button><button data-k="c">Nada: a taxa não importa.</button></div>
+    <div class="fb">Passos grandes demais ultrapassam o mínimo, como a demo do gradiente mostrou.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é backpropagation?</b></span><span class="bk">O algoritmo que calcula o quanto cada peso contribuiu para o erro, propagando o sinal da saída para a entrada.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é overfitting?</b></span><span class="bk">Ajustar-se demais ao treino (inclusive ao ruído), e falhar em dados novos.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é viés de confundimento?</b></span><span class="bk">Aprender um padrão correlacionado com a resposta no dataset, mas sem relação com o conceito real.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o dropout?</b></span><span class="bk">Desligar neurônios ao acaso no treino, para a rede não depender de caminhos específicos.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">Para entender de verdade, vamos começar pelo menor modelo possível: um único neurônio que aprende.</div><p>O Perceptron.</p></div>
+</section>
+
+</article>
+</body>
+</html>

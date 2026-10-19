@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Por dentro do treino (complemento) | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Complemento</div>
+  <h1>Por dentro do treino (complemento)</h1>
+  <p class="sub">Backpropagation em um exemplo numérico, perdas, épocas, otimizadores e regularização.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">0 demos · 3 testes · 4 flashcards</span><span class="chip">uma conta completa à mão</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Nos capítulos anteriores o treino foi uma caixa: você apertou o botão e os pesos mudaram. Aqui abrimos a caixa com <b>uma única conta numérica</b>, do começo ao fim. Este capítulo é um complemento: não vem das notas da aula, mas explica o que as aulas assumem.</div>
+<section class="sec" id="exemplo">
+  <h2><span class="sn">1</span>Backpropagation com números</h2>
+  <p class="gancho">Dois pesos, uma entrada, um passo de ajuste.</p>
+  <p>Rede minúscula: uma entrada <code>x</code>, um neurônio oculto com peso <code>w₁</code> e ativação ReLU, e uma saída com peso <code>w₂</code> (linear). Ou seja: <code>h = ReLU(w₁·x)</code> e <code>ŷ = w₂·h</code>. A perda é o erro ao quadrado: <code>L = (ŷ − y)²</code>.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: um passo completo</span>
+    <div class="l"><div><b>Dados:</b> <code>x = 2</code>, <code>y = 3</code> (resposta correta), <code>w₁ = 0,5</code>, <code>w₂ = 1,0</code>, taxa <code>η = 0,1</code>.</div></div>
+    <div class="l"><div><b>Passada para frente:</b> <code>z = w₁·x = 1</code>; <code>h = ReLU(1) = 1</code>; <code>ŷ = w₂·h = 1</code>; <code>L = (1 − 3)² = <b>4</b></code>.</div></div>
+    <div class="l"><div><b>Passada para trás</b> (regra da cadeia, da saída para a entrada): <code>dL/dŷ = 2(ŷ − y) = −4</code>.</div></div>
+    <div class="l"><div><code>dL/dw₂ = dL/dŷ · h = −4 · 1 = <b>−4</b></code>. <code>dL/dh = dL/dŷ · w₂ = −4</code>.</div></div>
+    <div class="l"><div>A ReLU deixa passar o gradiente (z &gt; 0, derivada 1). <code>dL/dw₁ = dL/dh · x = −4 · 2 = <b>−8</b></code>.</div></div>
+    <div class="l"><div><b>Atualização</b> (<code>w ← w − η · gradiente</code>): <code>w₁ = 0,5 − 0,1·(−8) = <b>1,3</b></code>; <code>w₂ = 1,0 − 0,1·(−4) = <b>1,4</b></code>.</div></div>
+    <div class="l"><div><b>Conferindo:</b> <code>h = 1,3·2 = 2,6</code>; <code>ŷ = 1,4·2,6 = 3,64</code>; <code>L = (3,64 − 3)² = <b>0,4096</b></code>. A perda caiu de 4 para 0,41 em <b>um</b> passo.</div></div>
+  </div>
+  <p>Os gradientes são negativos (o erro diminui quando o peso <b>aumenta</b>), por isso o sinal de menos da fórmula os transforma em soma. Numa rede real é a mesma conta, repetida para milhões de pesos, em lotes de exemplos, com o auxílio de bibliotecas que calculam as derivadas automaticamente.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Usamos o erro ao quadrado. Existem outros? E como organizar milhares de passos?</div><p>Perdas, épocas e otimizadores.</p></div>
+</section>
+
+<section class="sec" id="perdas">
+  <h2><span class="sn">2</span>Funções de perda</h2>
+  <p class="gancho">A perda define o que significa "errar".</p>
+  <div class="tablewrap"><table>
+    <tr><th>Perda</th><th>Para quê</th><th>Ideia</th></tr>
+    <tr><td><b>MSE</b> (erro quadrático médio)</td><td>regressão</td><td>penaliza erros grandes mais que proporcionalmente</td></tr>
+    <tr><td><b>MAE</b> (erro absoluto médio)</td><td>regressão</td><td>menos sensível a valores extremos</td></tr>
+    <tr><td><b>Entropia cruzada binária</b></td><td>classificação em 2 classes (sigmoide)</td><td>pune forte quem está confiante e errado</td></tr>
+    <tr><td><b>Entropia cruzada categórica</b></td><td>várias classes (softmax)</td><td>mede o quão longe a distribuição está da certa</td></tr>
+  </table></div>
+  <p>O RMSE do Capítulo 5 é só a raiz do MSE, para voltar à unidade original (kWh).</p>
+</section>
+
+<section class="sec" id="treino-pratica">
+  <h2><span class="sn">3</span>Épocas, lotes e otimizadores</h2>
+  <p class="gancho">Como milhares de passos viram um treino.</p>
+  <ul>
+    <li><b>Época</b>: uma passada completa por todos os exemplos de treino.</li>
+    <li><b>Lote</b> (<i>batch</i>): o grupo de exemplos usado para calcular um passo. Em um exemplo hipotético com 273 exemplos e lote de 32 (o <code>MLPRegressor</code> usa por padrão lotes de até 200), uma época tem 9 passos (8 de 32 e 1 de 17).</li>
+    <li><b>SGD</b> (gradiente descendente estocástico): atualiza com o gradiente de cada lote. Simples, mas sensível à taxa de aprendizado.</li>
+    <li><b>Adam</b>: ajusta o passo de cada peso com base no histórico dos gradientes. É o padrão em muitos projetos e é o otimizador padrão do <code>MLPRegressor</code> do scikit-learn.</li>
+  </ul>
+  <h3>Como evitar o overfitting na prática</h3>
+  <ul>
+    <li><b>Regularização L2</b>: acrescenta à perda uma penalidade pelo tamanho dos pesos (no scikit-learn, o parâmetro <code>alpha</code>).</li>
+    <li><b>Dropout</b>: desliga neurônios ao acaso durante o treino.</li>
+    <li><b>Early stopping</b>: acompanhar a perda numa parte reservada dos dados (validação) e parar quando ela volta a subir.</li>
+    <li><b>Mais dados</b>, de qualidade e variados.</li>
+  </ul>
+  <div class="nota lembra"><span class="lbl">Três conjuntos</span>Treino ajusta os pesos. <b>Validação</b> ajuda a escolher hiperparâmetros e a hora de parar. <b>Teste</b> só é usado uma vez, no fim, para estimar o desempenho real.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Backpropagation</b> = regra da cadeia da saída para a entrada, para saber quanto cada peso contribuiu para a perda.</li><li>No exemplo: <code>L = 4</code> → gradientes −8 e −4 → pesos 1,3 e 1,4 → <code>ŷ = 3,64</code> → <code>L = 0,4096</code>.</li><li><b>Perda</b>: MSE/MAE na regressão; entropia cruzada na classificação.</li><li><b>Época</b> = passada completa; <b>lote</b> = grupo por passo. <b>Adam</b> e <b>SGD</b> são otimizadores.</li><li>Contra o overfitting: regularização, dropout, early stopping, mais dados. Teste só no fim.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">No exemplo, dL/dw₁ = −8. Com η = 0,1, qual o novo w₁ (partindo de 0,5)?</p>
+    <div class="opts"><button data-k="a">1,3.</button><button data-k="b">0,3.</button><button data-k="c">−0,3.</button></div>
+    <div class="fb">w₁ − η·gradiente = 0,5 − 0,1·(−8) = 1,3. Gradiente negativo aumenta o peso.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual perda é adequada para prever um valor contínuo, como preço?</p>
+    <div class="opts"><button data-k="a">Entropia cruzada categórica.</button><button data-k="b">Entropia cruzada binária.</button><button data-k="c">MSE ou MAE.</button></div>
+    <div class="fb">Regressão usa perdas de distância; as entropias cruzadas são para probabilidades.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O que é early stopping?</p>
+    <div class="opts"><button data-k="a">Treinar com menos neurônios.</button><button data-k="b">Parar o treino quando o erro de validação deixa de melhorar.</button><button data-k="c">Descartar o conjunto de teste.</button></div>
+    <div class="fb">A partir de certo ponto a rede só memoriza o treino; parar antes ajuda a generalizar.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o backpropagation calcula?</b></span><span class="bk">O gradiente da perda em relação a cada peso, propagando o erro da saída para a entrada.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um lote?</b></span><span class="bk">O grupo de exemplos usado para calcular um passo de atualização.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o Adam?</b></span><span class="bk">Adapta o tamanho do passo de cada peso usando o histórico dos gradientes.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve a validação?</b></span><span class="bk">Escolher hiperparâmetros e decidir quando parar, sem tocar no teste.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">Uma camada oculta basta para tabelas. E para imagens, texto e voz?</div><p>É aí que entram as redes profundas.</p></div>
+</section>
+
+</article>
+</body>
+</html>

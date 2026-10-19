@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: A MLP: camada oculta | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="rn-data.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Aula 7</div>
+  <h1>A MLP: camada oculta</h1>
+  <p class="sub">Uma rede com camada oculta resolve o U da energia e o XOR; três experimentos controlados mostram o que importa.</p>
+  <div class="meta"><span class="chip"><b>~50 min</b></span><span class="chip">3 demos · 4 testes · 4 flashcards</span><span class="chip">dados reais do scikit-learn</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 o XOR derrotou o neurônio único, e no Capítulo 4 vimos que o bias desloca a reta. Agora empilhamos neurônios: com uma <b>camada oculta</b>, a rede deixa de desenhar só retas. Aplicamos isso a um problema real em forma de U: o consumo de energia de um prédio ao longo da temperatura.</div>
+<section class="sec" id="problema">
+  <h2><span class="sn">1</span>O problema: energia em forma de U</h2>
+  <p class="gancho">Frio liga o aquecedor, calor liga o ar-condicionado, o meio é barato.</p>
+  <p>O arquivo <code>consumo_energia_mlp.csv</code> tem <b>365 dias</b> com a temperatura média e o consumo de energia (kWh). Os dados são <b>sintéticos</b> (gerados por computador para ilustrar o problema), não medições de um prédio real. A relação não é uma reta: o consumo é <b>alto no frio, baixo em temperatura amena e alto de novo no calor</b>. Os dados foram divididos em <b>treino e teste</b> (<code>test_size = 0,25</code>, <code>random_state = 42</code>): <b>273 dias</b> para treinar e <b>92</b> para avaliar.</p>
+  <p>Como régua de comparação usamos três modelos: a <b>média</b> do treino (o chute mais ingênuo), uma <b>reta</b> (regressão linear) e a <b>MLP</b>. A métrica é o <b>RMSE</b>, o erro típico em kWh no conjunto de teste (menor é melhor).</p>
+  <div class="demo" data-demo="mlpenergia"></div>
+  <div class="tablewrap"><table>
+    <tr><th>Modelo</th><th>RMSE no teste</th></tr>
+    <tr><td>Média (chute ingênuo)</td><td>5,90</td></tr>
+    <tr><td>Reta (regressão linear)</td><td>5,91</td></tr>
+    <tr><td><b>MLP</b> (camada oculta de 8 neurônios, ReLU)</td><td><b>1,54</b></td></tr>
+  </table></div>
+  <p>Repare que a <b>reta empata com a média</b> (5,91 contra 5,90): como o U é simétrico, a melhor reta é quase horizontal e não explica nada. Já a MLP reduz o erro a cerca de <b>um quarto</b>. Lendo a curva da rede: 34,82 kWh a 10 °C, 22,70 a 16 °C, 18,28 a 23 °C, 23,75 a 30 °C e 34,58 a 36 °C, com o mínimo de <b>17,91 kWh perto de 26,5 °C</b>.</p>
+  <div class="nota cuidado"><span class="lbl">Cuidado: extrapolar</span>Os dados de treino vão até 37,8 °C. Perguntar à rede sobre 45 °C é <b>extrapolação</b>: ela devolve um número, mas sem base nenhuma nos dados. Sempre cheque se a entrada está dentro da faixa vista no treino.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Por que 8 neurônios? E por que ReLU? Cada escolha é um experimento.</div><p>Rode os três.</p></div>
+</section>
+
+<section class="sec" id="experimentos">
+  <h2><span class="sn">2</span>Três experimentos controlados</h2>
+  <p class="gancho">Mude uma coisa por vez e meça.</p>
+  <div class="demo" data-demo="experimentos"></div>
+  <div class="grid2">
+    <div class="card rv"><b>A. Número de neurônios</b><p>1 neurônio: 5,91 (uma reta, nada aprendido). 2: 5,85. <b>3: 1,54</b>. 8: 1,54. Com 3 neurônios a rede <b>pode</b> montar o U, mas depende da semente: com outras sementes o treino de 3 neurônios fica preso em RMSE por volta de 4,7 (a semente 1, por exemplo). Com 8 neurônios o resultado é estável, e por isso o código usa 8. Mais neurônios custam mais e arriscam overfitting.</p></div>
+    <div class="card rv"><b>B. Função de ativação</b><p>ReLU 1,54; tanh 1,38; logística 1,48; <b>identidade 5,98</b>. Com a identidade a rede vira uma conta linear (Capítulo 1) e volta a falhar. É a prova experimental de que a <b>não linearidade</b> é o que faz a camada oculta valer.</p></div>
+    <div class="card rv"><b>C. Taxa de aprendizado</b><p>0,0001: RMSE 4,69 e treinou até o limite de 2000 épocas. 0,001: 2,16 em 625 épocas. <b>0,01: 1,54 em 200</b>. 0,1: 1,56 em 46 épocas. Muito baixa não chega; muito alta acelera mas pode ficar menos precisa.</p></div>
+    <div class="card rv"><b>O que o scaler faz</b><p>As entradas (e o alvo, o consumo) são padronizados (média 0, desvio 1) antes da rede. O <code>StandardScaler</code> é ajustado <b>só no treino</b> e depois aplicado ao teste. Ajustar no conjunto inteiro vazaria informação do teste para o treino.</p></div>
+  </div>
+  <div class="nota exemplo"><span class="lbl">Código da rede</span>
+<pre><code><span class="k">from</span> sklearn.neural_network <span class="k">import</span> MLPRegressor
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> train_test_split
+
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.25, random_state=42)
+sc = StandardScaler().fit(X_tr)                  <span class="c"># aprende média/desvio só no treino</span>
+sy = StandardScaler().fit(y_tr.to_frame())       <span class="c"># o consumo (y) também é padronizado</span>
+rede = MLPRegressor(hidden_layer_sizes=(8,),    <span class="c"># 1 camada oculta, 8 neurônios</span>
+                    activation="relu",
+                    learning_rate_init=0.01,
+                    max_iter=2000, random_state=42)
+rede.fit(sc.transform(X_tr), sy.transform(y_tr.to_frame()).ravel())
+pred = sy.inverse_transform(rede.predict(sc.transform(X_te)).reshape(-1, 1)).ravel()   <span class="c"># volta para kWh</span></code></pre></div>
+  <p>Os números acima vêm de um treino real do scikit-learn sobre o mesmo arquivo. Mudar a semente (<code>random_state</code>) ou a versão da biblioteca mexe nos decimais, e com <b>poucos</b> neurônios pode mudar o resultado inteiro (veja o experimento A). Com 8 neurônios, a história se mantém: a reta falha, a camada oculta acerta e a identidade volta a falhar. Estes valores vêm de uma conferência feita com o arquivo real, e não das anotações de aula (complemento).</p>
+</section>
+
+<section class="sec" id="xor">
+  <h2><span class="sn">3</span>O XOR, finalmente resolvido</h2>
+  <p class="gancho">A promessa do Capítulo 3.</p>
+  <p>Uma MLP pequena (2 entradas, 2 ou mais neurônios ocultos, 1 saída) aprende o XOR porque a camada oculta <b>transforma o espaço</b>: cada neurônio oculto desenha uma reta, e a saída combina as duas. Treine na demo e acompanhe o erro caindo. Compare com o Perceptron simples do Capítulo 3, que errava 3 ou 4 dos 4 casos para sempre.</p>
+  <div class="demo" data-demo="xor"></div>
+  <div class="nota lembra"><span class="lbl">Por que funciona</span>Dois neurônios ocultos podem calcular, por exemplo, "pelo menos um" (OR) e "os dois" (AND). A saída então faz "OR e não AND", que é justamente o XOR. A camada oculta cria as <b>características intermediárias</b> que uma reta sozinha não tinha.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Energia x temperatura tem forma de <b>U</b>: uma reta não explica (RMSE 5,91, igual à média 5,90). A MLP chega a <b>1,54</b>.</li><li>Divisão: 365 dias, <code>test_size = 0,25</code>, <code>random_state = 42</code> → 273 de treino e 92 de teste. O scaler é ajustado <b>só no treino</b>.</li><li>Neurônios: 1 → 5,91; 2 → 5,85; <b>3 → 1,54</b>; 8 → 1,54. Ativação: <b>identidade → 5,98</b> (sem não linearidade, a rede falha).</li><li>Taxa de aprendizado: 0,0001 → 4,69 (2000 épocas); 0,001 → 2,16; <b>0,01 → 1,54 (200)</b>; 0,1 → 1,56 (46).</li><li>A MLP resolve o <b>XOR</b>: a camada oculta cria características intermediárias. Fora da faixa do treino (45 °C), a rede só <b>extrapola</b>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Por que a regressão linear teve RMSE quase igual ao da média (5,91 x 5,90) nos dados de energia?</p>
+    <div class="opts"><button data-k="a">Porque a reta usou poucos dados.</button><button data-k="b">Porque o RMSE é inválido para retas.</button><button data-k="c">Porque o U é simétrico: a melhor reta fica quase horizontal e não explica a variação.</button></div>
+    <div class="fb">Frio e calor elevam o consumo; uma reta não consegue subir dos dois lados.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">No experimento B, a ativação identidade deu RMSE 5,98. O que isso mostra?</p>
+    <div class="opts"><button data-k="a">Sem não linearidade, a rede inteira equivale a uma conta linear e perde a curva.</button><button data-k="b">Que a identidade é a melhor ativação.</button><button data-k="c">Que o teste está vazado.</button></div>
+    <div class="fb">Linear de linear continua linear: a camada oculta deixa de contribuir.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O que significa pedir à rede a previsão para 45 °C se o treino foi até 37,8 °C?</p>
+    <div class="opts"><button data-k="a">Uma previsão confiável.</button><button data-k="b">Extrapolação: a rede devolve um número sem respaldo nos dados.</button><button data-k="c">Um erro de sintaxe.</button></div>
+    <div class="fb">Fora da faixa de treino a previsão não tem base. Cheque sempre a faixa das entradas.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 4</span><p class="qq">Por que ajustar o StandardScaler apenas no treino?</p>
+    <div class="opts"><button data-k="a">Para economizar memória.</button><button data-k="b">Para não vazar informação do conjunto de teste para o treino.</button><button data-k="c">Porque o teste não pode ser padronizado.</button></div>
+    <div class="fb">A média e o desvio do teste não deveriam ter participado do ajuste.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é RMSE?</b></span><span class="bk">A raiz do erro quadrático médio: o erro típico, na mesma unidade do alvo (aqui, kWh).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que a camada oculta resolve o XOR?</b></span><span class="bk">Ela cria características intermediárias (como OR e AND) que a saída combina.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quantos parâmetros tem a rede 1-8-1?</b></span><span class="bk">(1×8 + 8) + (8×1 + 1) = 25.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é extrapolar?</b></span><span class="bk">Prever fora da faixa vista no treino. O resultado não tem respaldo nos dados.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">A rede funcionou. Mas o que acontece por dentro quando ela treina?</div><p>Vamos abrir a caixa: backpropagation, com contas que cabem na mão.</p></div>
+</section>
+
+</article>
+</body>
+</html>

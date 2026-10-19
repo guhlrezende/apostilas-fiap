@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: Deep Learning e arquiteturas (complemento) | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Complemento</div>
+  <h1>Deep Learning e arquiteturas (complemento)</h1>
+  <p class="sub">Convolução, sequências, transfer learning, frameworks e os riscos de produção.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">filtros convolucionais ao vivo</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>A MLP do Capítulo 5 ligava <b>todos</b> os neurônios a <b>todos</b> os da camada seguinte, e tratava as entradas como uma lista sem ordem. Imagens, texto e voz têm <b>estrutura</b> (vizinhança, sequência). As arquiteturas deste capítulo, também um complemento, usam essa estrutura.</div>
+<section class="sec" id="cnn">
+  <h2><span class="sn">1</span>Convolução: olhar para vizinhanças</h2>
+  <p class="gancho">Um filtro pequeno que desliza pela imagem.</p>
+  <p>Uma <b>rede convolucional</b> (CNN) usa <b>filtros</b> pequenos (por exemplo 3×3) que deslizam pela imagem. Em cada posição, multiplica-se o filtro pelos pixels vizinhos e soma-se, produzindo um mapa que destaca um padrão (uma borda vertical, uma textura). O <b>mesmo</b> filtro é reaproveitado em toda a imagem, o que reduz muito o número de pesos em comparação a uma MLP. Experimente os filtros:</p>
+  <div class="demo" data-demo="conv"></div>
+  <p>Nas primeiras camadas os filtros detectam bordas e texturas. Nas seguintes, combinações dessas (cantos, olhos, rodas), e nas últimas, objetos inteiros. É a ideia de <i>features hierárquicas</i> do Capítulo 2, agora automática. As camadas de <b>pooling</b> reduzem o tamanho dos mapas, guardando o que mais importa.</p>
+</section>
+
+<section class="sec" id="sequencias">
+  <h2><span class="sn">2</span>Sequências: RNN, LSTM e Transformers</h2>
+  <p class="gancho">Quando a ordem importa.</p>
+  <div class="grid2">
+    <div class="card rv"><b>RNN e LSTM</b><p>Redes recorrentes processam um item por vez e carregam uma "memória" do que viram. A LSTM acrescenta portas que decidem o que lembrar e o que esquecer, e foi dominante em tradução e voz por anos.</p></div>
+    <div class="card rv"><b>Transformers</b><p>Introduzidos em 2017 (artigo <i>Attention Is All You Need</i>), usam <b>atenção</b>: cada palavra pode "olhar" diretamente para todas as outras da frase, em paralelo. Estão na base dos grandes modelos de linguagem.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="prontos">
+  <h2><span class="sn">3</span>Não comece do zero: transfer learning e frameworks</h2>
+  <p class="gancho">Treinar uma rede grande custa caro. Reaproveitar custa pouco.</p>
+  <p><b>Transfer learning</b> é partir de uma rede já treinada em milhões de exemplos (como a MobileNet, para imagens) e ajustar apenas as últimas camadas ao seu problema. Foi o que o Teachable Machine do Capítulo 2 fez. Vantagens: precisa de muito menos dados e tempo. Desvantagem: herda os vieses do modelo original.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Framework</th><th>Origem</th><th>Nota</th></tr>
+    <tr><td><b>TensorFlow</b></td><td>Google, 2015</td><td>muito usado em produção; <b>Keras</b> é sua interface de alto nível</td></tr>
+    <tr><td><b>PyTorch</b></td><td>Meta, 2016</td><td>muito usado em pesquisa, estilo mais "Python puro"</td></tr>
+    <tr><td><b>scikit-learn</b></td><td>2007</td><td>MLPs simples e todo o resto do ML clássico (usado no Capítulo 5)</td></tr>
+    <tr><td><b>JAX</b></td><td>Google, 2018</td><td>derivadas automáticas e compilação rápida</td></tr>
+  </table></div>
+</section>
+
+<section class="sec" id="riscos">
+  <h2><span class="sn">4</span>Riscos de levar um modelo à produção</h2>
+  <p class="gancho">Acertar no notebook não é o mesmo que ser confiável no mundo.</p>
+  <ul>
+    <li><b>Viés nos dados</b>: se o treino não representa todos os públicos, o modelo erra mais com quem ficou de fora.</li>
+    <li><b>Explicabilidade</b>: redes são pouco transparentes. Técnicas como <b>SHAP</b> e <b>LIME</b> estimam o que pesou em cada previsão.</li>
+    <li><b>Deriva (drift)</b>: o mundo muda e o desempenho cai com o tempo. É preciso monitorar.</li>
+    <li><b>Privacidade e lei</b>: no Brasil, a LGPD (art. 20) dá ao titular o direito de pedir <b>revisão de decisões tomadas unicamente por tratamento automatizado</b>.</li>
+    <li><b>Segurança</b>: modelos serializados (<code>.pkl</code>) podem executar código ao carregar.</li>
+  </ul>
+  <div class="nota lembra"><span class="lbl">Cinco perguntas antes de treinar</span>(1) Qual decisão o modelo vai influenciar? (2) Os dados representam quem será afetado? (3) Como saber que ele errou, e quanto custa o erro? (4) Alguém consegue revisar uma decisão contestada? (5) Quando e como o modelo será reavaliado?</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>CNN</b>: filtros pequenos deslizam pela imagem e são reaproveitados, detectando bordas, texturas e depois formas.</li><li><b>RNN/LSTM</b> processam sequências com memória. <b>Transformers</b> (2017) usam atenção e dominam a linguagem.</li><li><b>Transfer learning</b> reaproveita uma rede pré-treinada: menos dados e tempo, mas herda vieses.</li><li>Frameworks: TensorFlow/Keras, PyTorch, scikit-learn, JAX.</li><li>Em produção: viés, explicabilidade (SHAP/LIME), drift, LGPD art. 20 e segurança de arquivos de modelo.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que uma CNN usa muito menos pesos que uma MLP para imagens?</p>
+    <div class="opts"><button data-k="a">Porque ignora os pixels.</button><button data-k="b">Porque reaproveita o mesmo filtro pequeno em toda a imagem.</button><button data-k="c">Porque só olha o centro.</button></div>
+    <div class="fb">O compartilhamento de pesos do filtro é o que reduz os parâmetros.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">O que é transfer learning?</p>
+    <div class="opts"><button data-k="a">Treinar do zero com mais dados.</button><button data-k="b">Copiar o conjunto de teste.</button><button data-k="c">Reaproveitar uma rede pré-treinada e ajustar as últimas camadas.</button></div>
+    <div class="fb">Menos dados e tempo; cuidado com os vieses herdados.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O que a LGPD (art. 20) garante em decisões automatizadas?</p>
+    <div class="opts"><button data-k="a">O direito de pedir revisão de decisões tomadas unicamente por tratamento automatizado.</button><button data-k="b">Que todo modelo seja de código aberto.</button><button data-k="c">Que ninguém use redes neurais.</button></div>
+    <div class="fb">É um direito do titular dos dados; vale conferir o texto da lei no caso concreto.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um filtro convolucional?</b></span><span class="bk">Uma pequena matriz que desliza pela imagem e realça um padrão local.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é atenção?</b></span><span class="bk">O mecanismo em que cada elemento da sequência pondera os demais para construir sua representação.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é drift?</b></span><span class="bk">Mudança dos dados do mundo real ao longo do tempo, que degrada o modelo.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que servem SHAP e LIME?</b></span><span class="bk">Para estimar quais variáveis pesaram em uma previsão.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 8</div><div class="q">Todas essas redes aprendem por gradiente. Existe um jeito de otimizar sem ele?</div><p>Existe: inspirar-se na evolução.</p></div>
+</section>
+
+</article>
+</body>
+</html>

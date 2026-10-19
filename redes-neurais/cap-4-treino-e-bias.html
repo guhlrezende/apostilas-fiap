@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: Treinando à mão e o papel do bias | Apostila de Redes Neurais e Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/rn.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aulas 5 e 6</div>
+  <h1>Treinando à mão e o papel do bias</h1>
+  <p class="sub">Uma decisão de negócio como porta AND e o bias como nota de corte.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">ajuste o bias e veja o corte</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 o Perceptron aprendeu a porta AND com a regra <code>w ← w + η(y − ŷ)x</code>. Agora trocamos a porta lógica por uma <b>decisão de negócio</b> e isolamos uma peça que costuma ser esquecida: o <b>bias</b>.</div>
+<section class="sec" id="decisao">
+  <h2><span class="sn">1</span>A mesma conta, numa decisão de negócio</h2>
+  <p class="gancho">AND vira "liberar a oferta só se as duas condições valem".</p>
+  <p>Imagine uma regra: liberar uma oferta somente se o cliente <b>pagou em dia</b> <i>e</i> tem <b>alto engajamento</b>. Cada condição é 0 ou 1. A tabela do AND vira a tabela da decisão: só o caso <code>[1, 1]</code> libera.</p>
+  <div class="tablewrap"><table>
+    <tr><th>pagou em dia</th><th>engajado</th><th>liberar?</th></tr>
+    <tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>0</td></tr><tr><td>1</td><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td><td>1</td></tr>
+  </table></div>
+  <p>Com pesos <code>w₁ = w₂ = 1</code>, a soma <code>z = x₁ + x₂</code> vale 0, 1, 1 e 2. Falta decidir <b>onde cortar</b>. É exatamente o trabalho do bias.</p>
+</section>
+
+<section class="sec" id="bias">
+  <h2><span class="sn">2</span>O bias é a nota de corte</h2>
+  <p class="gancho">Sem ele, a reta é obrigada a passar pela origem.</p>
+  <p>Mexa no bias e nos pesos da demo. Comece pelo ponto inicial (pesos 1 e 1, bias 0) e leia o que a tabela diz:</p>
+  <div class="demo" data-demo="bias"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: sem bias e com bias −1,5</span>
+    <div class="l"><div>Sem bias (<code>b = 0</code>): <code>[0,0]</code> dá <code>z = 0</code>. Com o degrau <code>z ≥ 0</code>, sai <b>1</b>. Errado. <code>[0,1]</code> e <code>[1,0]</code> dão <code>z = 1</code> e saem 1, também errados. Só <code>[1,1]</code> acerta: <b>3 erros em 4</b>.</div></div>
+    <div class="l"><div>Com <code>b = −1,5</code>: as somas viram <code>−1,5</code>, <code>−0,5</code>, <code>−0,5</code> e <code>+0,5</code>. Só a última passa do zero. <b>4 acertos em 4</b>.</div></div>
+    <div class="l"><div>Leitura de negócio: o bias <b>exige evidência suficiente</b> antes de responder 1. Uma evidência sozinha (soma 1) não basta.</div></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Em uma frase</span>Os pesos dizem <b>o quanto cada informação conta</b>. O bias diz <b>o quanto de evidência é preciso</b> para o neurônio disparar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Em vez de escolher o bias à mão, dá para o modelo achá-lo sozinho?</div><p>Dá: é só deixar a regra de aprendizado rodar.</p></div>
+</section>
+
+<section class="sec" id="treino-mao">
+  <h2><span class="sn">3</span>O modelo aprendendo o bias sozinho</h2>
+  <p class="gancho">Clique em "Deixar o modelo aprender" na demo e compare com a conta abaixo.</p>
+  <p>Partindo de pesos e bias zero, com <code>η = 0,1</code> e a ordem de exemplos <code>[0,0] → [0,1] → [1,0] → [1,1]</code>, as épocas ficam assim (a mesma tabela que a demo mostra):</p>
+  <div class="tablewrap"><table>
+    <tr><th>época</th><th>pesos ao fim</th><th>bias ao fim</th><th>erros</th></tr>
+    <tr><td>1</td><td>[0,1; 0,1]</td><td>0,0</td><td>2</td></tr>
+    <tr><td>2</td><td>[0,2; 0,1]</td><td>−0,1</td><td>3</td></tr>
+    <tr><td>3</td><td>[0,2; 0,1]</td><td>−0,2</td><td>3</td></tr>
+    <tr><td>4</td><td>[0,2; 0,2]</td><td>−0,2</td><td>2</td></tr>
+    <tr><td>5</td><td>[0,2; 0,1]</td><td>−0,3</td><td>1</td></tr>
+    <tr><td>6</td><td>[0,2; 0,1]</td><td>−0,3</td><td>0</td></tr>
+  </table></div>
+  <p>Repare que o bias <b>desce</b> a cada erro de "falso positivo" (o modelo respondeu 1 quando devia ser 0), e que na época 6 <b>não há mais erros</b>: o treino convergiu. O resultado, <code>w = [0,2; 0,1]</code> e <code>b = −0,3</code>, é <b>diferente</b> do −1,5 que escolhemos à mão, e é igualmente válido: qualquer reta que separe o [1,1] dos outros três serve. Se a ordem dos exemplos ou a taxa de aprendizado mudarem, os números mudam, mas o ponto é o mesmo.</p>
+  <div class="nota cuidado"><span class="lbl">Cuidado: ≥ ou &gt; de novo</span>Uma planilha que use <code>z &gt; 0</code> no degrau vai gerar uma tabela de épocas diferente da acima, porque o caso <code>z = 0</code> passa a responder 0. Confira sempre qual comparação a sua conta usa antes de comparar resultados.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>O AND vira uma <b>regra de negócio</b>: liberar só quando as duas condições valem.</li><li><b>Bias = nota de corte.</b> Sem ele, a fronteira passa pela origem e o caso [0,0] dispara errado (3 erros em 4 com pesos 1 e 1).</li><li>Com <b>b = −1,5</b>, só a soma 2 passa do corte: 4 acertos em 4.</li><li>A regra de aprendizado também ajusta o bias: <code>b ← b + η(y − ŷ)</code>. Aqui convergiu na época 6 (<code>w = [0,2; 0,1]</code>, <code>b = −0,3</code>).</li><li>Existem <b>muitas</b> retas válidas. O treino acha uma delas.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Com pesos 1 e 1, bias 0 e degrau z ≥ 0, quantos dos 4 casos do AND o neurônio acerta?</p>
+    <div class="opts"><button data-k="a">Os 4.</button><button data-k="b">Só 1: o [1,1].</button><button data-k="c">Nenhum.</button></div>
+    <div class="fb">Os casos [0,0], [0,1] e [1,0] dão z ≥ 0 e saem 1, errado. Só o [1,1] acerta.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Por que b = −1,5 resolve o AND com pesos 1 e 1?</p>
+    <div class="opts"><button data-k="a">Porque só a soma 2 fica acima do corte, e as somas 0 e 1 ficam negativas.</button><button data-k="b">Porque muda os pesos.</button><button data-k="c">Porque troca o degrau por ReLU.</button></div>
+    <div class="fb">z = soma − 1,5: dá −1,5, −0,5, −0,5 e +0,5.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">O bias que o modelo aprendeu (−0,3) é diferente de −1,5. O que isso significa?</p>
+    <div class="opts"><button data-k="a">Que o treino falhou.</button><button data-k="b">Que o −1,5 está errado.</button><button data-k="c">Que há várias retas válidas; ambos separam o [1,1] dos demais.</button></div>
+    <div class="fb">O treino para quando para de errar, não quando acha 'a' solução única.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o bias representa?</b></span><span class="bk">A nota de corte: quanto de evidência é preciso para o neurônio responder 1.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como o bias é atualizado?</b></span><span class="bk">b ← b + η·(y − ŷ), só quando o neurônio erra.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um falso positivo aqui?</b></span><span class="bk">O modelo responde 1 quando o correto era 0. Empurra o bias para baixo.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que muda ao trocar ≥ por > no degrau?</b></span><span class="bk">O caso z = 0 passa a responder 0, e a tabela de épocas muda.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">Um neurônio só resolve AND e OR. Como resolver o que ele não consegue?</div><p>Com uma camada oculta: a MLP.</p></div>
+</section>
+
+</article>
+</body>
+</html>
