@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: Por que projetos de IA falham | Apostila de Gestão Ágil e Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/agil.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aulas 2 e 3</div>
+  <h1>Por que projetos de IA falham</h1>
+  <p class="sub">Um modelo com 92% de acurácia que não serviu, e o que isso ensina sobre gestão.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">matriz de confusão interativa</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo. Sem pressupostos: basta saber que um modelo de IA é avaliado por métricas. Ele mostra por que um projeto pode ter métrica boa e ainda assim falhar, e é a razão de existir de tudo que vem depois.</div>
+<section class="sec" id="caso">
+  <h2><span class="sn">1</span>O caso dos 92%</h2>
+  <p class="gancho">Boa acurácia, projeto fracassado.</p>
+  <p>Uma empresa pediu a uma equipe uma solução de IA para <b>classificar automaticamente as solicitações do atendimento ao cliente</b> e identificar as mais <b>urgentes</b>. Depois de várias semanas, a equipe entregou um modelo com <b>92% de acurácia</b>. Só que a solução <b>não identificava corretamente as solicitações urgentes</b> (o objetivo do projeto) e <b>não podia ser integrada</b> ao sistema usado pelos atendentes.</p>
+  <p>Pergunta: o projeto foi bem-sucedido? O que a equipe poderia ter feito <i>durante</i> o desenvolvimento para descobrir esses problemas antes da entrega final?</p>
+  <div class="grid2">
+    <div class="card rv"><b>O que deu errado</b><p>Faltaram critérios de sucesso combinados com a empresa; só se olhou a acurácia, e não métricas das urgentes; a integração com o sistema dos atendentes não foi verificada cedo; nada foi mostrado ao cliente até o fim.</p></div>
+    <div class="card rv"><b>O que teria ajudado</b><p>Definir critérios de sucesso antes de codar; medir <b>precisão, recall e F1</b> para os casos urgentes; protótipos e versões parciais regulares; feedback contínuo de empresa e usuários; pensar em valor e possibilidade de uso, e não só em desempenho técnico.</p></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como um modelo pode ter 92% de acurácia e falhar justamente no que importa?</div><p>Com um número e uma tabela.</p></div>
+</section>
+
+<section class="sec" id="metricas">
+  <h2><span class="sn">2</span>Por que a acurácia enganou</h2>
+  <p class="gancho">Quando uma classe é rara, acertar o comum é fácil.</p>
+  <p>Suponha (números ilustrativos) que, de <b>1.000</b> solicitações, <b>80</b> sejam urgentes. Um "modelo" que sempre responde <i>não urgente</i> acerta 920 de 1.000: <b>92%</b> de acurácia, sem aprender nada e sem nunca achar uma urgente. Mexa nos controles e compare com outros modelos:</p>
+  <div class="demo" data-demo="acuracia"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: a matriz de confusão do modelo do caso</span>
+    <div class="l"><div>Das <b>80</b> urgentes, o modelo acertou <b>10</b> (VP = 10) e errou <b>70</b> (FN = 70). Das <b>920</b> não urgentes, marcou <b>10</b> como urgentes (FP = 10) e acertou <b>910</b> (VN = 910).</div></div>
+    <div class="l"><div><b>Acurácia</b> = (VP + VN) / total = (10 + 910) / 1.000 = <b>92%</b>.</div></div>
+    <div class="l"><div><b>Precisão</b> (dos que ele chamou de urgentes, quantos eram) = VP / (VP + FP) = 10 / 20 = <b>50%</b>.</div></div>
+    <div class="l"><div><b>Recall</b> (das urgentes reais, quantas ele achou) = VP / (VP + FN) = 10 / 80 = <b>12,5%</b>.</div></div>
+    <div class="l"><div><b>F1</b> = 2·precisão·recall / (precisão + recall) = 2·0,5·0,125 / 0,625 = <b>0,20</b>.</div></div>
+    <div class="l"><div>Leitura: a acurácia diz 92%; o F1 das urgentes diz 0,20. O número que importa depende do objetivo do negócio, e o objetivo aqui era <b>achar as urgentes</b>.</div></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Regra prática</span>Com classe rara, <b>sempre compare a acurácia com o chute da classe majoritária</b> e olhe recall e precisão da classe que importa. É o mesmo assunto da apostila de Machine Learning, agora como problema de gestão.</div>
+</section>
+
+<section class="sec" id="invisivel">
+  <h2><span class="sn">3</span>O verdadeiro problema: trabalho invisível</h2>
+  <p class="gancho">Código continuar sendo escrito não significa que o projeto vai bem.</p>
+  <p>O alerta não é "não sabemos o que fazer". É <b>"cada pessoa entendeu uma coisa diferente"</b>: parece normal até o retrabalho aparecer. Antes de decidir tecnologia ou arquitetura, uma pergunta precisa estar respondida: <b>qual problema estamos tentando resolver?</b> O caminho entre o problema e o valor tem etapas, e em cada seta o contexto pode se perder:</p>
+  <div class="tl rv">
+    <div class="ev"><b>Problema</b><span>O que dói, para quem?</span></div>
+    <div class="ev"><b>Necessidade</b><span>O que a pessoa precisa conseguir fazer?</span></div>
+    <div class="ev"><b>User Story</b><span>A necessidade escrita para todos entenderem igual (Capítulo 3).</span></div>
+    <div class="ev"><b>Sprint</b><span>O ciclo curto em que se constrói e se aprende (Capítulo 2).</span></div>
+    <div class="ev"><b>Valor</b><span>O que ficou utilizável e útil.</span></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">A primeira Sprint pode não ter tela</span>Contrariando a intuição de que "Sprint = funcionalidade entregue", a primeira pode gerar valor só <b>reduzindo incerteza</b>: validar regras de negócio, entender o domínio, identificar risco técnico, prototipar. <b>Clareza também é uma entrega.</b></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Acurácia alta não basta</b>: com classe rara, o chute da maioria já acerta muito (aqui, 92%).</li><li><b>Precisão</b> = VP/(VP+FP). <b>Recall</b> = VP/(VP+FN). <b>F1</b> = média harmônica. Meça na classe que importa.</li><li>Falhas do caso: sem critérios de sucesso, sem métricas das urgentes, integração não verificada, sem feedback contínuo.</li><li>O perigo é o <b>trabalho invisível</b>: cada um entendeu uma coisa. Caminho: problema → necessidade → história → Sprint → valor.</li><li>A primeira Sprint pode ser só <b>reduzir incerteza</b>. Clareza também é entrega.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que 92% de acurácia pode ser enganoso em um problema com 8% de casos urgentes?</p>
+    <div class="opts"><button data-k="a">Porque 92% é sempre um número baixo.</button><button data-k="b">Porque um modelo que nunca marca nada como urgente já acerta 92%.</button><button data-k="c">Porque a acurácia não pode ser calculada com duas classes.</button></div>
+    <div class="fb">Quando uma classe é rara, acertar a maioria é fácil. O que importa é o desempenho na classe rara (recall e precisão).</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Qual métrica diz quantas das urgentes reais o modelo encontrou?</p>
+    <div class="opts"><button data-k="a">Recall.</button><button data-k="b">Precisão.</button><button data-k="c">Acurácia.</button></div>
+    <div class="fb">Recall = VP / (VP + FN): dos que eram urgentes de verdade, quantos o modelo achou.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">O que significa 'trabalho invisível' na gestão de projetos?</p>
+    <div class="opts"><button data-k="a">Trabalho feito fora do horário.</button><button data-k="b">Código sem comentários.</button><button data-k="c">Pessoas trabalhando com entendimentos diferentes do mesmo problema, sem perceber.</button></div>
+    <div class="fb">O sinal de alerta é cada um ter entendido uma coisa diferente: o retrabalho só aparece depois.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o F1?</b></span><span class="bk">A média harmônica de precisão e recall: só é alto se os dois forem.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que a primeira Sprint pode entregar sem tela?</b></span><span class="bk">Redução de incerteza: regras de negócio validadas, domínio entendido, riscos técnicos identificados.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a pergunta que vem antes de qualquer tecnologia?</b></span><span class="bk">Qual problema estamos tentando resolver?</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que a equipe do caso deveria ter feito?</b></span><span class="bk">Definir critérios de sucesso com o cliente, medir métricas específicas e mostrar protótipos com frequência.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Como deixar o trabalho visível e manter o cliente por perto?</div><p>Com um framework de ciclos curtos e feedback: o Scrum.</p></div>
+</section>
+
+</article>
+</body>
+</html>

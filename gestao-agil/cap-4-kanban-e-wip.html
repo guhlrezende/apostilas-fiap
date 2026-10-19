@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: Kanban e limite de trabalho em andamento | Apostila de Gestão Ágil e Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/agil.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aula 3</div>
+  <h1>Kanban e limite de trabalho em andamento</h1>
+  <p class="sub">O quadro, a diferença entre Scrum, Kanban e ferramenta, e o efeito do WIP.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">simulador de limite de WIP</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Com histórias claras e uma DoD combinada, o time tem <b>o que</b> fazer. O Capítulo 4 trata de <b>como o trabalho flui</b>: um quadro que torna o trabalho visível e um limite simples que impede o time de começar mais do que consegue terminar.</div>
+<section class="sec" id="tres-coisas">
+  <h2><span class="sn">1</span>Scrum, Kanban e Trello</h2>
+  <p class="gancho">Três coisas diferentes que se misturam na conversa.</p>
+  <div class="grid2">
+    <div class="card rv"><b>Scrum</b><p>Organiza o trabalho em <b>ciclos curtos</b> (Sprints), com meta, papéis e revisão.</p></div>
+    <div class="card rv"><b>Kanban</b><p>Visualiza e melhora o <b>fluxo</b>: mostra o trabalho, expõe gargalos e limita o que está em andamento.</p></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">E o Trello?</span>É uma <b>ferramenta visual</b> (um quadro de cartões). Ela não decide prioridade, valor ou qualidade por ninguém. Dá para usar o Trello para Scrum, para Kanban ou para nenhum dos dois.</div>
+</section>
+
+<section class="sec" id="quadro">
+  <h2><span class="sn">2</span>O quadro de cinco colunas</h2>
+  <p class="gancho">Cada coluna é um estado do trabalho.</p>
+  <div class="tl rv">
+    <div class="ev"><b>Product Backlog</b><span>O que pode gerar valor (o PO ordena).</span></div>
+    <div class="ev"><b>Sprint Backlog</b><span>O que faremos nesta Sprint.</span></div>
+    <div class="ev"><b>Em andamento</b><span>Alguém está trabalhando agora. Aqui vale o limite de WIP.</span></div>
+    <div class="ev"><b>Em validação</b><span>O resultado atende ao critério de aceite? Alguém revisou? Há evidência?</span></div>
+    <div class="ev"><b>Done</b><span>Atende à Definition of Done: demonstrável.</span></div>
+  </div>
+  <p>A coluna que mais exige conversa é a <b>"Em validação"</b>: é nela que aparecem as perguntas que o "concluído" esconde. Um cartão só entra em Done quando alguém consegue responder <i>sim</i> a todas.</p>
+</section>
+
+<section class="sec" id="wip">
+  <h2><span class="sn">3</span>Limite de WIP: começar menos para terminar mais</h2>
+  <p class="gancho">Muitas tarefas iniciadas não é o mesmo que muito valor entregue.</p>
+  <p><b>WIP</b> (<i>work in progress</i>) é o trabalho começado e não terminado. Mais tarefas simultâneas significam mais troca de contexto, mais trabalho parado e <b>menos entregas finalizadas</b>. Um limite simples (por exemplo, no máximo 3 cartões em "Em andamento") expõe o gargalo cedo e muda a pergunta de "o que posso começar agora?" para <b>"o que podemos terminar antes de começar algo novo?"</b>.</p>
+  <p>Veja com números. Uma equipe de <b>3 pessoas</b> tem <b>12 tarefas</b> de <b>3 dias</b> cada, e uma pessoa trabalha em uma tarefa de cada vez dentro dela (uma tarefa absorve no máximo uma pessoa). Mude o limite:</p>
+  <div class="demo" data-demo="wip"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: três limites</span>
+    <div class="l"><div><b>WIP = 3</b>: cada pessoa fica com uma tarefa e termina em 3 dias. Entregas aos 3, 6, 9 e 12 dias, três de cada vez. <b>Primeira entrega: 3 dias. Tempo médio até a entrega: 7,5 dias.</b></div></div>
+    <div class="l"><div><b>WIP = 12</b>: todas começam no dia 0 e cada uma recebe 3/12 = 0,25 de dia de trabalho por dia. Todas terminam juntas no dia 12. <b>Primeira entrega: 12 dias. Tempo médio: 12 dias.</b></div></div>
+    <div class="l"><div><b>WIP = 1</b>: uma tarefa de cada vez, e duas pessoas ficam sem tarefa. Entregas aos 3, 6, ..., 36 dias. <b>Tempo médio: 19,5 dias.</b></div></div>
+    <div class="l"><div>O <b>trabalho total é o mesmo</b> (36 pessoas-dias). O WIP muda <b>quando</b> cada coisa fica pronta, e portanto quando o cliente pode dar feedback. O melhor aqui é WIP igual ao número de pessoas.</div></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Complemento: a lei de Little</span>Em um fluxo estável, <b>tempo médio no sistema = WIP / vazão</b>. Com WIP = 3 e vazão de 1 tarefa por dia, cada tarefa leva 3 dias <b>em andamento</b>, igual ao tempo da primeira entrega na simulação. O 'tempo médio até entregar' da demo (7,5 dias) é outra medida: conta desde o dia 0, incluindo a espera na fila. Para reduzir o tempo de entrega, ou aumenta-se a vazão, ou <b>reduz-se o WIP</b>, e a segunda opção é de graça.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Scrum</b> = ciclos (Sprints). <b>Kanban</b> = fluxo e limite de WIP. <b>Trello</b> = só a ferramenta visual.</li><li>Quadro: Product Backlog → Sprint Backlog → Em andamento → <b>Em validação</b> → Done.</li><li><b>WIP</b> alto = troca de contexto, trabalho parado, menos entregas. Pergunta certa: o que podemos <b>terminar</b> antes de começar algo novo?</li><li>No exemplo (3 pessoas, 12 tarefas de 3 dias): WIP 3 → 1ª entrega aos 3 dias, média 7,5; WIP 12 → tudo no dia 12.</li><li><b>Lei de Little</b> (complemento): tempo médio = WIP / vazão.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">No exemplo, o que acontece quando o WIP vai de 3 para 12?</p>
+    <div class="opts"><button data-k="a">A equipe entrega mais tarefas no total.</button><button data-k="b">O total de trabalho é o mesmo, mas a primeira entrega vai de 3 para 12 dias.</button><button data-k="c">Nada: o WIP não afeta o prazo.</button></div>
+    <div class="fb">O WIP não cria capacidade; só espalha o esforço e adia as entregas.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">O Trello é...</p>
+    <div class="opts"><button data-k="a">Um framework ágil.</button><button data-k="b">Sinônimo de Kanban.</button><button data-k="c">Uma ferramenta visual, que não decide prioridade nem qualidade.</button></div>
+    <div class="fb">Scrum e Kanban são formas de trabalhar; o Trello é onde você desenha o quadro.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual coluna do quadro guarda as perguntas 'atende ao critério de aceite? alguém revisou? há evidência?'</p>
+    <div class="opts"><button data-k="a">Em validação.</button><button data-k="b">Product Backlog.</button><button data-k="c">Sprint Backlog.</button></div>
+    <div class="fb">É a coluna que impede que 'concluído' vire 'Done' sem checagem.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é WIP?</b></span><span class="bk">Work in progress: trabalho começado e ainda não terminado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que limitar o WIP?</b></span><span class="bk">Para expor gargalos cedo e terminar mais coisas, em vez de começar tudo e entregar tarde.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que diz a lei de Little?</b></span><span class="bk">Em fluxo estável, tempo médio no sistema = WIP dividido pela vazão.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a pergunta que o WIP muda?</b></span><span class="bk">De 'o que posso começar?' para 'o que podemos terminar antes de começar algo novo?'.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">O trabalho está visível e fluindo. Falta apresentá-lo em 5 minutos para quem decide.</div><p>O pitch da Sprint Review.</p></div>
+</section>
+
+</article>
+</body>
+</html>

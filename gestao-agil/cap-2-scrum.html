@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: O framework Scrum | Apostila de Gestão Ágil e Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/agil.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aulas 2 e 3</div>
+  <h1>O framework Scrum</h1>
+  <p class="sub">Pilares, valores, papéis, artefatos e eventos do Scrum.</p>
+  <div class="meta"><span class="chip"><b>~50 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">percorra o ciclo da Sprint</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 o projeto falhou porque o trabalho estava invisível e o cliente longe. O <b>Scrum</b> é um framework feito para o contrário: ciclos curtos, inspeção constante e feedback de quem usa o produto.</div>
+<section class="sec" id="origem">
+  <h2><span class="sn">1</span>De onde vem e quando usar</h2>
+  <p class="gancho">Um nome emprestado do rugby.</p>
+  <p>O Scrum se inspira no artigo <i>The New New Product Development Game</i> (1986), de Ikujiro Nonaka e Hirotaka Takeuchi, que descreve equipes <b>pequenas, multidisciplinares e auto-organizadas</b> desenvolvendo produtos complexos. A metáfora é a do <i>scrum</i> do rugby: o time avança junto. Nos anos 1990, Jeff Sutherland e Ken Schwaber estruturaram essas ideias no framework que se conhece hoje.</p>
+  <p>Ele serve a projetos de <b>alta incerteza</b>, como software e IA, com abordagem <b>iterativa</b>: ciclos curtos de entrega e feedback constante, o que reduz desperdício e expõe gargalos cedo.</p>
+</section>
+
+<section class="sec" id="pilares">
+  <h2><span class="sn">2</span>Pilares e valores</h2>
+  <p class="gancho">A base de tudo é inspecionar e se adaptar.</p>
+  <div class="grid2">
+    <div class="card rv"><b>3 pilares</b><p><b>Transparência</b>: as informações são acessíveis a todos os envolvidos. <b>Inspeção</b>: verificações constantes do andamento. <b>Adaptação</b>: ajustes conforme o que a inspeção mostrar.</p></div>
+    <div class="card rv"><b>5 valores</b><p><b>Compromisso, foco, abertura, respeito e coragem.</b> Sem abertura não há transparência; sem coragem, ninguém levanta o problema que a inspeção encontrou.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="papeis">
+  <h2><span class="sn">3</span>Os três papéis</h2>
+  <p class="gancho">Responsabilidade, não hierarquia.</p>
+  <ul>
+    <li><b>Product Owner (PO)</b>: maximiza o valor do produto. Ordena as prioridades, mantém o <b>Product Backlog</b> compreensível e <b>representa os stakeholders</b> (clientes, usuários finais, investidores, gerentes e líderes de negócio, reguladores).</li>
+    <li><b>Scrum Master (SM)</b>: ajuda o time a melhorar o processo. Facilita, remove impedimentos e estimula a melhoria contínua. Não é chefe.</li>
+    <li><b>Developers</b>: transformam a necessidade em um <b>incremento utilizável</b>. Planejam a Sprint, constroem, testam e validam. São autogerenciáveis. Em um curso com empresa parceira, o Scrum Master costuma ser um integrante do grupo, que também desenvolve (isso é a regra do curso, e não do Scrum).</li>
+  </ul>
+  <div class="card sorter rv" data-demo="sorter" data-opts="po:Product Owner|sm:Scrum Master|dev:Developers">
+    <div class="item" data-ans="po"><p>Ordena o Product Backlog e decide o que traz mais valor.</p><span class="why">Maximizar valor e gerenciar o Backlog é o papel do PO.</span></div>
+    <div class="item" data-ans="sm"><p>Percebe que o time está travado esperando um acesso e resolve o impedimento.</p><span class="why">Remover impedimentos e facilitar o processo é o papel do Scrum Master.</span></div>
+    <div class="item" data-ans="dev"><p>Constrói, testa e valida o incremento da Sprint.</p><span class="why">Transformar a necessidade em incremento utilizável é dos Developers.</span></div>
+    <div class="item" data-ans="po"><p>Conversa com clientes e usuários para captar e priorizar as demandas.</p><span class="why">O PO é o principal representante dos stakeholders dentro do time.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <h3>Que competências um time de IA precisa?</h3>
+  <p>Observando um projeto de IA, os Developers juntos precisam cobrir: entendimento do <b>problema de negócio</b>; <b>engenharia e análise de dados</b>; <b>desenvolvimento e avaliação de modelos</b>; <b>software, API ou interface</b>; <b>testes e documentação</b>; <b>comunicação com os stakeholders</b>; e <b>ética, privacidade e análise de riscos</b>. É o eixo negócio → dados → modelo → produto → risco. Boa pergunta para dividir responsabilidades: quem do time cobre cada uma?</p>
+</section>
+
+<section class="sec" id="artefatos">
+  <h2><span class="sn">4</span>Os artefatos: três perguntas</h2>
+  <p class="gancho">Cada artefato responde a uma pergunta.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Artefato</th><th>Pergunta</th><th>Quem cuida</th></tr>
+    <tr><td><b>Product Backlog</b></td><td>O que pode gerar valor?</td><td>PO: lista ordenada de tudo que o produto precisa</td></tr>
+    <tr><td><b>Sprint Backlog</b></td><td>O que faremos agora?</td><td>Developers: itens escolhidos para a Sprint e o plano para entregá-los</td></tr>
+    <tr><td><b>Incremento</b></td><td>O que ficou utilizável?</td><td>Developers: o resultado entregável de cada Sprint</td></tr>
+  </table></div>
+  <p>Regra de ouro: <b>se algo "pronto" não pode ser demonstrado, ainda existe trabalho escondido</b>. Cada artefato tem também um compromisso (Guia do Scrum, complemento): o Product Backlog tem a <b>meta do produto</b>, o Sprint Backlog tem a <b>meta da Sprint</b> e o Incremento tem a <b>Definition of Done</b> (Capítulo 3).</p>
+</section>
+
+<section class="sec" id="eventos">
+  <h2><span class="sn">5</span>Os eventos e a Sprint</h2>
+  <p class="gancho">A Sprint é um ciclo de aprendizado, não um prazo.</p>
+  <p>O objetivo de uma Sprint não é cumprir tarefas: é <b>aprender rápido se o que está sendo construído resolve o problema</b>. O ciclo é <i>planejar → executar → revisar → adaptar</i>, e a Sprint dura <b>no máximo um mês</b>. Percorra os quatro eventos (os limites de tempo são <b>complemento</b> (vêm do Guia do Scrum, e não do slide) e valem para uma Sprint de 1 mês):</p>
+  <div class="demo" data-demo="ciclo"></div>
+  <div class="nota cuidado"><span class="lbl">Erro comum: Review não é relatório</span>A Sprint Review não é uma cerimônia para mostrar que "fizemos tudo". É o momento de <b>colocar o produto na frente de quem usa</b> e deixar o feedback mudar o Backlog. Se nada mudou depois da Review, ela não cumpriu seu papel.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Scrum</b>: times pequenos, ciclos curtos, feedback. Origem em Nonaka e Takeuchi (1986); estruturado por Sutherland e Schwaber nos anos 1990.</li><li><b>3 pilares</b>: transparência, inspeção, adaptação. <b>5 valores</b>: compromisso, foco, abertura, respeito, coragem.</li><li><b>PO</b> (valor e Backlog), <b>SM</b> (processo e impedimentos), <b>Developers</b> (incremento). Papéis, não chefias.</li><li><b>Artefatos</b>: Product Backlog (o que pode gerar valor?), Sprint Backlog (o que faremos agora?), Incremento (o que ficou utilizável?).</li><li><b>Eventos</b>: Planning, Sprint (com Daily), Review, Retrospective. Sprint de até 1 mês.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Qual evento olha para o processo de trabalho, e não para o produto?</p>
+    <div class="opts"><button data-k="a">Sprint Review.</button><button data-k="b">Sprint Retrospective.</button><button data-k="c">Sprint Planning.</button></div>
+    <div class="fb">A Retrospective inspeciona como o time trabalha e define melhorias. A Review inspeciona o produto.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Quem representa os stakeholders dentro do time Scrum?</p>
+    <div class="opts"><button data-k="a">O Scrum Master.</button><button data-k="b">Os Developers.</button><button data-k="c">O Product Owner.</button></div>
+    <div class="fb">O PO capta e prioriza as demandas dos stakeholders no Product Backlog.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual pergunta o Sprint Backlog responde?</p>
+    <div class="opts"><button data-k="a">O que faremos agora?</button><button data-k="b">O que pode gerar valor?</button><button data-k="c">O que ficou utilizável?</button></div>
+    <div class="fb">Product Backlog é 'o que pode gerar valor'; Incremento é 'o que ficou utilizável'.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais os 3 pilares do Scrum?</b></span><span class="bk">Transparência, inspeção e adaptação.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que faz o Scrum Master?</b></span><span class="bk">Facilita o processo, remove impedimentos e estimula a melhoria contínua. Não é chefe.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual o objetivo de uma Sprint?</b></span><span class="bk">Aprender rápido se o que está sendo construído resolve o problema, e não apenas cumprir tarefas.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quanto dura uma Sprint?</b></span><span class="bk">No máximo um mês.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">O Product Backlog precisa de itens bem escritos. Como se escreve um item que todos entendem do mesmo jeito?</div><p>Com a User Story.</p></div>
+</section>
+
+</article>
+</body>
+</html>

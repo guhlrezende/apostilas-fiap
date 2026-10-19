@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: UML: diagrama de componentes | Apostila de Gestão Ágil e Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/agil.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Aula 6</div>
+  <h1>UML: diagrama de componentes</h1>
+  <p class="sub">Desenhar a arquitetura para quem decide: tipos de diagrama, símbolos e um exemplo completo.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">diagrama interativo</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>O pitch mostra o valor. Mas e se o cliente perguntar <i>como</i> a solução funciona por dentro? Uma solução de IA brilhante que ninguém entende não gera confiança. O <b>UML</b> é uma linguagem visual para explicar a arquitetura <b>sem mostrar código</b>.</div>
+<section class="sec" id="por-que">
+  <h2><span class="sn">1</span>Por que desenhar</h2>
+  <p class="gancho">Se o cliente não entende o seu diagrama, não compra a sua solução.</p>
+  <p><b>UML</b> (<i>Unified Modeling Language</i>) é uma linguagem visual para representar sistemas. O objetivo não é desenhar bonito: é <b>clareza, comunicação e tomada de decisão</b>. O caminho é <b>ideia → diagrama claro → implementação</b>. Como explicar sem código, por exemplo, uma solução em que um <i>sensor</i> envia dados a uma <i>API</i>, que alimenta um <i>modelo</i> cujo resultado aparece em um <i>dashboard</i>? Com caixas e linhas rotuladas.</p>
+  <div class="nota cuidado"><span class="lbl">Infográfico não é UML</span>Uma arquitetura de nuvem desenhada com ícones de serviços é um infográfico: bonito, mas cada pessoa lê de um jeito. O mesmo desenho em UML usa <b>caixas padronizadas e linhas rotuladas pelo protocolo</b> (DNS, HTTP/HTTPS, SSH), e todos leem igual.</div>
+</section>
+
+<section class="sec" id="tipos">
+  <h2><span class="sn">2</span>Três tipos de diagrama</h2>
+  <p class="gancho">Cada um responde a uma pergunta diferente.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Diagrama</th><th>Pergunta que responde</th><th>Mostra</th></tr>
+    <tr><td><b>Componentes</b></td><td>Quais são as peças e como se conectam?</td><td>cliente, servidor web, servidor de aplicação, banco, dispositivos</td></tr>
+    <tr><td><b>Sequência</b></td><td>Em que ordem as mensagens trafegam?</td><td>ator, site, navegador e banco trocando mensagens</td></tr>
+    <tr><td><b>Classes</b></td><td>Que dados e estruturas existem?</td><td>classes, atributos e multiplicidade (<code>1</code>, <code>1..*</code>)</td></tr>
+  </table></div>
+  <p>Para explicar arquitetura a quem decide, o <b>diagrama de componentes</b> é o mais útil. Ferramenta gratuita no navegador: <b>UMLetino</b>. Os símbolos principais:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Elemento</th><th>Significado</th></tr>
+    <tr><td>Boneco (<i>actor</i>)</td><td>quem usa o sistema</td></tr>
+    <tr><td>Seta sólida / pontilhada</td><td>conexão contínua / esporádica</td></tr>
+    <tr><td>"Pilha" (cilindro)</td><td>banco de dados</td></tr>
+    <tr><td>Caixa 3D (<code>«device»</code>, <code>«execution environment»</code>)</td><td>algo com CPU e memória: PC, servidor, microcontrolador</td></tr>
+    <tr><td>Classe simples</td><td>biblioteca, framework ou software</td></tr>
+    <tr><td>Caixa de borda pontilhada</td><td>agrupar outros blocos (por exemplo, "User Story 1")</td></tr>
+    <tr><td>Caixas em camadas</td><td>front-end e back-end</td></tr>
+  </table></div>
+</section>
+
+<section class="sec" id="exemplo">
+  <h2><span class="sn">3</span>Um exemplo completo: detectar fadiga de motorista</h2>
+  <p class="gancho">Hardware, nuvem e painel em um só desenho.</p>
+  <p><b>User Story:</b> "Como gestor de operações, quero monitorar o nível de fadiga dos motoristas em tempo real para reduzir riscos de acidentes e melhorar a segurança da operação." <b>Critérios de aceite:</b> capturar câmera (expressão facial) e sensores (tempo de direção, velocidade); detectar fadiga com IA (olhos fechando, distração); alerta sonoro ao motorista e alerta no painel do gestor; guardar histórico; dashboard em tempo real e relatórios simples.</p>
+  <p>O desenho de componentes que atende a essa história: o <b>motorista</b> é detectado pela <b>câmera</b> e por um sensor de pressão no volante, ligados aos pinos (GPIO) de um <b>microcontrolador</b> (ESP32) que roda um algoritmo em C++ e aciona um <b>buzzer</b>. O microcontrolador conversa com um <b>servidor na nuvem</b> por MQTT ou WebSocket. No back-end, um servidor em Python roda o modelo de detecção, os alertas e o dashboard, ligados a um banco. O <b>gestor</b> acessa o dashboard pelo navegador, por HTTPS. Tudo dentro de uma caixa tracejada, "User Story 1", com front-end e back-end separados. Clique nas caixas e nas linhas:</p>
+  <div class="demo" data-demo="uml"></div>
+  <div class="nota lembra"><span class="lbl">Como ler o diagrama</span>Cada <b>caixa</b> tem uma responsabilidade, e cada <b>linha</b> tem um rótulo com a forma de comunicação (um pino físico, MQTT, HTTPS). Se você consegue explicar, para cada caixa, "o que ela faz" e, para cada linha, "o que passa por ela", o diagrama cumpriu seu papel.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo (e da apostila)</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>UML</b> comunica arquitetura sem código: clareza, comunicação e decisão.</li><li><b>Infográfico</b> com ícones não é UML: UML usa caixas padronizadas e linhas rotuladas com o protocolo.</li><li>Três diagramas: <b>componentes</b> (peças e conexões), <b>sequência</b> (ordem das mensagens) e <b>classes</b> (dados e relações).</li><li>Símbolos: ator, seta sólida/pontilhada, cilindro (banco), caixa 3D (<code>«device»</code>), caixa tracejada para agrupar.</li><li>Fio condutor da apostila: problema → história → critérios → Sprint → quadro → pitch → diagrama.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Qual diagrama UML mostra as peças de uma solução e como elas se conectam?</p>
+    <div class="opts"><button data-k="a">Diagrama de classes.</button><button data-k="b">Diagrama de componentes.</button><button data-k="c">Diagrama de sequência.</button></div>
+    <div class="fb">Componentes mostram a arquitetura; sequência mostra a ordem das mensagens; classes mostram os dados.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">O que a caixa tracejada 'User Story 1' no exemplo representa?</p>
+    <div class="opts"><button data-k="a">Um banco de dados.</button><button data-k="b">Um erro.</button><button data-k="c">O agrupamento dos blocos que atendem àquela história.</button></div>
+    <div class="fb">A borda pontilhada agrupa outros blocos; aqui, tudo que entrega aquela história.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Por que rotular as linhas com protocolos (HTTPS, MQTT...)?</p>
+    <div class="opts"><button data-k="a">Para que todos leiam a comunicação do mesmo jeito, sem ambiguidade.</button><button data-k="b">Para enfeitar o diagrama.</button><button data-k="c">Porque o UML exige cores.</button></div>
+    <div class="fb">A linha rotulada é o que diferencia um diagrama técnico de um infográfico solto.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é UML?</b></span><span class="bk">Uma linguagem visual padronizada para representar sistemas.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um diagrama de componentes?</b></span><span class="bk">Um desenho das peças de um sistema e de como elas se comunicam.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que a caixa 3D com «device» representa?</b></span><span class="bk">Algo com CPU e memória: um computador, um servidor, um microcontrolador.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Infográfico x UML?</b></span><span class="bk">Infográfico usa ícones e cada um interpreta de um jeito. UML usa símbolos padronizados e linhas rotuladas.</span></button></div>
+  <div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Do projeto que falhou ao diagrama que convence.</div><p>Se algum ponto ficou solto, refaça a demo do capítulo correspondente. Um projeto bem conduzido é o que você consegue explicar a qualquer pessoa em cinco minutos.</p></div>
+</section>
+
+</article>
+</body>
+</html>

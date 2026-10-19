@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: User Story, critérios de aceite e Done | Apostila de Gestão Ágil e Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/agil.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Aulas 2 e 3</div>
+  <h1>User Story, critérios de aceite e Done</h1>
+  <p class="sub">Escrever o item de backlog, validar o valor e saber quando está pronto.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">construtor de história com checklist</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 2 você viu que o Product Backlog é uma lista ordenada do que pode gerar valor. Agora, <b>como se escreve cada item</b> para que o PO, o time e o cliente entendam igual, como se prioriza e como se sabe que algo está <b>pronto de verdade</b>.</div>
+<section class="sec" id="story">
+  <h2><span class="sn">1</span>A User Story</h2>
+  <p class="gancho">Uma frase com papel, ação e benefício.</p>
+  <p>A técnica é escrever o item como <b>"Como &lt;papel&gt;, quero &lt;ação&gt;, para &lt;benefício&gt;"</b>. Ela força a pergunta que evita trabalho invisível: <i>quem precisa, do quê, e para quê?</i> Exemplo clássico: "Como aluno, quero ver minhas notas no portal para acompanhar meu desempenho."</p>
+  <p>Toda história pode (e deve) vir com <b>critérios de aceite</b>: regras objetivas que dizem quando ela está <b>pronta</b>. No exemplo: mostrar as notas de todas as disciplinas; exibir a média final e o status (aprovado ou reprovado). Monte a sua:</p>
+  <div class="demo" data-demo="story"></div>
+  <div class="nota lembra"><span class="lbl">Complemento: INVEST</span>Uma boa história costuma ser <b>I</b>ndependente, <b>N</b>egociável, <b>V</b>aliosa, <b>E</b>stimável, <b>P</b>equena (<i>small</i>) e <b>T</b>estável. Se não dá para testar, o critério de aceite está vago. Uma forma comum de escrever critérios testáveis é <i>Dado</i> (contexto), <i>Quando</i> (ação), <i>Então</i> (resultado): "Dado que a biblioteca tem 120 livros emprestados e 15 em atraso, quando a bibliotecária abre o painel, então vê os dois totais e a lista dos atrasados."</div>
+</section>
+
+<section class="sec" id="tres">
+  <h2><span class="sn">2</span>História, critério e tarefa não são a mesma coisa</h2>
+  <p class="gancho">Três camadas, três perguntas.</p>
+  <ul>
+    <li><b>User Story</b>: representa <b>valor</b>. "Como gestor da frota, quero visualizar o custo consolidado dos veículos para entender onde os recursos estão sendo consumidos."</li>
+    <li><b>Critério de aceite</b>: define <b>como validar</b> esse valor. "Apresentar o custo total", "permitir ver o custo por veículo".</li>
+    <li><b>Tarefa</b>: o <b>trabalho técnico</b> para entregar. "Definir os campos", "tratar os dados", "implementar o cálculo", "construir a visualização".</li>
+  </ul>
+  <div class="card sorter rv" data-demo="sorter" data-opts="us:User Story|ca:Critério de aceite|tf:Tarefa">
+    <div class="item" data-ans="us"><p>Como bibliotecária, quero ver os livros em atraso para decidir quem avisar.</p><span class="why">Papel, ação e benefício: é a história, a unidade de valor.</span></div>
+    <div class="item" data-ans="ca"><p>A lista deve mostrar o título, o aluno e os dias de atraso, do maior para o menor.</p><span class="why">Regra verificável que diz quando a história está pronta: critério de aceite.</span></div>
+    <div class="item" data-ans="tf"><p>Criar a tabela de empréstimos no banco e escrever a consulta que calcula os dias de atraso.</p><span class="why">Trabalho técnico necessário: tarefa.</span></div>
+    <div class="item" data-ans="ca"><p>A tela deve destacar em vermelho os atrasos acima de 7 dias.</p><span class="why">É uma condição de aceite: dá para olhar e dizer se está certo ou errado.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <p>Uma boa tarefa continua conectada à história. Se ninguém sabe responder <b>"por que estamos fazendo isso?"</b>, o trabalho já ficou invisível.</p>
+</section>
+
+<section class="sec" id="prioridade">
+  <h2><span class="sn">3</span>Prioridade e meta da Sprint</h2>
+  <p class="gancho">Importante não é o mesmo que "para agora".</p>
+  <p>Uma funcionalidade pode ser importante e ainda assim não precisar ser feita agora. A priorização pesa quatro coisas: <b>valor</b> (impacto para o usuário), <b>risco</b> (o que precisa ser validado cedo), <b>dependência</b> (o que destrava outras partes) e <b>esforço</b> (cabe neste ciclo?).</p>
+  <p>A <b>meta da Sprint</b> é o filtro. Exemplo: <i>"Até o final da Sprint, queremos permitir que o gestor visualize o custo consolidado da frota e identifique onde estão as principais fontes de desperdício."</i> Se uma tarefa não contribui para a meta, provavelmente não pertence a esta Sprint.</p>
+</section>
+
+<section class="sec" id="done">
+  <h2><span class="sn">4</span>"Concluído" não é "Done"</h2>
+  <p class="gancho">Rodou na minha máquina não é pronto.</p>
+  <p>"Concluído", para muitos, é "rodou na minha máquina". <b>Done</b> é o que está <b>integrado, testado, validado e pronto para demonstrar</b>. A <b>Definition of Done</b> (DoD) é a lista, combinada <b>antes</b> de começar, que diz o que "pronto" significa para o time. Um exemplo de DoD:</p>
+  <ul>
+    <li>critérios de aceite atendidos;</li>
+    <li>código integrado ao repositório principal;</li>
+    <li>testes executados e passando;</li>
+    <li>resultado validado (com o PO ou com dados reais);</li>
+    <li>evidência anexada (print, log, relatório);</li>
+    <li>revisado por outra pessoa do time.</li>
+  </ul>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Definir a DoD <b>depois</b> de codar é o mesmo que escolher o critério de sucesso depois de ver o resultado. Combine antes, e escreva onde todos vejam.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>User Story</b>: Como &lt;papel&gt;, quero &lt;ação&gt;, para &lt;benefício&gt;. Representa <b>valor</b>.</li><li><b>Critério de aceite</b>: como validar o valor. <b>Tarefa</b>: o trabalho técnico. Três camadas, três perguntas.</li><li><b>Priorizar</b> pesa valor, risco, dependência e esforço. A <b>meta da Sprint</b> é o filtro do que entra.</li><li><b>Done</b> = integrado, testado, validado, demonstrável. A <b>DoD</b> se combina antes de começar.</li><li>Complemento: INVEST e o formato Dado/Quando/Então ajudam a escrever critérios testáveis.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">'Criar a tabela de custos no banco' é...</p>
+    <div class="opts"><button data-k="a">Uma User Story.</button><button data-k="b">Um critério de aceite.</button><button data-k="c">Uma tarefa técnica, que só faz sentido se estiver ligada a uma história.</button></div>
+    <div class="fb">É trabalho para entregar o valor, e não o valor em si.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 2</span><p class="qq">Quando é o melhor momento de definir a Definition of Done?</p>
+    <div class="opts"><button data-k="a">Depois da entrega, quando se vê o resultado.</button><button data-k="b">Antes de começar a construir.</button><button data-k="c">Só se o cliente pedir.</button></div>
+    <div class="fb">A DoD é um acordo prévio. Definida depois, vira justificativa.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Uma funcionalidade importante deve entrar sempre na Sprint atual?</p>
+    <div class="opts"><button data-k="a">Não: ela só entra se contribuir com a meta da Sprint e couber no ciclo.</button><button data-k="b">Sim, importância é o único critério.</button><button data-k="c">Sim, se for do PO.</button></div>
+    <div class="fb">Importante e urgente não são sinônimos; a meta da Sprint filtra.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual o formato de uma User Story?</b></span><span class="bk">Como &lt;papel&gt;, quero &lt;ação&gt;, para &lt;benefício&gt;.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que servem os critérios de aceite?</b></span><span class="bk">Para dizer, de forma objetiva, quando a história está pronta.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é Done?</b></span><span class="bk">Integrado, testado, validado e pronto para demonstrar, seguindo a Definition of Done do time.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que a meta da Sprint decide?</b></span><span class="bk">O que entra e o que sai da Sprint: tarefas que não ajudam a meta provavelmente não pertencem a ela.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">Com histórias claras, falta organizar o fluxo de trabalho. Quanto trabalho em paralelo é demais?</div><p>É a pergunta do Kanban.</p></div>
+</section>
+
+</article>
+</body>
+</html>
