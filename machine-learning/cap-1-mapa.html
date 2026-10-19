@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: O mapa do território | Apostila de Machine Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-1.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 1</div>
+  <h1>O mapa do território</h1>
+  <p class="sub">Antes de ligar qualquer algoritmo, descubra de qual parte da floresta ele vem e que tipo de pergunta ele sabe responder.</p>
+  <div class="meta"><span class="chip"><b>~25 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">sem código neste capítulo</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo, então você não precisa saber nada de ML. Basta já ter visto Python básico. Daqui em diante, cada capítulo vai começar lembrando o que ficou em aberto no anterior.</div>
+
+<!-- ============ 1 ============ -->
+<section class="sec" id="regras-vs-exemplos">
+  <h2><span class="sn">1</span>Programar é dar regras. ML é dar exemplos</h2>
+  <p class="gancho">Como um computador descobre uma regra que ninguém escreveu?</p>
+
+  <p>Pense em um filtro de spam. O jeito que você aprendeu em programação é escrever as regras: <i>se o assunto tem "GRÁTIS" e vem de um remetente desconhecido, vai para o lixo</i>. Funciona por uma semana. Depois o spammer escreve "GR4TIS", e você escreve outra regra, e outra, e o programa vira um monte de exceções que ninguém consegue manter.</p>
+  <p>O <mark class="hl">Machine Learning (ML)</mark> inverte o jogo. Em vez de você escrever a regra, você entrega <b>milhares de e-mails já classificados</b> (isto é spam, isto não é) e o algoritmo <b>procura sozinho</b> o padrão que separa um grupo do outro. A regra deixa de ser escrita e passa a ser <mark class="hl g">aprendida a partir dos dados</mark>.</p>
+
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>Programação clássica</b><p>Você entra com <b>dados</b> e com as <b>regras</b> que escreveu. O programa devolve as <b>respostas</b>.</p><p class="hand">regras + dados → respostas</p></div>
+      <div class="st"><b>Machine Learning</b><p>Você entra com <b>dados</b> e com as <b>respostas certas</b> (exemplos já rotulados). O algoritmo devolve as <b>regras</b>, que chamamos de <b>modelo</b>.</p><p class="hand">dados + respostas → regras (o modelo)</p></div>
+      <div class="st"><b>Depois do treino</b><p>O modelo agora é a regra. Você dá a ele <b>dados novos</b>, que nunca viu, e ele devolve uma <b>previsão</b>. Todo o resto do curso é sobre fazer isso bem e provar que funciona.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+
+  <h3>Onde o ML entrou na história da computação</h3>
+  <p>A aula organiza isso como um novo paradigma, em quatro degraus. Repare que cada degrau resolve o limite do anterior:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Degrau</th><th>Como decide</th><th>O limite dele</th></tr>
+    <tr><td><b>Algoritmos</b></td><td>Conjunto de instruções que você escreveu</td><td>Só faz o que você previu</td></tr>
+    <tr><td><b>Sistemas especialistas</b></td><td>Regras específicas de um especialista</td><td>Regras demais para manter</td></tr>
+    <tr><td><b>Machine Learning</b></td><td>Predição <mark class="hl">probabilística</mark>, aprendida dos dados</td><td>Precisa de dados bons e erra de vez em quando</td></tr>
+    <tr><td><b>Gen AI e IA agêntica</b></td><td>Gera conteúdo e age com autonomia</td><td>Assunto de outras aulas</td></tr>
+  </table></div>
+
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>A palavra "probabilística" é a chave. Um modelo de ML <b>não sabe</b> a resposta, ele <b>estima</b>. Por isso ele erra, e por isso uma boa parte do curso é sobre <b>medir o erro</b> de forma honesta.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">ML virou a palavra da moda. Mas "IA", "ML", "deep learning" e "Gen AI" são a mesma coisa?</div><p>Não são, e confundir isso é o erro mais comum de quem está começando. Vamos arrumar essa gaveta.</p></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="sec" id="guarda-chuva">
+  <h2><span class="sn">2</span>O guarda-chuva da IA</h2>
+  <p class="gancho">Todo mundo diz "IA" para tudo. Vamos separar as camadas.</p>
+
+  <p>A <b>Inteligência Artificial</b>, na definição da aula, é a capacidade de sistemas computacionais <mark class="hl b">aprenderem padrões, tomarem decisões e executarem ações de forma autônoma a partir de dados</mark>. Dentro dessa ideia ampla existem camadas que se encaixam como bonecas russas. Clique nelas:</p>
+
+  <div class="demo" data-demo="camadas"></div>
+
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>"ML e IA são sinônimos."</b> Não são. Todo ML é IA, mas nem toda IA é ML: um sistema especialista que decide por regras escritas à mão é IA e <b>não</b> aprende nada dos dados. Em prova, a pegadinha costuma ser a direção da frase.</div>
+
+  <h3>Uma linha do tempo, para dar contexto</h3>
+  <p>Você não precisa decorar datas, mas ver o ritmo ajuda: a ideia é antiga, e o que mudou recentemente foi a quantidade de dados e de poder de cálculo. Arraste para o lado.</p>
+  <div class="tl rv">
+    <div class="ev"><b>1950</b><span>Turing publica o artigo do "teste de Turing". (A máquina de Turing é de 1936.)</span></div>
+    <div class="ev"><b>1956</b><span>O termo "Inteligência Artificial" nasce em Dartmouth.</span></div>
+    <div class="ev"><b>1997</b><span>Deep Blue vence no xadrez.</span></div>
+    <div class="ev"><b>2006</b><span>Deep learning com redes neurais ganha força.</span></div>
+    <div class="ev"><b>2011</b><span>Watson, da IBM, vence no Jeopardy!</span></div>
+    <div class="ev"><b>2016</b><span>AlphaGo vence no Go.</span></div>
+    <div class="ev"><b>2017</b><span>Arquitetura Transformer.</span></div>
+    <div class="ev"><b>2022</b><span>ChatGPT 3.5 chega ao grande público.</span></div>
+  </div>
+
+  <details class="cola"><summary>Quem trabalha com isso? Os papéis que a aula listou</summary>
+    <div class="in-body"><div class="tablewrap"><table>
+      <tr><th>Papel</th><th>O que faz</th></tr>
+      <tr><td>Engenheiro de dados</td><td>Prepara e organiza os dados, cria pipelines e ETL</td></tr>
+      <tr><td>Analista de dados</td><td>Explora, visualiza e monta dashboards</td></tr>
+      <tr><td>Cientista de dados</td><td>Analisa, acha padrões, cria modelos estatísticos</td></tr>
+      <tr><td>Cientista de IA</td><td>Cria modelos preditivos e generativos</td></tr>
+      <tr><td>Engenheiro de ML</td><td>MLOps: escala, automatiza e monitora modelos em produção</td></tr>
+      <tr><td>Engenheiro de IA</td><td>Projeta agentes e integra modelos e APIs em aplicações</td></tr>
+      <tr><td>Consultor de IA</td><td>Define estratégia e leva IA para o negócio</td></tr>
+    </table></div><p class="muted">Repare que a cadeia começa nos <b>dados</b>. Um modelo bom depende de dado bom, e é isso que vamos treinar daqui para a frente.</p></div>
+  </details>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Dentro do ML, o que significa "aprender"? Aprender o quê, e com a ajuda de quem?</div><p>Existem três famílias, e saber em qual delas o seu problema cai decide quase tudo o que vem depois.</p></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="sec" id="tres-jeitos">
+  <h2><span class="sn">3</span>Três jeitos de aprender</h2>
+  <p class="gancho">A pergunta que decide tudo: existe uma "resposta certa" nos dados?</p>
+
+  <div class="grid3">
+    <div class="card rv"><b style="color:var(--c0)">Supervisionado</b><p>Os dados vêm <b>com rótulo</b>: cada exemplo já tem a resposta. O objetivo é prever o rótulo de um exemplo novo.</p><p class="muted">Ex.: spam ou não spam; custo do seguro.</p></div>
+    <div class="card rv"><b style="color:var(--c1)">Não supervisionado</b><p><b>Sem rótulo</b>: só entradas. O objetivo é descobrir estrutura, como grupos parecidos.</p><p class="muted">Ex.: agrupar clientes por comportamento.</p></div>
+    <div class="card rv"><b style="color:var(--c2)">Por reforço</b><p>Um <b>agente</b> age num <b>ambiente</b> e recebe <b>recompensa</b> ou punição. Aprende por tentativa e erro.</p><p class="muted">Ex.: agentes que jogam milhões de partidas.</p></div>
+  </div>
+
+  <h3>Agora é com você: classifique os cenários</h3>
+  <div class="card sorter rv" data-demo="sorter" data-opts="sup:Supervisionado|nao:Não supervisionado|ref:Por reforço">
+    <div class="item" data-ans="sup"><p>Um banco tem o histórico de milhares de empréstimos, cada um marcado como <b>"pagou"</b> ou <b>"deu calote"</b>, e quer prever o risco de um novo pedido.</p><span class="why">Supervisionado: o histórico tem o rótulo (pagou ou não). O banco quer prever esse rótulo para um caso novo.</span></div>
+    <div class="item" data-ans="nao"><p>Uma loja tem o comportamento de compra de 50 mil clientes, <b>sem nenhuma etiqueta</b>, e quer descobrir quais perfis existem.</p><span class="why">Não supervisionado: não há resposta certa pré-definida. O algoritmo agrupa o que é parecido e você interpreta os grupos depois.</span></div>
+    <div class="item" data-ans="ref"><p>Um robô de armazém começa errando e vai aprendendo o melhor caminho porque <b>ganha pontos</b> ao entregar rápido e perde pontos ao bater.</p><span class="why">Por reforço: agente, ambiente e recompensa. Não existe um conjunto de exemplos rotulados, existe tentativa e feedback.</span></div>
+    <div class="item" data-ans="sup"><p>Uma operadora quer prever <b>quanto</b> cada cliente vai gastar no mês, usando os gastos de meses anteriores como exemplo.</p><span class="why">Supervisionado: o gasto passado é o rótulo. Como a resposta é um número, o nome mais específico é <b>regressão</b>.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+
+  <h3>Dentro do supervisionado: classificar ou prever um número?</h3>
+  <p>Essa distinção vai aparecer em todos os capítulos seguintes, então grave-a agora:</p>
+  <div class="grid2">
+    <div class="card rv"><b>Classificação</b><p>A saída é uma <mark class="hl">categoria</mark>. Ex.: a espécie da flor, spam ou não spam. É o assunto do Capítulo 2.</p></div>
+    <div class="card rv"><b>Regressão</b><p>A saída é um <mark class="hl g">número contínuo</mark>. Ex.: preço de um imóvel, custo médico. É o assunto dos Capítulos 3 a 5.</p></div>
+  </div>
+
+  <div class="ex rv"><span class="t">Exemplo resolvido: de que tipo é o nosso problema?</span>
+    <div class="l"><div>Temos 1.338 pessoas de um seguro de saúde, e <b>para cada uma</b> sabemos quanto o seguro gastou.</div></div>
+    <div class="l"><div>Como existe uma resposta conhecida para cada exemplo, não é não supervisionado nem por reforço. É <b>supervisionado</b>.</div></div>
+    <div class="l"><div>O que queremos prever (o custo em dólares) é um número, então é <b>regressão</b>.</div></div>
+    <div class="l"><div>Conclusão: <b>aprendizado supervisionado, tarefa de regressão</b>. Este é o fio condutor da apostila.</div></div>
+  </div>
+
+  <details class="cola"><summary>Complemento: e o semi-supervisionado?</summary><div class="in-body"><p>Aparece nas suas anotações da Aula 1: um pouco de dado rotulado e muito dado sem rótulo, usados juntos. Útil quando rotular é caro (por exemplo, pedir para um médico marcar milhares de exames). Não é cobrado no resto da apostila.</p></div></details>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Tá, mas um modelo não aparece do nada. Como um projeto de verdade se organiza?</div><p>Entre o problema da empresa e o modelo rodando existe um ciclo de seis fases. Ele explica por que a gente passa tanto tempo "antes" do algoritmo.</p></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="sec" id="crisp">
+  <h2><span class="sn">4</span>CRISP-DM: o ciclo de um projeto</h2>
+  <p class="gancho">Onde, no meio de um projeto, o nosso algoritmo aparece?</p>
+
+  <p>O <abbr class="gl" data-def="Cross-Industry Standard Process for Data Mining: metodologia de 6 fases usada para organizar projetos de dados.">CRISP-DM</abbr> é um roteiro de seis fases, em <b>ciclo</b>. Para cada fase, mostro a pergunta que ela responde e como isso fica no nosso caso do seguro. Avance com os botões:</p>
+
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Entendimento do negócio</b><p><i>Qual decisão este modelo vai apoiar?</i></p><p><b>No nosso caso:</b> a seguradora quer estimar o custo de um cliente novo para precificar o plano.</p></div>
+      <div class="st"><b>2. Entendimento dos dados</b><p><i>O que temos, e está confiável?</i></p><p><b>No nosso caso:</b> 1.338 pessoas, 7 colunas (idade, sexo, IMC, filhos, fumante, região e custo), sem valores faltando.</p></div>
+      <div class="st"><b>3. Preparação dos dados</b><p><i>Como deixar os dados prontos para o algoritmo?</i></p><p><b>No nosso caso:</b> transformar texto em número e colocar as colunas na mesma régua. É o <b>Capítulo 4</b>.</p></div>
+      <div class="st"><b>4. Modelagem</b><p><i>Qual algoritmo, com quais ajustes?</i></p><p><b>No nosso caso:</b> KNN e regressão linear, com busca dos melhores hiperparâmetros. Capítulos <b>2, 3 e 5</b>.</p></div>
+      <div class="st"><b>5. Avaliação</b><p><i>O modelo acerta com dados que nunca viu? E isso resolve o problema do negócio?</i></p><p><b>No nosso caso:</b> MAE, RMSE e R² no conjunto de teste. <mark class="hl p">Se não resolver, o ciclo volta para a fase 1</mark>, e não para a fase de implantação.</p></div>
+      <div class="st"><b>6. Implantação</b><p><i>Como colocar em uso e acompanhar?</i></p><p><b>No nosso caso:</b> o modelo entra no sistema de precificação e é monitorado. Esse cuidado de produção é o que chamam de MLOps.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+
+  <div class="nota lembra"><span class="lbl">Lembra</span>Repare como o <b>algoritmo é só a fase 4</b>. Quem estuda só algoritmo erra o problema antes (fase 1), usa dado ruim (fase 2) ou mede errado (fase 5).</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E o ML, em que nível de maturidade de uma empresa ele entra?</div><p>Uma última peça de contexto, curta, e você já pode mexer em modelos.</p></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="sec" id="piramide">
+  <h2><span class="sn">5</span>A pirâmide de maturidade analítica</h2>
+  <p class="gancho">Quatro perguntas que uma empresa aprende a fazer, nesta ordem.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Nível</th><th>Pergunta</th><th>Como se responde</th><th>No nosso seguro</th></tr>
+    <tr><td><b>1. Descritiva</b></td><td>O que aconteceu?</td><td>Dados e dashboards</td><td>Quanto gastamos em saúde no mês passado?</td></tr>
+    <tr><td><b>2. Diagnóstica</b></td><td>Por que aconteceu?</td><td>Exploração e causas</td><td>Por que os fumantes custam mais?</td></tr>
+    <tr class="dest"><td><b>3. Preditiva</b></td><td>O que pode acontecer?</td><td>Modelos e projeções</td><td><b>Quanto vai custar esta cliente nova? (aqui entra o ML)</b></td></tr>
+    <tr><td><b>4. Prescritiva</b></td><td>O que devemos fazer?</td><td>Recomendações e ações</td><td>Que plano oferecer a ela?</td></tr>
+  </table></div>
+  <p>Note que cada nível <b>depende do anterior</b>: não adianta prever o futuro de dados que você nem consegue descrever. É por isso que o primeiro passo de qualquer trabalho é <mark class="hl g">olhar os dados</mark> antes de tocar no modelo, o que você vai fazer logo no Capítulo 3.</p>
+</section>
+
+<!-- ============ fechamento ============ -->
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li><b>ML</b> aprende regras a partir de exemplos. A saída é uma <b>estimativa probabilística</b>, não uma certeza.</li>
+    <li><b>IA ⊃ ML ⊃ Deep Learning ⊃ Gen AI.</b> Todo ML é IA, nem toda IA é ML.</li>
+    <li>Três famílias: <b>supervisionado</b> (com rótulo), <b>não supervisionado</b> (sem rótulo), <b>por reforço</b> (recompensa).</li>
+    <li>Supervisionado se divide em <b>classificação</b> (categoria) e <b>regressão</b> (número).</li>
+    <li><b>CRISP-DM</b> tem 6 fases em ciclo, e a avaliação pode mandar você de volta ao negócio.</li>
+    <li>O ML mora no nível <b>preditivo</b> da pirâmide analítica.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Qual frase descreve melhor a diferença entre programação clássica e ML?</p>
+    <div class="opts"><button data-k="a">Na clássica o computador é mais rápido que no ML.</button><button data-k="b">No ML você escreve as regras com mais cuidado.</button><button data-k="c">Na clássica você dá regras e dados e recebe respostas. No ML você dá dados e respostas e recebe as regras.</button></div>
+    <div class="fb">A inversão é a ideia central: no ML a regra nasce dos exemplos. Velocidade e cuidado ao escrever não têm a ver com a diferença.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 2</span><p class="qq">Um modelo prevê o preço de um imóvel a partir de milhares de vendas passadas. De que tipo é?</p>
+    <div class="opts"><button data-k="a">Não supervisionado, porque não há categoria.</button><button data-k="b">Supervisionado, de regressão.</button><button data-k="c">Por reforço, porque o preço tem recompensa.</button></div>
+    <div class="fb">Cada venda passada tem o preço real (rótulo), então é supervisionado. Como a saída é um número contínuo, é regressão.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Em qual nível da pirâmide analítica o ML se encaixa?</p>
+    <div class="opts"><button data-k="a">Preditiva: "o que pode acontecer?"</button><button data-k="b">Descritiva: "o que aconteceu?"</button><button data-k="c">Diagnóstica: "por que aconteceu?"</button></div>
+    <div class="fb">ML trabalha com modelos e projeções, que respondem ao que pode acontecer. Descrever e diagnosticar vêm antes.</div></div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é aprendizado supervisionado?</b></span><span class="bk">Aprender de exemplos que já têm a resposta (rótulo), para prever a resposta de um exemplo novo.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Classificação ou regressão?</b></span><span class="bk">Classificação prevê uma categoria. Regressão prevê um número contínuo.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que dizer que ML é "probabilístico"?</b></span><span class="bk">Porque o modelo estima, não garante. Ele erra, e por isso medimos o erro.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quando o CRISP-DM volta ao início?</b></span><span class="bk">Quando a avaliação mostra que o modelo não resolve o problema do negócio.</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Se o computador aprende com exemplos, como eu sei que ele aprendeu de verdade e não só decorou?</div><p>É a pergunta mais importante do curso inteiro. A resposta é um truque simples, e você vai usá-lo no seu primeiro modelo: o KNN classificando flores.</p></div>
+</section>
+
+</article>
+</body>
+</html>

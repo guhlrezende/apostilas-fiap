@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: A reta que melhor se ajusta | Apostila de Machine Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="ml-data.js"></script>
+<script src="ml-core.js"></script>
+<script src="demos/cap-5.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Aula 8</div>
+  <h1>A reta que melhor se ajusta</h1>
+  <p class="sub">O primeiro modelo que aprende uma fórmula de verdade. Com ele você finalmente consegue dizer <i>quanto</i> cada coluna pesa no custo do seguro.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">5 demos · 4 testes · 4 flashcards</span><span class="chip">dados reais: Insurance</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 4 você preparou os dados (OneHot, scalers, Pipeline) e viu que o KNN <b>guarda</b> os dados e compara vizinhos. Isso funciona, mas tem um limite: o KNN não consegue te dizer <i>por que</i> uma pessoa custa mais. Hoje entra um modelo de outra família, que em vez de guardar os dados, <b>ajusta uma fórmula</b>.</div>
+
+<!-- ============ 1 ============ -->
+<section class="sec" id="formula">
+  <h2><span class="sn">1</span>Uma fórmula em vez de vizinhos</h2>
+  <p class="gancho">E se, em vez de procurar quem é parecido, a gente descobrisse a conta que gera o custo?</p>
+
+  <p>A aula começa com a pergunta de negócio: <b>como precificar um convênio médico?</b> A resposta do slide é prever o custo médico de cada cliente, porque o preço do convênio vem de custos médicos + mão de obra + margem de lucro. Até aqui você já respondeu isso com KNN. A <mark class="hl">regressão linear</mark> responde de outro jeito:</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>KNN</th><th>Regressão linear</th></tr>
+    <tr><td><b>Como prevê</b></td><td>Olha os vizinhos e tira a média</td><td>Aplica uma <b>fórmula</b> aprendida</td></tr>
+    <tr><td><b>O que o <code>.fit()</code> faz</b></td><td>Só guarda os dados (não paramétrico)</td><td>Calcula os <b>parâmetros</b> da fórmula (paramétrico)</td></tr>
+    <tr><td><b>Dá para interpretar?</b></td><td>Pouco</td><td><mark class="hl g">Sim</mark>: cada coeficiente tem um significado</td></tr>
+  </table></div>
+
+  <div class="ex rv"><span class="t">Exemplo do slide: estimar o preço de um imóvel</span>
+    <div class="l"><div>Você tem preço × área de vários imóveis e quer o preço de um de <b>2.000 pés quadrados</b>, que não está na base.</div></div>
+    <div class="l"><div>Em vez de olhar vizinhos, ajusta-se uma reta aos pontos. No slide: <b>y = −59.386 + 1.008·x</b>, com R² = 0,90.</div></div>
+    <div class="l"><div>Para x = 2.000: −59.386 + 1.008 × 2.000 = <b>1.956.614</b>, cerca de 2 milhões.</div></div>
+    <div class="l"><div>Leitura do 1.008: a cada pé quadrado a mais, o preço previsto sobe cerca de <b>US$ 1.008</b>.</div></div>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Essa reta tem dois números. O que cada um quer dizer?</div><p>Entender os dois (b0 e b1) é entender a maior parte da regressão linear.</p></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="sec" id="b0b1">
+  <h2><span class="sn">2</span>b0 e b1: o ponto de partida e a inclinação</h2>
+  <p class="gancho">Uma reta é só dois números.</p>
+
+  <div class="formula">y = b0 + b1 · x<small>No slide aparece como β0 + β1·x, e em outros pontos como a0, a1. É sempre o mesmo par de coeficientes.</small></div>
+  <ul>
+    <li><b>b0 (intercepto):</b> onde a reta cruza o eixo Y, ou seja, o valor de y quando x = 0. É o <b>ponto de partida</b>.</li>
+    <li><b>b1 (coeficiente angular, ou <i>slope</i>):</b> a inclinação. Quanto o y <b>sobe</b> a cada unidade a mais de x.</li>
+  </ul>
+  <p>A planilha da aula mostra isso com <code>custo = b0 + b1 × IMC</code>, usando b0 = 5.000 e b1 = 200. Mexa nos dois botões:</p>
+  <div class="demo" data-demo="planilha"></div>
+  <div class="nota lembra"><span class="lbl">Lembra</span>Os números 5.000 e 200 da planilha são <b>de exemplo</b>. Eles não vêm de um ajuste nos dados do Insurance. O ajuste real está na seção 4.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Existem infinitas retas possíveis. Como o computador escolhe <i>a</i> melhor?</div><p>Com uma ideia muito bonita: medir o erro de cada ponto e somar.</p></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="sec" id="minimos">
+  <h2><span class="sn">3</span>Mínimos quadrados: a reta com o menor erro</h2>
+  <p class="gancho">Dá para chutar uma reta. Dá para saber se ela é boa. Dá para saber se é a <i>melhor</i>.</p>
+
+  <p>Para cada ponto, o <b>resíduo</b> é a distância vertical até a reta: <code>valor real − valor previsto</code>. Alguns são positivos (o ponto está acima da reta), outros negativos (abaixo). Se somássemos assim, eles se cancelariam. Por isso elevamos <b>ao quadrado</b> antes de somar:</p>
+  <div class="formula">soma dos erros² = Σ (yᵢ − ŷᵢ)²<small>A melhor reta é a que deixa esta soma <b>a menor possível</b>. Daí o nome "mínimos quadrados".</small></div>
+
+  <p>Agora vá para o jogo. São dados reais do Insurance: IMC × custo (em milhares de dólares). Comece com os 25 pontos, para enxergar os resíduos em vermelho, e tente chegar à melhor reta <b>sozinho</b>, arrastando as bolinhas vermelhas:</p>
+  <div class="demo" data-demo="reta"></div>
+
+  <h3>Repare no botão "Só a média"</h3>
+  <p>Uma reta horizontal na média é o <b>modelo mais bobo possível</b>: prevê sempre o mesmo valor. O R² dela é <b>0</b>, e é justamente o que o R² mede: <i>quanto sua reta melhora em relação a chutar a média</i>. Uma reta pior que a média dá R² <b>negativo</b>. Arraste uma reta para longe dos pontos e confira.</p>
+
+  <div class="ex rv"><span class="t">Exemplo resolvido: a melhor reta de 3 pontos, à mão</span>
+    <div class="l"><div>Pontos: (1, 2), (2, 3), (3, 5). Médias: x̄ = 2 e ȳ = 10/3 ≈ 3,333.</div></div>
+    <div class="l"><div>Inclinação: b1 = Σ(x − x̄)(y − ȳ) ÷ Σ(x − x̄)² = (1,333 + 0 + 1,667) ÷ (1 + 0 + 1) = 3 ÷ 2 = <b>1,5</b>.</div></div>
+    <div class="l"><div>Intercepto: b0 = ȳ − b1·x̄ = 3,333 − 1,5 × 2 = <b>0,333</b>. Reta: y = 0,333 + 1,5x.</div></div>
+    <div class="l"><div>Previstos: 1,833 · 3,333 · 4,833. Resíduos: +0,167 · −0,333 · +0,167. Soma dos quadrados: 0,028 + 0,111 + 0,028 = <b>0,167</b>. Nenhuma outra reta faz menos.</div></div>
+  </div>
+  <p class="muted">(As fórmulas de b1 e b0 usadas acima não aparecem no slide da aula, que só mostra a soma dos quadrados. São o resultado clássico do método e foram conferidas, mas vale tratá-las como complemento.)</p>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Teoria bonita. Mas e no Insurance, com o IMC, a reta funciona?</div><p>Prepare-se para uma surpresa.</p></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="sec" id="insurance">
+  <h2><span class="sn">4</span>No Insurance: custo × IMC</h2>
+  <p class="gancho">O código tem 5 linhas. O resultado tem uma lição.</p>
+<pre><code>X = dados[[<span class="s">'bmi'</span>]]              <span class="c"># entrada: só o IMC (precisa de colchete duplo: é uma tabela, não uma lista)</span>
+y = dados[<span class="s">'charges'</span>] / <span class="n">1000</span>    <span class="c"># alvo: custo em MILHARES de dólares</span>
+regressao = <span class="f">LinearRegression</span>()
+regressao.<span class="f">fit</span>(X, y)
+<span class="f">print</span>(<span class="an" tabindex="0" data-t="intercept_ é o b0: o custo previsto quando o IMC é 0.">regressao.intercept_</span>, <span class="an" tabindex="0" data-t="coef_ é um vetor com um b1 para cada coluna de X. Aqui só tem uma.">regressao.coef_[<span class="n">0</span>]</span>)</code></pre>
+  <p>Resultado do slide: <b>b0 = 1,1929</b> e <b>b1 = 0,3939</b>. Ou seja, <mark class="hl b">custo = 1,19 + 0,39 × IMC</mark> (em milhares). Cada ponto a mais de IMC soma cerca de 0,39 mil, ou <b>US$ 394</b>, ao custo previsto.</p>
+
+  <div class="demo" data-demo="prever"></div>
+
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Esquecer que o custo está em milhares.</b> No slide, o código escreve <code>y = dados['charges']</code> (sem dividir por 1000), mas os resultados mostrados são os de <code>charges/1000</code>. Sem a divisão, saem b0 = 1.192,94 e b1 = 393,87. Mesma reta, outra unidade. Copiar o código sem ajustar dá número diferente do slide.</div>
+
+  <h3>A pegadinha: ela está boa?</h3>
+  <p>O slide termina esta parte com uma pergunta: <i>"será que acabou? O modelo está bem ajustado?"</i> E a resposta é um balde de água fria. Esse modelo, só com IMC, tem <b>R² = 0,039</b> nos dados inteiros: explica uns <b>4%</b> da variação do custo (complemento, conferido rodando). A reta existe, mas a nuvem de pontos é <b>muito mais espalhada</b> do que ela. Outra medida de erro da aula, o EQM no holdout, deu <b>168,35</b>, o que equivale a um RMSE de cerca de <b>US$ 13 mil</b> de erro típico, para custos que na média ficam perto de US$ 13 mil. (O slide não fixa <code>random_state</code>, então esse valor muda a cada sorteio de divisão, como você viu no Capítulo 3.)</p>
+
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Ter uma reta com coeficientes "bonitos" não prova nada. <b>Só a métrica, medida em dados novos, diz se o modelo presta.</b> É o mesmo conselho do Capítulo 2, e ele não vai embora.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O que falta nessa reta, para chegar mais perto dos pontos?</div><p>Olhe de novo o gráfico do seguro. Tem um grupo de pontos bem lá em cima.</p></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="sec" id="varios">
+  <h2><span class="sn">5</span>Mais de uma coluna: o fumante entra em cena</h2>
+  <p class="gancho">A reta não consegue explicar o grupo de cima. Uma coluna nova talvez consiga.</p>
+
+  <p>A aula mostra um gráfico de IMC × custo <b>colorido por fumante</b>, com <b>duas retas paralelas</b>, uma por grupo. Isso corresponde a um modelo com <b>duas colunas</b>: <code>bmi</code> e <code>smoker</code>. A forma geral é:</p>
+  <div class="formula">y = a0 + a1·x1 + a2·x2 + ...<small>Com 2 colunas, o ajuste é um plano. Com mais, um hiperplano. A regra é sempre a mesma: mínimos quadrados.</small></div>
+
+  <div class="demo" data-demo="plano"></div>
+
+  <p>(Esse modelo de duas colunas é um complemento conferido rodando. O slide mostra o gráfico mas não traz o código dele, então não dá para afirmar que foi exatamente isso que o professor usou.)</p>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Com todas as colunas juntas, quem pesa mais, de fato?</div><p>É a pergunta que o KNN nunca soube responder.</p></div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="sec" id="todas">
+  <h2><span class="sn">6</span>O modelo completo e quem pesa mais</h2>
+  <p class="gancho">Todas as colunas, sem vazamento, com coeficientes que dá para ler.</p>
+
+  <p>O notebook da aula faz o modelo "de verdade", com todas as colunas e <code>charges</code> em reais. Siga os seis passos:</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Carregar os dados</b><p>O Insurance: <b>1.338 linhas</b>, 7 colunas, sem valores faltando.</p></div>
+      <div class="st"><b>2. Texto em número</b><p><code>pd.get_dummies(X, drop_first=True)</code> gera <b>8 colunas</b>: <code>age, bmi, children, sex_male, smoker_yes, region_northwest, region_southeast, region_southwest</code>.</p><p class="muted">O <code>drop_first=True</code> descarta uma categoria de cada variável (ela vira "todas as outras colunas valem zero"). Sem isso, as colunas dummy de uma mesma variável somam sempre 1 e ficam <b>redundantes</b>. A regressão ainda roda, mas os coeficientes deixam de ser únicos e fáceis de interpretar.</p></div>
+      <div class="st"><b>3. Separar treino e teste</b><p><code>test_size=0.2, random_state=42</code>: <b>1.070</b> linhas de treino e <b>268</b> de teste. Mesma divisão da referência do KNN.</p></div>
+      <div class="st"><b>4. Escalar, sem vazamento</b><p><code>StandardScaler</code> com <code>fit_transform</code> no <b>treino</b> e só <code>transform</code> no teste. Este notebook <b>não vaza</b>, ao contrário do de scaling do Capítulo 4.</p></div>
+      <div class="st"><b>5. Ajustar</b><p><code>LinearRegression().fit(X_train_scaled, y_train)</code> e <code>predict</code> no teste.</p></div>
+      <div class="st"><b>6. Medir no teste</b><p><b>R² = 0,7836</b> · MSE = 33.596.915,85 · <b>RMSE = 5.796,28</b>. O notebook não calcula o MAE; calculado à parte: <b>4.181,19</b>.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+
+  <h3>Quem pesa mais no custo?</h3>
+  <div class="demo" data-demo="coef"></div>
+  <p>Aqui está a condição que o slide marca em vermelho: <mark class="hl p">só dá para comparar coeficientes se as colunas estiverem na mesma régua</mark> (normalizadas). Se a idade estivesse em anos e o IMC em outra unidade, "3.615 por unidade" e "2.036 por unidade" não seriam comparáveis. Como o <code>StandardScaler</code> deixou todas com desvio 1, cada coeficiente passa a ser <b>"quanto o custo muda, em R$, quando a coluna sobe um desvio-padrão"</b>. O sinal diz se a relação é positiva ou negativa; o tamanho diz a força.</p>
+
+  <details class="cola"><summary>Complementos conferidos rodando (não foram dados em aula)</summary><div class="in-body">
+    <ul>
+      <li>Como as colunas escaladas têm média 0, o <b>intercepto é a média de <code>charges</code> do treino</b>: US$ 13.346,09.</li>
+      <li><b>Escalar não melhora a regressão linear:</b> sem o <code>StandardScaler</code>, o R² no teste é o mesmo (0,7836). Só os coeficientes mudam de unidade (por exemplo, <code>smoker_yes</code> ≈ +US$ 23.651, <code>age</code> ≈ +US$ 257 por ano, <code>bmi</code> ≈ +US$ 337 por ponto). Aqui o scaler serve para <b>comparar</b> coeficientes, não para melhorar o resultado (no KNN, ao contrário, ele é essencial).</li>
+    </ul></div></details>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Este é um bom modelo? Como ele se compara com o KNN que a gente construiu?</div><p>Hora de colocar os três lado a lado.</p></div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="sec" id="comparar">
+  <h2><span class="sn">7</span>Linear x KNN: quem ganha?</h2>
+  <p class="gancho">Mesmo dataset, mesma divisão, modelos de famílias diferentes.</p>
+  <div data-demo="placar3"></div>
+  <p>Leitura (comparação feita para esta apostila, não foi dada em aula): a regressão linear fica <b>entre</b> o baseline e o KNN tunado no MSE, no RMSE e no R², e <b>pior que os dois no MAE</b>. Ou seja, nenhum modelo vence em tudo, e a escolha depende de qual erro dói mais (Capítulo 3, seção de métricas).</p>
+
+  <div class="nota lembra"><span class="lbl">Lembra</span>O gráfico de resíduos desse modelo forma <b>faixas visíveis</b>: um grupo de erros bem positivos e outro de negativos nos valores previstos altos. O slide diz que o gráfico de resíduos <b>não deveria ter padrão</b>. Ter padrão sugere que a relação <b>não é uma reta única</b>: fumantes formam um grupo à parte. Isso combina com o que a demo das duas retas mostrou, e é uma dica de onde procurar melhoria (a interação fumante × IMC).</div>
+
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>O slide 32 diz que "os pressupostos do modelo não são o que importa, e sim o desempenho em dados não usados no treino". Isso vale para quem quer <b>prever</b>. Para <b>interpretar coeficientes</b> e fazer inferência estatística, os pressupostos (linearidade, resíduos sem padrão etc.) continuam importando.</div>
+</section>
+
+<!-- ============ fechamento ============ -->
+<section class="sec" id="fechamento">
+  <h2><span class="sn">8</span>Fechamento do capítulo</h2>
+
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li><b>y = b0 + b1·x.</b> b0 é o intercepto (y quando x = 0). b1 é a inclinação (quanto y sobe por unidade de x).</li>
+    <li><b>Resíduo</b> = real − previsto. A melhor reta minimiza a <b>soma dos resíduos ao quadrado</b> (mínimos quadrados).</li>
+    <li><b>R²</b> = 1 − SSres/SStot. 1 é perfeito, 0 é igual a prever a média, e <b>pode ser negativo</b>.</li>
+    <li>Custo × IMC sozinho: R² ≈ 0,04. Com <code>smoker</code> junto: ≈ 0,66.</li>
+    <li>Com todas as colunas: <b>R² 0,7836, RMSE 5.796</b>. Fumar pesa mais, depois idade e IMC; <code>sex_male</code> ≈ 0.</li>
+    <li>Só se comparam coeficientes com colunas <b>normalizadas</b>. Escalar não melhora a regressão linear.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Na planilha <code>custo = b0 + b1 × IMC</code> com b0 = 5.000 e b1 = 200, quanto custa um IMC de 17?</p>
+    <div class="opts"><button data-k="a">5.200</button><button data-k="b">8.400</button><button data-k="c">3.400</button></div>
+    <div class="fb">5.000 + 200 × 17 = 5.000 + 3.400 = 8.400. A opção de 3.400 esquece o b0.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Com <code>custo = 1,1929 + 0,3939 × IMC</code> (custo em milhares), quanto é o custo previsto para IMC = 20?</p>
+    <div class="opts"><button data-k="a">9,07 dólares.</button><button data-k="b">1,19 mil.</button><button data-k="c">Cerca de 9,07 mil, ou US$ 9.070.</button></div>
+    <div class="fb">1,1929 + 0,3939 × 20 = 9,0704 (mil). Como o custo foi dividido por 1000, multiplica-se de volta: ≈ US$ 9.070. O slide mostra 9.070,40.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O R² pode ser negativo?</p>
+    <div class="opts"><button data-k="a">Pode: um modelo pior do que prever sempre a média dá R² negativo.</button><button data-k="b">Não: ele só varia de 0 a 1.</button><button data-k="c">Só em regressão linear com muitas colunas.</button></div>
+    <div class="fb">O slide 19 diz que pode ser menor que 0. No notebook, prever sempre a média do treino deu R² ≈ −0,0009 no teste.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 4</span><p class="qq">Por que só podemos comparar o tamanho dos coeficientes quando as colunas estão normalizadas?</p>
+    <div class="opts"><button data-k="a">Porque o scikit-learn exige.</button><button data-k="b">Porque, sem a mesma régua, o tamanho do coeficiente depende da unidade da coluna, e não só da sua importância.</button><button data-k="c">Porque normalizar melhora o R².</button></div>
+    <div class="fb">Em escalas diferentes, "por unidade" significa coisas diferentes (um ano, um ponto de IMC...). Normalizando, cada coeficiente fala de "por desvio-padrão". E não, normalizar não melhora o R² da regressão linear.</div></div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que elevar o resíduo ao quadrado?</b></span><span class="bk">Para positivos e negativos não se cancelarem (e para punir mais os erros grandes).</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o intercepto?</b></span><span class="bk">O valor previsto quando todas as colunas valem 0. Com colunas escaladas, é a média do alvo no treino.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o <code>drop_first</code>?</b></span><span class="bk">Evita colunas dummy redundantes (que somam 1), que tiram a unicidade e a interpretação dos coeficientes.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Resíduos com padrão: o que sugere?</b></span><span class="bk">Que a relação não é uma reta única, e que talvez falte uma coluna ou uma interação (ex.: fumante).</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">Já tenho todas as peças. Como encaixá-las num projeto do começo ao fim, sem trapacear?</div><p>Treino e teste, métricas, validação cruzada, busca de hiperparâmetros, escala, one-hot, pipeline, interpretação. No último capítulo elas viram um <b>roteiro de nove passos</b>, e você descobre por que melhorar um modelo é, antes de tudo, uma questão de método.</p></div>
+</section>
+
+</article>
+</body>
+</html>

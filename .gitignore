@@ -1,0 +1,9 @@
+# dados locais e temporários
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+.env
+.env.*
+CLAUDE.local.md
+.claude/settings.local.json

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Apostilas de estudo</title>
+<meta name="description" content="Apostilas interativas feitas a partir das aulas da faculdade, atualizadas toda semana.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/estudo.css">
+<script src="assets/estudo.js"></script>
+<script src="data/apostilas.js"></script>
+</head>
+<body data-root="">
+<article class="paper">
+  <header class="capa">
+    <div class="kicker">caderno digital</div>
+    <h1>Apostilas de estudo</h1>
+    <p class="sub">Cada aula da faculdade vira um capítulo que explica o porquê, deixa você mexer nos números e termina com perguntas para você se testar. Aos domingos o caderno cresce.</p>
+    <div class="meta"><span class="chip"><b>Como estudar:</b> leia, mexa na demo, responda o teste</span><span class="chip"><b>Seu progresso</b> fica salvo neste navegador</span></div>
+    <span class="num">✎</span>
+  </header>
+
+  <section class="sec">
+    <h2><span class="sn">1</span>Escolha uma apostila</h2>
+    <div class="hubgrid" id="apostilas"></div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="sn">2</span>Como cada capítulo é montado</h2>
+    <div class="grid2">
+      <div class="card rv"><b>O fio condutor.</b> Todo capítulo abre com uma pergunta que sobrou do anterior e termina com a pergunta que leva ao próximo. Nada de tópicos soltos.</div>
+      <div class="card rv"><b>Explicação em camadas.</b> Intuição, definição, exemplo resolvido com número, código comentado e o erro que todo mundo comete.</div>
+      <div class="card rv"><b>Demos com dados reais.</b> Os gráficos usam o Iris e o Insurance de verdade, e vários números vêm direto do scikit-learn.</div>
+      <div class="card rv"><b>Teste no final.</b> Quizzes com resposta explicada, flashcards e a "cola da prova" com o que não pode faltar.</div>
+    </div>
+  </section>
+
+  <footer class="rodape">Feito por um estudante, a partir das próprias anotações de aula. Se achar um erro, abra uma issue no repositório.</footer>
+</article>
+</body>
+</html>

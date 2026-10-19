@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: Preparar os dados | Apostila de Machine Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="ml-data.js"></script>
+<script src="ml-core.js"></script>
+<script src="demos/cap-4.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aula 7</div>
+  <h1>Preparar os dados</h1>
+  <p class="sub">Transformar texto em número, colocar tudo na mesma régua e, principalmente, fazer isso sem deixar o teste espiar. É o capítulo que separa um resultado bonito de um resultado verdadeiro.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">6 demos · 3 testes · 4 flashcards</span><span class="chip">dados reais: Insurance</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 você montou o KNN para prever o custo do seguro, descobriu que <b>escala importa</b> e que o notebook da aula usa <code>StandardScaler</code> e <code>OneHotEncoder</code> <i>dentro de um Pipeline</i>, quase sem explicar o que cada peça faz. Hoje a gente abre essas caixas pretas. No fim, você entende por que tanto cuidado com a <b>ordem</b> das operações.</div>
+
+<!-- ============ 1 ============ -->
+<section class="sec" id="problema">
+  <h2><span class="sn">1</span>Três problemas escondidos na tabela</h2>
+  <p class="gancho">O modelo só aceita número, na mesma régua. Nossa tabela tem texto e colunas de tamanhos diferentes.</p>
+
+  <p>Olhe o Insurance com olhos de KNN. Ele precisa <b>medir distância</b> entre linhas, e a tabela traz três obstáculos:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Obstáculo</th><th>Exemplo</th><th>Por que atrapalha</th><th>Solução</th></tr>
+    <tr><td><b>Texto</b></td><td><code>region = "northeast"</code></td><td>"norte menos sul" não é uma conta</td><td><mark class="hl">OneHotEncoder</mark></td></tr>
+    <tr><td><b>Réguas diferentes</b></td><td>idade 18–64, filhos 0–5, IMC 16–53</td><td>a coluna de números grandes domina a distância</td><td><mark class="hl g">Scalers</mark></td></tr>
+    <tr><td><b>Ordem das operações</b></td><td>escalar antes ou depois de separar treino e teste?</td><td>o teste pode "contaminar" o treino sem aviso</td><td><mark class="hl p">Pipeline</mark></td></tr>
+  </table></div>
+  <p>As três partes entram na fase 3 do CRISP-DM (<i>preparação dos dados</i>). Vamos na ordem.</p>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como transformo "northeast" em algo que tem distância?</div><p>Com um truque que é quase bobo de tão simples.</p></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="sec" id="onehot">
+  <h2><span class="sn">2</span>OneHotEncoder: cada categoria vira uma coluna</h2>
+  <p class="gancho">Em vez de um texto, uma pergunta de sim ou não para cada categoria.</p>
+
+  <p>Quem é "northeast"? Ao invés de inventar um número (northeast = 1, northwest = 2...), o que <b>criaria uma ordem que não existe</b>, a gente faz uma coluna para cada categoria, com <b>1</b> ("é esta") ou <b>0</b> ("não é"). Em inglês, <i>one-hot</i>: só uma "quente" por vez.</p>
+
+  <div class="demo" data-demo="onehot"></div>
+
+  <p>Contando: <code>sex</code> tem 2 categorias, <code>smoker</code> tem 2 e <code>region</code> tem 4. Três colunas viram <b>2 + 2 + 4 = 8 colunas</b>.</p>
+<pre><code>ohe = <span class="f">OneHotEncoder</span>(
+    <span class="an" tabindex="0" data-t="Devolve uma matriz comum (e não a versão esparsa, que economiza memória mas é mais difícil de olhar).">sparse_output=<span class="n">False</span></span>,
+    <span class="an" tabindex="0" data-t="Se na hora de prever aparecer uma categoria que o treino nunca viu, ela vira tudo zero em vez de dar erro.">handle_unknown=<span class="s">"ignore"</span></span>)
+X_cat = ohe.<span class="f">fit_transform</span>(X[cat_cols])
+
+<span class="c"># o pandas tem um atalho parecido:</span>
+X_dummies = pd.<span class="f">get_dummies</span>(X, columns=cat_cols, dtype=<span class="s">"float"</span>)</code></pre>
+
+  <div class="tablewrap"><table>
+    <tr><th></th><th>OneHotEncoder (scikit-learn)</th><th>get_dummies (pandas)</th></tr>
+    <tr><td><b>Memoriza as categorias?</b></td><td>Sim: aprende no <code>fit</code> e reaplica igual no teste</td><td>Não: olha só o que está na tabela naquele momento</td></tr>
+    <tr><td><b>Entra num Pipeline?</b></td><td>Sim</td><td>Não</td></tr>
+    <tr><td><b>Quando usar</b></td><td>No <b>modelo final</b></td><td>Para <b>explorar</b> os dados rapidamente</td></tr>
+  </table></div>
+
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Se o teste tem uma categoria que o treino nunca viu e você usou <code>get_dummies</code> nos dois separadamente, as colunas saem <b>diferentes</b> e o modelo quebra (ou pior: desalinha). O <code>OneHotEncoder</code> resolve isso porque guarda a lista de categorias do treino.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Agora tudo é número. Mas idade vai de 18 a 64 e filhos de 0 a 5. Como igualar as réguas?</div><p>Existem três jeitos clássicos, e escolher entre eles é uma decisão que você precisa saber <i>justificar</i>.</p></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="sec" id="scalers">
+  <h2><span class="sn">3</span>Os três scalers, com a conta na mão</h2>
+  <p class="gancho">Mesmo valor, três réguas diferentes, três respostas.</p>
+
+  <div class="tablewrap"><table>
+    <tr><th>Scaler</th><th>Fórmula</th><th>Resultado</th><th>Quando usar</th><th>Ponto fraco</th></tr>
+    <tr><td><b>MinMax</b></td><td><code>(x − mín) / (máx − mín)</code></td><td>tudo entre 0 e 1</td><td>sem muitos outliers; quando precisa de faixa controlada</td><td>muito sensível a outlier</td></tr>
+    <tr><td><b>Standard</b></td><td><code>(x − média) / desvio</code></td><td>média 0, desvio 1</td><td>dados mais ou menos "em sino"; modelos lineares</td><td>sensível a outlier</td></tr>
+    <tr><td><b>Robust</b></td><td><code>(x − mediana) / (Q3 − Q1)</code></td><td>mediana 0</td><td>quando há <b>outliers fortes</b></td><td>a faixa final não é limitada</td></tr>
+  </table></div>
+  <p class="muted"><b>Q1 e Q3</b> são o primeiro e o terceiro quartil (25% e 75% dos dados ficam abaixo deles). Q3 − Q1 é o <b>IQR</b>, a largura do "miolo" dos dados.</p>
+
+  <div class="demo" data-demo="scalers"></div>
+
+  <div class="ex rv"><span class="t">Exemplo resolvido: age = 19</span>
+    <div class="l"><div>Estatísticas reais da idade: mín 18, máx 64, média 39,207, desvio 14,045, mediana 39, Q1 27, Q3 51.</div></div>
+    <div class="l"><div><b>MinMax:</b> (19 − 18) ÷ (64 − 18) = 1 ÷ 46 = <b>0,0217</b>. Quase no começo da faixa.</div></div>
+    <div class="l"><div><b>Standard:</b> (19 − 39,207) ÷ 14,045 = <b>−1,4388</b> (usando todas as casas decimais da média e do desvio). Está 1,44 desvios <i>abaixo</i> da média (por isso é negativo).</div></div>
+    <div class="l"><div><b>Robust:</b> (19 − 39) ÷ (51 − 27) = −20 ÷ 24 = <b>−0,8333</b>.</div></div>
+  </div>
+
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Precedência na fórmula.</b> No material da aula aparece escrito <code>X - X_min / X_max - X_min</code>. Pela ordem das contas, o computador faz <i>primeiro</i> as divisões: com X = 19 dá <code>19 − 18/64 − 18 = 0,71875</code>. O certo é <code>(X − X_min) / (X_max − X_min)</code> = 0,0217. <b>Parênteses importam.</b></div>
+
+  <h3>E se existir um valor extremo?</h3>
+  <p>Aqui mora a razão de existir o Robust. Mova o valor extra e veja o MinMax encolher todo mundo, enquanto o Robust quase não se mexe:</p>
+  <div class="demo" data-demo="outlier"></div>
+
+  <details class="cola"><summary>Excel e scikit-learn dão números diferentes. Qual está certo?</summary>
+    <div class="in-body"><p>Os dois estão certos, porque são <b>dois desvios padrão diferentes</b>. O Excel (<code>STDEV.S</code>) usa o desvio <b>amostral</b>, que divide por <b>n − 1</b>. O <code>StandardScaler</code> usa o <b>populacional</b>, que divide por <b>n</b>. Com 10 linhas, a diferença aparece; com milhares, some. Edite a lista:</p>
+    <div class="demo" data-demo="desvio" style="margin-top:20px"></div></div>
+  </details>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Dá para ver, nessas contas, como cada coluna passa a pesar na distância?</div><p>Dá. E o resultado surpreende com as colunas 0/1.</p></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="sec" id="pesos">
+  <h2><span class="sn">4</span>O que as colunas 0 e 1 fazem com a distância</h2>
+  <p class="gancho">Depois do scaler, tudo está entre 0 e 1. Será que tudo pesa igual?</p>
+
+  <p>Pesa <b>por fração da faixa</b>. Uma diferença de 10 anos de idade, no MinMax, vale 10 ÷ 46 ≈ 0,22. Já uma coluna 0/1, quando as duas pessoas discordam, vale <b>exatamente 1</b>, a faixa inteira. (Com o <code>OneHotEncoder</code>, o <code>smoker</code> vira <i>duas</i> colunas, <code>smoker_no</code> e <code>smoker_yes</code>, e as duas discordam ao mesmo tempo, o que dá √2 ≈ 1,41 na distância. No Pipeline do fim do capítulo, só as colunas numéricas passam pelo scaler; as colunas 0/1 do one-hot ficam como estão.) A demo simplifica com uma coluna só. Brinque:</p>
+  <div class="demo" data-demo="peso"></div>
+
+  <p>Isso tem uma consequência prática importante: <mark class="hl p">colunas 0/1 podem dominar a distância do KNN</mark>. Para <code>smoker</code>, isso é ótimo (fumar é o que mais separa o custo, como você viu no Capítulo 3). Para uma coluna que pouco informa sobre o alvo, é <b>ruído</b>: ela distancia pessoas parecidas por um motivo que não ajuda a prever o custo. No Insurance, o custo médio varia de 12.347 a 14.735 entre as regiões e de 12.570 a 13.957 entre os sexos, bem menos que os 8.434 contra 32.050 de não fumantes e fumantes. Isso é um indício, e não uma prova: quem decide se a coluna fica é a validação cruzada.</p>
+  <div class="nota lembra"><span class="lbl">Lembra</span>Daí vem uma pergunta que vale um trabalho inteiro: <b>será que todas as colunas merecem entrar no modelo?</b> Escolher e criar colunas (<i>feature engineering</i>) é parte do jogo, e é onde costuma estar o maior ganho. Fica de gancho para o Capítulo 6.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O scaler calcula médias e desvios. De quais linhas?</div><p>Se a resposta for "de todas", você acabou de cometer o erro mais silencioso do machine learning.</p></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="sec" id="vazamento">
+  <h2><span class="sn">5</span>Vazamento de dados: quando o teste espia</h2>
+  <p class="gancho">O erro que não dá mensagem de erro e pode deixar seu resultado bonito demais.</p>
+
+  <p>No Capítulo 2 a regra era: <i>o modelo nunca pode ver o teste</i>. Só que o <b>scaler também aprende</b> (a média, o desvio, o mínimo, o máximo). Se ele aprender com <b>todas</b> as linhas antes da separação, o teste influenciou a régua. Isso é <mark class="hl">vazamento de dados</mark> (<i>data leakage</i>).</p>
+
+  <div class="demo" data-demo="vazamento"></div>
+
+  <p>E o diagrama do que acontece, nas duas ordens possíveis. Avance:</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>Ponto de partida</b><p>Você tem 10 linhas de dados. 8 serão treino (azul) e 2 serão teste (laranja).</p><div class="rowb"><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk te"></span><span class="blk te"></span></div></div>
+      <div class="st"><b>Jeito ERRADO: o scaler aprende com tudo</b><p>Primeiro escala, depois separa. A média e o desvio foram calculados <b>com as linhas de teste dentro</b>.</p><div class="reads" data-l="o scaler lê"><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk te"></span><span class="blk te"></span></div></div>
+      <div class="st"><b>Jeito CERTO: separa primeiro</b><p>Primeiro separa, e <b>só depois</b> o scaler aprende, olhando apenas o treino (<code>fit</code>).</p><div class="reads ok" data-l="o scaler lê só isto"><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span></div> <span class="blk te"></span><span class="blk te"></span></div>
+      <div class="st"><b>E o teste?</b><p>O teste só é <b>transformado</b> (<code>transform</code>) com a régua que o treino ensinou. Ele nunca participa de <code>fit</code>. É como dados novos chegando depois, no mundo real.</p><p class="hand">fit só no treino · transform no treino e no teste</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+
+  <div class="nota cuidado"><span class="lbl">Cuidado com o material da aula</span>No notebook de scaling, o <code>fit_transform</code> foi aplicado no <code>X</code> inteiro. Para <b>mostrar a conta</b> do scaler, tudo bem. Num modelo de verdade, isso é vazamento. Em trabalho, use sempre o <b>Pipeline</b> da próxima seção.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como garantir que a ordem certa aconteça sempre, sem depender de eu lembrar?</div><p>Com uma ferramenta que empacota os passos e executa na ordem certa, até dentro da validação cruzada.</p></div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="sec" id="pipeline">
+  <h2><span class="sn">6</span>Pipeline: a ordem certa por construção</h2>
+  <p class="gancho">Em vez de lembrar, deixe o código impedir o erro.</p>
+
+  <p>O <b>Pipeline</b> agrupa os passos de preparação e o modelo numa peça só. Quando você chama <code>.fit()</code>, tudo aprende só com os dados que você deu. O <b>ColumnTransformer</b> permite aplicar um tratamento diferente a cada grupo de colunas:</p>
+<pre><code>num_cols = [<span class="s">"age"</span>, <span class="s">"bmi"</span>, <span class="s">"children"</span>]
+cat_cols = [<span class="s">"sex"</span>, <span class="s">"smoker"</span>, <span class="s">"region"</span>]
+
+prep = <span class="f">ColumnTransformer</span>([
+    (<span class="s">"num"</span>, <span class="f">StandardScaler</span>(), num_cols),                          <span class="c"># números: régua comum</span>
+    (<span class="s">"cat"</span>, <span class="f">OneHotEncoder</span>(handle_unknown=<span class="s">"ignore"</span>), cat_cols),  <span class="c"># texto: 0 e 1</span>
+])
+
+pipe = <span class="f">Pipeline</span>([(<span class="s">"prep"</span>, prep), (<span class="s">"modelo"</span>, <span class="f">KNeighborsRegressor</span>())])
+
+<span class="an" tabindex="0" data-t="Scaler e one-hot aprendem só com X_train. O modelo também.">pipe.<span class="f">fit</span>(X_train, y_train)</span>
+<span class="an" tabindex="0" data-t="O teste é só transformado com o que o treino ensinou. Nunca participa do fit.">pipe.<span class="f">predict</span>(X_test)</span></code></pre>
+
+  <h3>E dentro da validação cruzada?</h3>
+  <p>Quando você entrega o <code>pipe</code> ao <code>GridSearchCV</code> (Capítulo 3), ele <b>refaz o <code>fit</code> do scaler em cada rodada</b>, usando só as 4 partes que estão treinando naquela rodada. A parte que está validando <b>não participa</b>. Assim a validação cruzada também fica livre de vazamento. Foi por isso que, no Capítulo 3, os nomes dos parâmetros tinham o prefixo <code>modelo__</code> (<code>modelo__n_neighbors</code>): é a forma de falar com um passo <i>dentro</i> do Pipeline.</p>
+
+  <div class="nota exemplo"><span class="lbl">Resumo da ordem certa</span>1) Separe treino e teste. 2) Monte o Pipeline com preparação + modelo. 3) Ajuste e escolha com validação cruzada <b>só no treino</b>. 4) Abra o teste <b>uma vez</b>.</div>
+</section>
+
+<!-- ============ fechamento ============ -->
+<section class="sec" id="fechamento">
+  <h2><span class="sn">7</span>Fechamento do capítulo</h2>
+
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li><b>OneHotEncoder:</b> cada categoria vira uma coluna 0/1. No Insurance, 3 colunas viram 8 (2 + 2 + 4).</li>
+    <li><code>handle_unknown="ignore"</code> evita erro com categoria nova: ela vira tudo zero.</li>
+    <li><b>MinMax</b> = (x−mín)/(máx−mín). <b>Standard</b> = (x−média)/desvio. <b>Robust</b> = (x−mediana)/(Q3−Q1).</li>
+    <li>Outliers estragam MinMax e Standard. O <b>Robust</b> aguenta melhor.</li>
+    <li>Com MinMax, colunas 0/1 pesam o <b>máximo</b> na distância (1,0).</li>
+    <li><b>Vazamento:</b> o scaler só pode aprender (<code>fit</code>) com o <b>treino</b>. Use <b>Pipeline</b>.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Com <code>age = 19</code> (mín 18, máx 64, mediana 39, Q1 27, Q3 51), quanto dá no MinMax e no Robust?</p>
+    <div class="opts"><button data-k="a">MinMax 0,0217 e Robust 0,7188.</button><button data-k="b">MinMax 0,0217 e Robust −0,8333.</button><button data-k="c">MinMax −1,4388 e Robust −0,8333.</button></div>
+    <div class="fb">MinMax: (19−18)/(64−18) = 1/46 ≈ 0,0217. Robust: (19−39)/(51−27) = −20/24 ≈ −0,8333. O −1,4388 é o Standard.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Onde o scaler deve ficar para evitar vazamento?</p>
+    <div class="opts"><button data-k="a">Aplicado em todo o X antes de separar treino e teste.</button><button data-k="b">Aplicado só no teste.</button><button data-k="c">Dentro de um Pipeline, ajustado só com o treino.</button></div>
+    <div class="fb">O Pipeline garante que o <code>fit</code> aconteça apenas com os dados de treino (e, dentro do GridSearchCV, só com as partes de treino de cada rodada).</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Por que o MinMax pode ser uma má escolha com outliers fortes?</p>
+    <div class="opts"><button data-k="a">Porque o máximo (ou mínimo) extremo estica a faixa e amassa os demais valores perto de zero.</button><button data-k="b">Porque ele usa a mediana.</button><button data-k="c">Porque deixa a média diferente de zero.</button></div>
+    <div class="fb">Como a fórmula depende do mín e do máx, um único valor extremo redefine a régua inteira. Foi o que a demo do valor extra mostrou.</div></div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que não usar 1, 2, 3, 4 para as regiões?</b></span><span class="bk">Criaria uma ordem e uma distância que não existem (3 não está "entre" 2 e 4 em nenhum sentido real).</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>fit x transform?</b></span><span class="bk"><code>fit</code> aprende (média, mín, máx...). <code>transform</code> aplica o que foi aprendido. Teste só recebe transform.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Excel e sklearn diferem no desvio. Por quê?</b></span><span class="bk">Excel usa n−1 (amostral); scikit-learn usa n (populacional). Com poucas linhas, aparece.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é vazamento de dados?</b></span><span class="bk">Informação do teste influenciando o treino (ou o pré-processamento), tornando o resultado otimista.</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">O KNN só guarda os dados e compara vizinhos. Existe um modelo que aprende uma fórmula em vez disso?</div><p>Existe, e é o mais clássico de todos: a <b>regressão linear</b>. Com ela, você vai poder ler <i>quanto cada coluna pesa</i> no custo, algo que o KNN não consegue dizer.</p></div>
+</section>
+
+</article>
+</body>
+</html>

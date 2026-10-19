@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: KNN para números | Apostila de Machine Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="ml-data.js"></script>
+<script src="ml-core.js"></script>
+<script src="demos/cap-3.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Aula 3</div>
+  <h1>KNN para números</h1>
+  <p class="sub">Prever o custo de um seguro de saúde. É o capítulo mais denso da apostila: quase tudo o que vem depois (e o que o professor cobra em trabalho) nasce aqui.</p>
+  <div class="meta"><span class="chip"><b>~50 min</b></span><span class="chip">8 demos · 4 testes · 4 flashcards</span><span class="chip">dados reais: Insurance + resultados do scikit-learn</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 2 o KNN <b>votava</b> numa categoria (a espécie da flor) e você aprendeu que a nota só vale se medida em dados que o modelo <b>não viu</b> (treino e teste). Faltou responder: <i>e se o que eu quero prever for um número?</i> E, de quebra, aparecem quatro problemas novos: a escala das colunas, como medir o erro de um número, qual k escolher sem trapacear, e como não depender da sorte de um único corte. Vamos resolver um de cada vez.</div>
+
+<!-- ============ 1 ============ -->
+<section class="sec" id="media">
+  <h2><span class="sn">1</span>Mesma ideia, final diferente: a média dos vizinhos</h2>
+  <p class="gancho">O que muda quando o alvo é um número?</p>
+
+  <p>Quase nada. O algoritmo continua: <b>medir a distância, pegar os k mais próximos</b>. A única diferença está no último passo:</p>
+  <div class="grid2">
+    <div class="card rv"><b>Classificação</b><p>Os vizinhos <mark class="hl">votam</mark>. Vence a classe mais comum.</p><p class="muted"><code>KNeighborsClassifier</code></p></div>
+    <div class="card rv"><b>Regressão</b><p>Os vizinhos <mark class="hl g">têm o valor deles</mark> e a previsão é a <b>média</b>.</p><p class="muted"><code>KNeighborsRegressor</code></p></div>
+  </div>
+
+  <div class="ex rv"><span class="t">Exemplo resolvido (números ilustrativos)</span>
+    <div class="l"><div>Pessoa nova, com k = 5. Os custos dos 5 vizinhos mais próximos: <b>7.000, 8.500, 6.200, 9.100 e 7.800</b>.</div></div>
+    <div class="l"><div>Soma: 38.600. Dividindo por 5: <b>7.720</b>. Essa é a previsão de custo.</div></div>
+    <div class="l"><div>Com <code>weights="distance"</code>, cada custo entra com peso <b>1/distância</b>: o vizinho mais perto pesa mais. É a variação que o <code>GridSearchCV</code> da aula também testa.</div></div>
+  </div>
+
+  <p>Veja a ideia desenhando uma curva com dados <b>reais</b>. Usei só as <b>1.064 pessoas não fumantes</b> e só a <b>idade</b>, para caber num gráfico de duas dimensões:</p>
+  <div class="demo" data-demo="knnReg1d"></div>
+  <p>Com <b>k = 1</b> a previsão é uma linha serrilhada que segue cada pessoa isolada (inclusive os casos esquisitos). Com <b>k grande</b> ela fica suave, mas passa a ignorar variações reais. Guarde essa sensação: o Capítulo 3 inteiro volta a ela com números.</p>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">De quem estamos falando, exatamente? O que tem nessa tabela?</div><p>Antes de qualquer modelo, a gente olha os dados. Sempre.</p></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="sec" id="dados">
+  <h2><span class="sn">2</span>Conheça os dados antes de modelar</h2>
+  <p class="gancho">Todo bom trabalho de ML começa olhando, não modelando.</p>
+
+  <p>O dataset é o <b>Insurance</b>: <b>1.338 pessoas</b> de um seguro de saúde, <b>sem nenhum valor faltando</b>. Seis colunas descrevem a pessoa e uma é o que queremos prever.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Coluna</th><th>Tipo</th><th>Valores</th><th>Papel</th></tr>
+    <tr><td><code>age</code></td><td>número</td><td>18 a 64 anos</td><td>entrada</td></tr>
+    <tr><td><code>bmi</code></td><td>número</td><td>IMC, de 15,96 a 53,13</td><td>entrada</td></tr>
+    <tr><td><code>children</code></td><td>número</td><td>0 a 5 filhos</td><td>entrada</td></tr>
+    <tr><td><code>sex</code></td><td>texto</td><td>female, male</td><td>entrada</td></tr>
+    <tr><td><code>smoker</code></td><td>texto</td><td>yes, no</td><td>entrada</td></tr>
+    <tr><td><code>region</code></td><td>texto</td><td>northeast, northwest, southeast, southwest</td><td>entrada</td></tr>
+    <tr class="dest"><td><code>charges</code></td><td>número</td><td>custo médico em dólares</td><td><b>alvo (y)</b></td></tr>
+  </table></div>
+
+  <div class="demo" data-demo="insScatter"></div>
+
+  <p>O que o gráfico mostra, e o que você deve levar daqui:</p>
+  <ul>
+    <li><mark class="hl p">Fumar muda tudo.</mark> Os fumantes ocupam uma faixa muito acima. Com IMC no eixo x, o grupo de fumantes se parte em <b>dois</b>: quem está abaixo e acima de IMC 30 (limite de obesidade) tem custos bem diferentes.</li>
+    <li>A <b>idade</b> sobe o custo de forma quase em degraus paralelos, três faixas visíveis.</li>
+    <li>O custo é <b>assimétrico</b>: a média (13.270) é bem maior que a mediana (9.382), porque poucas pessoas têm custos altíssimos. Isso vai pesar no RMSE mais adiante.</li>
+  </ul>
+  <div class="nota lembra"><span class="lbl">Lembra</span>Você acabou de fazer a fase 2 do CRISP-DM (<i>entendimento dos dados</i>). Quando algo no seu modelo parecer estranho, volte a esta etapa primeiro.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O KNN decide por distância. Mas distância entre uma idade e uma renda faz sentido?</div><p>Não faz, e o jeito como isso quebra o modelo é traiçoeiro: o código roda sem erro e a previsão sai errada.</p></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="sec" id="escala">
+  <h2><span class="sn">3</span>Escala: quem manda na distância?</h2>
+  <p class="gancho">O KNN só entende uma coisa: perto e longe. E "perto" depende da régua de cada coluna.</p>
+
+  <p>Se uma coluna varia de 18 a 70 (idade) e outra de 30.000 a 260.000 (renda), a distância <mark class="hl">é dominada pela renda</mark>, simplesmente porque os números dela são maiores. Não é que renda seja mais importante: é um <b>viés puramente numérico</b>. Teste:</p>
+  <div class="demo" data-demo="escala"></div>
+
+  <p>A saída é colocar todas as colunas numa <b>mesma régua</b> antes de calcular distância. O mais simples é o <b>MinMax</b>:</p>
+  <div class="formula">x_escalado = (x − mín) / (máx − mín)<small>Cada coluna vira um número entre 0 e 1. A idade 70 vira 1, a 18 vira 0, e a renda também.</small></div>
+  <p>Depois disso, uma diferença de "metade da faixa de idade" pesa o mesmo que uma de "metade da faixa de renda". Existem outras réguas (<code>StandardScaler</code>, <code>RobustScaler</code>), e o Capítulo 4 abre cada uma com conta.</p>
+
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Esquecer a escala e achar que está tudo certo.</b> O KNN sem escala <i>roda</i>, devolve números e parece normal. Só que está olhando quase só a coluna de números grandes. Sempre escale antes de qualquer modelo baseado em distância.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Escalei, rodei, deu uma previsão. Como sei se ela é boa?</div><p>É preciso um número que diga "errou por quanto". E existem quatro, cada um dizendo uma coisa diferente.</p></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="sec" id="metricas">
+  <h2><span class="sn">4</span>Como medir o erro: MAE, MSE, RMSE e R²</h2>
+  <p class="gancho">Em classificação você contava acertos. Em regressão ninguém acerta o número exato, então se mede a distância do erro.</p>
+
+  <p>O erro de uma previsão é <code>previsto − real</code>. Para juntar o erro de muitas pessoas num número só, há quatro caminhos:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Métrica</th><th>Como calcula</th><th>O que ela diz</th><th>Atenção</th></tr>
+    <tr><td><b>MAE</b></td><td>média de |erro|</td><td>"Em média, erro X dólares"</td><td>Trata erro pequeno e grande por igual</td></tr>
+    <tr><td><b>MSE</b></td><td>média de erro²</td><td>Pune forte o erro grande</td><td>Unidade ao quadrado, difícil de interpretar</td></tr>
+    <tr><td><b>RMSE</b></td><td>raiz do MSE</td><td>Volta para dólares, ainda pune o erro grande</td><td>Sempre ≥ MAE</td></tr>
+    <tr><td><b>R²</b></td><td>1 − (erro do modelo ÷ erro de sempre chutar a média)</td><td>Quanto da variação do custo o modelo explica</td><td>1 = perfeito · 0 = igual a chutar a média · pode ser negativo</td></tr>
+  </table></div>
+
+  <div class="demo" data-demo="metricas"></div>
+
+  <div class="ex rv"><span class="t">Exemplo resolvido: o exemplo inicial da calculadora</span>
+    <div class="l"><div>Reais: 10, 20, 30, 40. Previstos: 12, 18, 36, 38. Erros: <b>+2, −2, +6, −2</b>.</div></div>
+    <div class="l"><div>MAE = (2 + 2 + 6 + 2) ÷ 4 = <b>3</b>.</div></div>
+    <div class="l"><div>MSE = (4 + 4 + 36 + 4) ÷ 4 = <b>12</b>. RMSE = √12 ≈ <b>3,46</b>.</div></div>
+    <div class="l"><div>R²: a média dos reais é 25, e o "erro de chutar a média" soma 225 + 25 + 25 + 225 = 500. O erro do modelo soma 48. R² = 1 − 48/500 = <b>0,904</b>.</div></div>
+  </div>
+
+  <h3>Qual métrica olhar?</h3>
+  <p>Não existe a certa. Se errar muito de uma vez é bem pior do que errar pouco várias vezes (por exemplo, subestimar um custo gigante), olhe o <b>RMSE</b>. Se todo erro pesa igual, o <b>MAE</b> é mais fácil de explicar. O <b>R²</b> responde "estou muito melhor do que chutar a média?". Na prática, <mark class="hl b">relate as quatro</mark> e use o RMSE como critério de escolha, que é o que o notebook da aula faz.</p>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span><b>R² negativo existe.</b> Significa que o modelo é <i>pior</i> do que prever sempre a média. Quando isso aparecer, não é bug da biblioteca: o modelo está muito ruim.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Agora tenho um número para comparar. Qual k deixa esse número menor?</div><p>E aí mora a primeira armadilha séria: escolher o k olhando a nota errada.</p></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="sec" id="k">
+  <h2><span class="sn">5</span>O k certo: nervoso demais ou calmo demais</h2>
+  <p class="gancho">Mexa no k e veja o que acontece com o erro no treino e no teste.</p>
+
+  <div class="demo" data-demo="kcurve"></div>
+
+  <p>Repare no que o gráfico conta (são números reais, calculados com o mesmo pipeline do notebook da aula, para k de 1 a 40):</p>
+  <ul>
+    <li><b>Com k = 1</b>, o erro de <mark class="hl p">treino é minúsculo (cerca de 700)</mark>: o modelo copia o vizinho exato. Só que no <mark class="hl p">teste o erro é cerca de 6.750</mark>, quase dez vezes maior. É a assinatura do <b>overfitting</b>: decorou o treino.</li>
+    <li><b>Com k grande</b>, treino e teste sobem juntos: o modelo suavizou tanto que perdeu padrões reais. É o <b>underfitting</b>.</li>
+    <li>O melhor k está <b>no meio</b>. Na curva de validação cruzada (verde), o mínimo cai em k = 6.</li>
+  </ul>
+
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Escolher o k pelo menor erro de treino.</b> Seria sempre k = 1, e o modelo seria o pior possível fora do treino. E também <b>não</b> vale escolher pelo menor erro de <i>teste</i>: aí o teste deixa de ser surpresa (Capítulo 2). Para escolher, usamos um terceiro jeito, que é a próxima seção.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se não posso usar o treino nem o teste para escolher, o que sobra?</div><p>Sobra fabricar vários "testes de mentira" a partir do próprio treino. É a validação cruzada.</p></div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="sec" id="cv">
+  <h2><span class="sn">6</span>Holdout engana, validação cruzada acalma</h2>
+  <p class="gancho">Um corte só depende de sorte. Cinco cortes, menos.</p>
+
+  <p>Dividir uma vez (o <b>holdout</b>) tem um defeito escondido: o resultado depende de <i>qual</i> divisão aleatória calhou. Se os casos difíceis caíram no teste, o modelo parece pior; se caíram no treino, parece melhor. Veja o <b>mesmo</b> KNN (k = 5), 60 sorteios diferentes:</p>
+  <div class="demo" data-demo="holdout"></div>
+
+  <p>Na <b>validação cruzada</b> (<code>cv=5</code>) você corta o treino em 5 pedaços. Cada pedaço vira a "prova" uma vez, enquanto os outros 4 treinam. A nota é a <b>média</b> das 5 provas, o que apaga boa parte da sorte.</p>
+  <div class="demo" data-demo="folds"></div>
+
+  <div class="nota lembra"><span class="lbl">Lembra</span>A validação cruzada acontece <b>dentro do treino</b>. O conjunto de teste continua intocado, guardado para a nota final, uma vez só. Treino serve para ajustar e escolher, teste serve para dar a nota.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Tenho um jeito honesto de comparar o k=5 com o k=7. Mas são muitas opções: k, pesos, distância...</div><p>Fazer isso na mão seria insano. Dá para pedir ao computador.</p></div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="sec" id="grid">
+  <h2><span class="sn">7</span>GridSearchCV: testar todas as combinações</h2>
+  <p class="gancho">Três botões (k, pesos, distância). Uma grade de possibilidades. Uma validação cruzada em cada uma.</p>
+
+  <p>A grade do notebook da aula é:</p>
+<pre><code>param_grid = {
+    <span class="s">"modelo__n_neighbors"</span>: <span class="f">list</span>(<span class="f">range</span>(<span class="n">1</span>, <span class="n">21</span>)),          <span class="c"># 20 valores de k</span>
+    <span class="s">"modelo__weights"</span>:     [<span class="s">"uniform"</span>, <span class="s">"distance"</span>],     <span class="c"># 2 jeitos de pesar</span>
+    <span class="s">"modelo__metric"</span>:      [<span class="s">"euclidean"</span>, <span class="s">"manhattan"</span>],   <span class="c"># 2 jeitos de medir distância</span>
+}
+grid = <span class="f">GridSearchCV</span>(pipeline, param_grid, cv=<span class="n">5</span>,
+                    <span class="an" tabindex="0" data-t="O scikit-learn sempre MAXIMIZA a nota. Para erros, ele usa o negativo (-RMSE), assim 'maior é melhor' vale para toda métrica.">scoring=<span class="s">"neg_root_mean_squared_error"</span></span>)
+grid.<span class="f">fit</span>(X_train, y_train)        <span class="c"># 80 combinações x 5 rodadas = 400 treinos</span>
+grid.best_params_                 <span class="c"># a melhor combinação</span></code></pre>
+
+  <div class="ex rv"><span class="t">Exemplo resolvido: quantos treinos?</span>
+    <div class="l"><div>20 valores de k × 2 de weights × 2 de metric = <b>80 combinações</b>.</div></div>
+    <div class="l"><div>Cada uma é treinada 5 vezes (<code>cv=5</code>): 80 × 5 = <b>400 treinos</b>.</div></div>
+    <div class="l"><div>No fim, o <code>GridSearchCV</code> ainda treina <b>mais uma vez</b> o melhor modelo no treino inteiro (<i>refit</i>), que é o que você usa para prever.</div></div>
+  </div>
+
+  <p>E aqui estão os 80 resultados <b>reais</b>, calculados com o mesmo pipeline e a mesma divisão do notebook da aula. Clique em "Rodar a busca":</p>
+  <div class="demo" data-demo="grid"></div>
+
+  <div class="nota lembra"><span class="lbl">Lembra</span>Por que o score vem <b>negativo</b>? Convenção do scikit-learn: toda ferramenta de busca <b>maximiza</b>. Como erro menor é melhor, ele devolve <code>-RMSE</code>. Para ler como RMSE de verdade, é só tirar o sinal.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Achei a melhor combinação. Funciona de verdade, na prova final?</div><p>É hora de abrir o cofre, uma vez só.</p></div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section class="sec" id="placar">
+  <h2><span class="sn">8</span>O placar da aula</h2>
+  <p class="gancho">O teste, aberto uma única vez, com os dois modelos já prontos.</p>
+  <div data-demo="placar"></div>
+  <p>Leitura: o <b>baseline</b> (k = 5, sem ajuste) erra em média cerca de <b>3.632</b> dólares (MAE) e explica <b>76,8%</b> da variação (R²). O modelo <b>tunado</b> (<mark class="hl g">manhattan, k = 7, distance</mark>) melhora tudo: MAE 3.438, RMSE 5.650, R² 0,794. A melhora existe, mas é <b>moderada</b>, e isso deixa uma pergunta no ar, que o próximo capítulo ajuda a responder: <i>o que mais dá para fazer, além de mexer em k?</i></p>
+  <div class="nota exemplo"><span class="lbl">Dica de estudo</span>Esses dois modelos são a <b>referência</b> do notebook da aula. Em qualquer trabalho de "melhore o KNN", é com eles que você compara. A regra de ouro: se não superar as quatro métricas, analise e justifique por quê.</div>
+</section>
+
+<!-- ============ fechamento ============ -->
+<section class="sec" id="fechamento">
+  <h2><span class="sn">9</span>Fechamento do capítulo</h2>
+
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li>KNN regressor: <b>média</b> dos k vizinhos (ou média ponderada por 1/distância em <code>weights="distance"</code>).</li>
+    <li><b>Escala:</b> sem ela, a coluna de números maiores domina a distância. MinMax = (x − mín)/(máx − mín).</li>
+    <li><b>MAE</b> (|erro|), <b>MSE</b> (erro²), <b>RMSE</b> (√MSE, volta à unidade original), <b>R²</b> (1 = perfeito, 0 = média, pode ser &lt; 0).</li>
+    <li><b>k pequeno</b> → overfitting. <b>k grande</b> → underfitting. O ponto bom fica no meio.</li>
+    <li><b>Holdout</b> depende da sorte do corte. <b>Validação cruzada</b> (cv=5) tira a média de 5 cortes.</li>
+    <li><b>GridSearchCV:</b> 20 × 2 × 2 = 80 combinações × 5 rodadas = <b>400 treinos</b>. O score é negativo por convenção.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">No KNN, qual a diferença entre classificar e fazer regressão?</p>
+    <div class="opts"><button data-k="a">Na regressão não se calcula distância.</button><button data-k="b">Na classificação os vizinhos votam; na regressão tira-se a média dos valores deles.</button><button data-k="c">Na classificação usa-se k ímpar; na regressão, k par.</button></div>
+    <div class="fb">A distância e a escolha dos k vizinhos são iguais. Só o último passo muda: voto na classe versus média do número.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Um modelo tem RMSE de treino 700 e RMSE de teste 6.750. O que isso sugere?</p>
+    <div class="opts"><button data-k="a">Underfitting: o modelo é simples demais.</button><button data-k="b">O teste está errado e precisa ser refeito.</button><button data-k="c">Overfitting: o modelo decorou o treino e não generaliza.</button></div>
+    <div class="fb">Erro baixíssimo no que viu e alto no que não viu é a assinatura do overfitting. No underfitting os dois erros seriam altos.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Uma busca com 20 valores de k, 2 de weights, 2 de metric e <code>cv=5</code> faz quantos treinos (sem contar o refit)?</p>
+    <div class="opts"><button data-k="a">400 (20 × 2 × 2 × 5).</button><button data-k="b">80.</button><button data-k="c">45.</button></div>
+    <div class="fb">80 combinações, e cada uma treina 5 vezes (uma por rodada da validação cruzada): 80 × 5 = 400. O refit é um treino extra no fim.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 4</span><p class="qq">Por que o <code>scoring</code> do GridSearchCV aparece como <code>neg_root_mean_squared_error</code>?</p>
+    <div class="opts"><button data-k="a">Porque o RMSE pode ser negativo.</button><button data-k="b">Porque o scikit-learn sempre maximiza a nota, então devolve o erro com sinal trocado.</button><button data-k="c">Porque assim o teste fica protegido.</button></div>
+    <div class="fb">RMSE nunca é negativo. O sinal é só a convenção para que "maior é melhor" valha para qualquer métrica.</div></div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o KNN precisa de escala?</b></span><span class="bk">Porque decide por distância, e a coluna de números maiores dominaria a conta sem ser mais importante.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>RMSE ≫ MAE: o que indica?</b></span><span class="bk">Que há erros grandes e isolados, já que o quadrado pune muito mais o erro grande.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o holdout pode enganar?</b></span><span class="bk">O resultado depende de qual divisão aleatória calhou. Cinco cortes e a média reduzem a sorte.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>R² negativo significa...</b></span><span class="bk">O modelo é pior do que prever sempre a média.</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">O KNN só mede distância entre números. E as colunas de texto? E a régua de cada coluna?</div><p>A gente colocou <code>sex</code>, <code>smoker</code> e <code>region</code> no modelo e passou por cima de como. No próximo capítulo você vai abrir essas duas peças (OneHot e scalers) e ver por que fazer tudo isso fora de um <b>Pipeline</b> vaza dados do teste sem você perceber.</p></div>
+</section>
+
+</article>
+</body>
+</html>

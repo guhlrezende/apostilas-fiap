@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: Aprender não é decorar | Apostila de Machine Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="ml-data.js"></script>
+<script src="ml-core.js"></script>
+<script src="demos/cap-2.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aula 2</div>
+  <h1>Aprender não é decorar</h1>
+  <p class="sub">Seu primeiro modelo de verdade: o KNN classificando flores. E, de brinde, a regra de ouro que separa um modelo bom de um modelo que só parece bom.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">dados reais: Iris</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 você viu que ML aprende regras a partir de exemplos, e que o nosso caso é <b>aprendizado supervisionado</b>. Ficou uma pergunta no ar: <i>como saber se o modelo aprendeu de verdade ou só decorou?</i> Este capítulo responde com um truque simples e com o algoritmo mais fácil de imaginar.</div>
+
+<!-- ============ 1 ============ -->
+<section class="sec" id="mitchell">
+  <h2><span class="sn">1</span>O que "aprender" quer dizer, com precisão</h2>
+  <p class="gancho">Antes de medir se aprendeu, precisamos combinar o que é aprender.</p>
+
+  <p>Em português claro, a frase é vaga. A definição que a aula usa é a de <b>Mitchell (1997)</b>, e ela é <mark class="hl">operacional</mark>: dá para apontar com o dedo cada pedaço.</p>
+  <div class="formula">Um programa aprende com a experiência <b>E</b>, para a tarefa <b>T</b>, com desempenho medido por <b>P</b>, se <b>P melhora com E</b>.<small>Mitchell, 1997. A última parte é o que importa: sem melhora, não é aprendizado.</small></div>
+
+  <div class="demo" data-demo="mitchell"></div>
+
+  <div class="nota lembra"><span class="lbl">Lembra</span>A aula resume todo ML supervisionado em <b>três pilares</b>: um <b>modelo</b> para ajustar, uma <b>métrica</b> para otimizar e um <b>método</b> para validar. Fique de olho nos três, porque a apostila inteira gira em torno deles. Neste capítulo vem o primeiro modelo (KNN) e o primeiro método de validação (treino e teste).</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se P tem que melhorar, medido <i>onde</i>? Nos mesmos exemplos que o modelo já viu?</div><p>Spoiler: não. E há um experimento com pombos que mostra por quê.</p></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="sec" id="pombos">
+  <h2><span class="sn">2</span>Os pombos e a diferença entre aprender e decorar</h2>
+  <p class="gancho">Medir onde? O que dá errado se for no lugar errado?</p>
+
+  <p>Em 1995, pesquisadores (Watanabe e colegas) treinaram pombos para reconhecer pinturas de dois artistas diferentes, dando recompensa quando acertavam. Depois mediram o acerto em dois grupos de quadros:</p>
+  <ul><li><b>Pinturas que o pombo já tinha visto no treino:</b> 95% de acerto.</li><li><b>Pinturas novas dos mesmos artistas, que ele nunca viu:</b> 85% de acerto.</li></ul>
+
+  <div class="demo" data-demo="pombos"></div>
+
+  <p>O pombo <mark class="hl g">não decorou os quadros</mark>. Se tivesse decorado, o acerto nos quadros novos despencaria, porque decorar não ajuda diante de algo inédito. Ele extraiu <b>padrões</b> (pinceladas, cores, composição) que valem também para quadros novos. Isso se chama <mark class="hl b">generalização</mark>, e é o objetivo de todo modelo de ML.</p>
+
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>O modelo que <b>decora</b> o treino tem o nome técnico de <b>overfitting</b> (sobreajuste): acerto altíssimo no que viu, ruim no que não viu. O oposto, <b>underfitting</b>, é o modelo simples demais, que erra até no treino. Você vai ver os dois acontecendo, com número, no Capítulo 3.</div>
+
+  <p>A consequência prática é direta, e ela é a regra de ouro deste capítulo:</p>
+  <div class="formula">Nunca meça o modelo com os dados que ele usou para aprender.<small>Você estaria medindo memória, não aprendizado. Seria o aluno que acerta a prova porque viu o gabarito.</small></div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como garantir, na prática, que existam dados que o modelo nunca viu?</div><p>Você separa uma parte antes de começar e a guarda num cofre. É a divisão treino/teste.</p></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="sec" id="treino-teste">
+  <h2><span class="sn">3</span>Treino e teste: a prova que o modelo nunca viu</h2>
+  <p class="gancho">Separe um pedaço dos dados antes de qualquer coisa e esconda dele.</p>
+
+  <p>A ideia é só esta: você divide os dados em duas partes. Com a parte de <b>treino</b>, o modelo aprende. Com a parte de <b>teste</b>, você o avalia, <b>uma vez</b>, no fim. No notebook da aula a divisão é 70/30 (<code>test_size=0.3</code>): das 150 flores do Iris, 105 treinam e 45 testam.</p>
+
+  <p>O detalhe que quase todo mundo esquece: <mark class="hl p">tem que embaralhar antes de separar</mark>. O arquivo do Iris vem ordenado por espécie. Veja o que acontece se você cortar sem embaralhar:</p>
+  <div class="demo" data-demo="split"></div>
+
+  <h3>E o <code>random_state=42</code>?</h3>
+  <p>O embaralhamento é aleatório, então cada execução daria uma divisão diferente e resultados diferentes. O <code>random_state</code> fixa a semente do sorteio, e a divisão sai <b>igual toda vez</b>. O número 42 é só convenção (qualquer inteiro serve). O que importa: <mark class="hl">sem semente fixa, seu resultado não é reproduzível</mark>, e ninguém consegue conferir o seu trabalho.</p>
+
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Usar o teste para decidir coisas.</b> Se você olha a nota do teste, muda alguma coisa no modelo e olha de novo, o teste virou parte do treino e deixou de ser uma prova surpresa. Guarde essa dica: nos próximos capítulos você vai ver um método (validação cruzada) feito exatamente para <b>escolher</b> sem tocar no teste.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Tá certo, tenho treino e teste. Mas qual modelo eu treino?</div><p>Vamos começar pelo mais fácil de imaginar de todos: o que simplesmente pergunta aos vizinhos.</p></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="sec" id="knn">
+  <h2><span class="sn">4</span>KNN: pergunte aos vizinhos</h2>
+  <p class="gancho">Qual é o modelo mais simples que consegue classificar uma flor?</p>
+
+  <p><b>KNN</b> vem de <i>K-Nearest Neighbors</i>, "k vizinhos mais próximos". A analogia: você muda para um bairro novo e quer saber se a padaria da esquina é boa. Pergunta para as <b>k pessoas que moram mais perto</b> e fica com a opinião da maioria. É exatamente isso que o algoritmo faz com uma flor nova:</p>
+  <ol>
+    <li>Mede a <b>distância</b> dela até todas as flores de treino.</li>
+    <li>Escolhe as <b>k mais próximas</b>.</li>
+    <li>As k flores <b>votam</b>, e a espécie mais votada vence.</li>
+  </ol>
+
+  <div class="demo" data-demo="knnIris"></div>
+
+  <h3>Distância é uma conta, e dá para fazer à mão</h3>
+  <p>A distância euclidiana entre dois pontos é a "linha reta" (Pitágoras):</p>
+  <div class="formula">d = √( (x₁ − x₂)² + (y₁ − y₂)² )</div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: a quem a flor (4,5 ; 1,4) se parece?</span>
+    <div class="l"><div>Flor nova: pétala de <b>4,5 cm</b> de comprimento e <b>1,4 cm</b> de largura.</div></div>
+    <div class="l"><div>Contra uma <b>setosa</b> (1,4 ; 0,2): √(3,1² + 1,2²) = √(9,61 + 1,44) = <b>3,32</b>.</div></div>
+    <div class="l"><div>Contra uma <b>virginica</b> (6,0 ; 2,5): √(1,5² + 1,1²) = √(2,25 + 1,21) = <b>1,86</b>.</div></div>
+    <div class="l"><div>Contra uma <b>versicolor</b> (4,7 ; 1,4): √(0,2² + 0²) = <b>0,20</b>.</div></div>
+    <div class="l"><div>A versicolor está muitíssimo mais perto. Com k=1 ela já decidiria sozinha. Com k=5, o KNN repete a conta para as 105 flores de treino e pega as 5 menores distâncias.</div></div>
+  </div>
+
+  <h3>O que o k faz (brinque no gráfico acima)</h3>
+  <ul>
+    <li><b>k = 1</b>: o modelo segue o vizinho mais próximo, até se ele for um caso estranho. A fronteira fica recortada. É <mark class="hl p">nervoso demais</mark>.</li>
+    <li><b>k grande</b>: o voto fica suave, mas pode "engolir" grupos pequenos. É <mark class="hl b">calmo demais</mark>.</li>
+    <li>Use <b>k ímpar</b> em classificação com 2 classes, para evitar empate. Com 3 classes ainda pode haver empate, e a biblioteca desempata por uma regra interna.</li>
+  </ul>
+
+  <div class="nota lembra"><span class="lbl">Lembra</span>O KNN é <b>não paramétrico</b> e "preguiçoso". O <code>.fit()</code> não aprende nenhuma fórmula, só <b>guarda</b> os dados de treino. Todo o trabalho acontece na hora de prever: comparar com todo mundo. Isso é ótimo para entender, e é também o motivo de ele ficar lento com muitos dados.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como tudo isso vira código?</div><p>São poucas linhas. O valor está em saber o que cada uma faz.</p></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="sec" id="codigo">
+  <h2><span class="sn">5</span>Do notebook para a cabeça</h2>
+  <p class="gancho">Passe o mouse (ou toque) nos trechos destacados para ver o porquê.</p>
+
+<pre><code><span class="k">from</span> sklearn.datasets <span class="k">import</span> load_iris
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> train_test_split
+<span class="k">from</span> sklearn.neighbors <span class="k">import</span> KNeighborsClassifier
+
+iris = <span class="f">load_iris</span>()                    <span class="c"># dataset de brinquedo embutido no scikit-learn</span>
+X = iris.data                          <span class="c"># 150 linhas x 4 colunas (as medidas)</span>
+y = iris.target                        <span class="c"># a espécie de cada flor: 0, 1 ou 2</span>
+
+X_train, X_test, y_train, y_test = <span class="f">train_test_split</span>(
+    X, y, <span class="an" tabindex="0" data-t="30% dos dados ficam guardados para a prova final.">test_size=<span class="n">0.3</span></span>,
+    <span class="an" tabindex="0" data-t="Fixa o sorteio. A divisão sai igual toda vez, então o resultado é reproduzível.">random_state=<span class="n">42</span></span>)
+
+modelo = <span class="f">KNeighborsClassifier</span>()      <span class="c"># por padrão, k = 5</span>
+<span class="an" tabindex="0" data-t="No KNN, 'treinar' é só guardar X_train e y_train. Nenhuma fórmula é aprendida.">modelo.<span class="f">fit</span>(X_train, y_train)</span>
+
+pred = <span class="an" tabindex="0" data-t="Para cada flor de teste, mede a distância até as 105 de treino, pega as 5 mais próximas e vota.">modelo.<span class="f">predict</span>(X_test)</span></code></pre>
+
+  <div class="nota erro"><span class="lbl">Erro comum</span><code>KNeighborsClassifier</code> e <code>KNeighborsRegressor</code> são <b>coisas diferentes</b>. O primeiro vota numa classe (este capítulo). O segundo tira a média de um número (próximo capítulo). Se você usar o <code>Classifier</code> com um alvo numérico contínuo, o scikit-learn reclama (erro de tipo de rótulo). O contrário é o perigoso: o <code>Regressor</code> com rótulos 0, 1 e 2 <i>roda</i> sem avisar e devolve médias de classes, como 1,4, que não querem dizer nada.</div>
+
+  <h3>Para treinar: a tabela de acurácia por k</h3>
+  <p>O código acima só mostra as previsões. Para dar nota ao modelo você precisa de uma <b>métrica</b>. Em classificação, a mais simples é a <b>acurácia</b>: a fração de acertos. Para comparar vários k, faça um laço:</p>
+<pre><code><span class="k">from</span> sklearn.metrics <span class="k">import</span> accuracy_score
+
+<span class="k">for</span> k <span class="k">in</span> [<span class="n">1</span>, <span class="n">3</span>, <span class="n">5</span>, <span class="n">7</span>, <span class="n">9</span>]:
+    m = <span class="f">KNeighborsClassifier</span>(n_neighbors=k).<span class="f">fit</span>(X_train, y_train)
+    <span class="f">print</span>(k, <span class="f">accuracy_score</span>(y_test, m.<span class="f">predict</span>(X_test)))</code></pre>
+  <p class="muted">Rode isso e anote os resultados. O <code>accuracy_score</code> não aparece no notebook da aula, mas é exatamente o que um exercício de "variar o k" pede.</p>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O KNN votou numa categoria. E se o que queremos prever for um número?</div><p>O algoritmo continua igual até o penúltimo passo. Só o final muda, e todo um mundo novo de cuidados aparece.</p></div>
+</section>
+
+<!-- ============ fechamento ============ -->
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li><b>Mitchell:</b> aprende quem melhora o desempenho <b>P</b> na tarefa <b>T</b> com mais experiência <b>E</b>.</li>
+    <li><b>Generalizar</b> é acertar o que nunca viu. Decorar o treino é <b>overfitting</b>.</li>
+    <li><b>Treino e teste:</b> separe antes, <b>embaralhe</b>, treine no treino e meça <b>uma vez</b> no teste.</li>
+    <li><code>random_state</code> fixa o sorteio e torna o resultado <b>reproduzível</b>.</li>
+    <li><b>KNN:</b> mede distância, pega os <b>k</b> mais próximos e <b>vota</b> (classificação).</li>
+    <li><code>.fit()</code> do KNN só <b>guarda</b> os dados: ele é não paramétrico.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que nunca devemos avaliar o modelo com os mesmos dados do treino?</p>
+    <div class="opts"><button data-k="a">Porque o computador ficaria lento.</button><button data-k="b">Porque mediríamos memorização, não a capacidade de acertar o que nunca viu.</button><button data-k="c">Porque o treino tem poucos dados.</button></div>
+    <div class="fb">É o mesmo problema dos pombos: o que importa é a generalização. Um modelo que decorou o treino parece perfeito nele e falha fora.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">O que faz <code>random_state=42</code> em <code>train_test_split</code>?</p>
+    <div class="opts"><button data-k="a">Fixa a semente do sorteio, e a divisão sai igual em toda execução.</button><button data-k="b">Escolhe os 42% melhores dados para o teste.</button><button data-k="c">Define o valor de k do KNN.</button></div>
+    <div class="fb">O 42 é só uma convenção. O efeito é a reprodutibilidade: você e outra pessoa obtêm exatamente os mesmos conjuntos.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Por que dizemos que o KNN é "não paramétrico"?</p>
+    <div class="opts"><button data-k="a">Porque não usa parâmetros de configuração, como o k.</button><button data-k="b">Porque só funciona com dados sem categorias.</button><button data-k="c">Porque o <code>.fit()</code> não aprende uma fórmula: só guarda os dados e decide comparando distâncias.</button></div>
+    <div class="fb">Cuidado com a pegadinha: o k é um <b>hiperparâmetro</b> (escolhido por você), não um parâmetro aprendido. "Não paramétrico" fala dos parâmetros aprendidos.</div></div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a definição de aprendizado de Mitchell?</b></span><span class="bk">Aprende com a experiência E, na tarefa T, com desempenho P, se P melhora com E.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Overfitting em uma frase?</b></span><span class="bk">Acerta o treino quase sempre, mas erra o que nunca viu: o modelo decorou em vez de aprender.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que embaralhar antes de separar?</b></span><span class="bk">Porque os dados podem vir ordenados, e o teste ficaria com só uma parte (ex.: uma espécie).</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Os 3 passos do KNN?</b></span><span class="bk">Medir a distância até todos, escolher os k mais próximos e votar na classe mais comum.</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">E se eu não quiser prever uma classe, e sim um número, como o custo de um seguro?</div><p>A resposta é "tire a média dos vizinhos". Parece simples, mas vem junto: escala das colunas, métricas de erro, escolha do k e uma forma de validar sem depender de sorte.</p></div>
+</section>
+
+</article>
+</body>
+</html>

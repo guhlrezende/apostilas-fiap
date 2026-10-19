@@ -1,0 +1,109 @@
+<!doctype html>
+<!--
+  MODELO DE CAPÍTULO. Como usar:
+  1. Copie este arquivo para a pasta da apostila (ex.: machine-learning/cap-7-nome.html).
+  2. Troque N (número do capítulo), o título e os textos. Mantenha as classes: o CSS e o JS dependem delas.
+  3. Adicione o capítulo em <apostila>/capitulos.js (campos: n, file, titulo, aula, tempo, resumo, pergunta).
+  4. Se criar uma demo nova, registre em demos/cap-N.js com  Estudo.demos.nome = function (el) { ... }
+     e use no HTML:  <div class="demo" data-demo="nome"></div>
+  5. Rode  python scripts/checar.py  antes de subir.
+
+  REGRA DO FIO CONDUTOR: o capítulo abre com um .recap (onde paramos) e cada seção abre com um
+  .gancho (a pergunta que sobrou) e fecha com uma .ponte (a pergunta que leva à próxima).
+  Nada de tópico solto.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. N: Título | Apostila de NOME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<!-- se o capítulo tiver demos de ML: ml-data.js, ml-core.js e demos/cap-N.js -->
+</head>
+<body data-cap="N" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo N · Aula X</div>
+  <h1>Título do capítulo</h1>
+  <p class="sub">Uma frase que diz por que este capítulo existe.</p>
+  <div class="meta"><span class="chip"><b>~30 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span></div>
+  <span class="num">N</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>O que o capítulo anterior resolveu e a pergunta que ele deixou em aberto.</div>
+
+<section class="sec" id="primeira">
+  <h2><span class="sn">1</span>Título da seção</h2>
+  <p class="gancho">A pergunta que abre esta seção.</p>
+
+  <p>Texto com <mark class="hl">destaque amarelo</mark>, <mark class="hl g">verde</mark>, <mark class="hl p">rosa</mark> e <mark class="hl b">azul</mark>. Termos técnicos podem ter dica: <abbr class="gl" data-def="Definição curta que aparece ao passar o mouse.">sigla</abbr>.</p>
+
+  <div class="formula">y = b0 + b1 · x<small>Legenda da fórmula.</small></div>
+
+  <div class="ex rv"><span class="t">Exemplo resolvido: título</span>
+    <div class="l"><div>Passo 1 com o número.</div></div>
+    <div class="l"><div>Passo 2 com o número.</div></div>
+  </div>
+
+  <!-- Post-its: nota (amarelo = dica), .lembra (azul), .cuidado (rosa), .erro (vermelho), .exemplo (verde) -->
+  <div class="nota erro"><span class="lbl">Erro comum</span>O deslize que aparece em prova e em trabalho.</div>
+
+  <!-- Demo: registre a função em demos/cap-N.js -->
+  <div class="demo" data-demo="nomeDaDemo"></div>
+
+  <!-- Código, com dica ao passar o mouse nos trechos .an. Classes de cor: k (palavra-chave), s (texto), f (função), n (número), c (comentário) -->
+<pre><code><span class="k">import</span> numpy <span class="k">as</span> np
+x = np.<span class="f">array</span>([<span class="n">1</span>, <span class="n">2</span>])  <span class="c"># comentário</span>
+<span class="an" tabindex="0" data-t="Explicação que aparece ao passar o mouse.">x.mean()</span></code></pre>
+
+  <!-- Passo a passo com botões -->
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>Passo 1</b><p>Conteúdo.</p></div>
+      <div class="st"><b>Passo 2</b><p>Conteúdo.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+
+  <!-- Seção colapsável -->
+  <details class="cola"><summary>Complemento (não foi dado em aula)</summary><div class="in-body"><p>Conteúdo extra.</p></div></details>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">A pergunta que leva à próxima seção.</div><p>Uma linha de contexto.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">2</span>Fechamento do capítulo</h2>
+
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li>O que não pode faltar na sua cabeça.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <!-- data-ans = letra da opção certa. O .fb é a explicação que aparece depois da resposta. -->
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Enunciado?</p>
+    <div class="opts"><button data-k="a">Opção A</button><button data-k="b">Opção B (certa)</button><button data-k="c">Opção C</button></div>
+    <div class="fb">Por que a B está certa.</div></div>
+
+  <!-- Jogo de classificar cenários (componente genérico) -->
+  <div class="card sorter rv" data-demo="sorter" data-opts="a:Opção A|b:Opção B">
+    <div class="item" data-ans="a"><p>Cenário.</p><span class="why">Por quê.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Frente do cartão</b></span><span class="bk">Verso do cartão.</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo N+1</div><div class="q">A pergunta que abre o próximo capítulo.</div><p>Uma linha de contexto.</p></div>
+</section>
+
+</article>
+</body>
+</html>

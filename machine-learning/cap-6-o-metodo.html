@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: O método | Apostila de Machine Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Integração</div>
+  <h1>O método: juntando tudo</h1>
+  <p class="sub">Você já conhece as peças. Este capítulo é o roteiro que as encaixa num projeto de verdade, do problema até a conclusão, sem trapacear em nenhum ponto.</p>
+  <div class="meta"><span class="chip"><b>~30 min</b></span><span class="chip">1 checklist · 1 jogo · 3 testes · 4 flashcards</span><span class="chip">sem código novo</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Nos capítulos anteriores você aprendeu cada peça isolada: treino/teste (2), KNN para números, métricas, validação cruzada e GridSearchCV (3), OneHot, scalers e Pipeline (4), regressão linear (5). A pergunta que sobrou é a mais prática de todas: <i>numa tarefa tipo "melhore este modelo", por onde eu começo e em que ordem eu faço cada coisa?</i></div>
+
+<!-- ============ 1 ============ -->
+<section class="sec" id="roteiro">
+  <h2><span class="sn">1</span>O roteiro de nove passos</h2>
+  <p class="gancho">O erro mais comum de iniciante: abrir o notebook e começar pelo modelo.</p>
+
+  <p>Quem começa pelo modelo tenta valores de k no escuro, escala sem saber por quê e só nota o vazamento quando o resultado "bom demais" levanta suspeita. O roteiro abaixo evita isso. Cada passo aponta para o capítulo onde você viu a peça, e o que mais se erra nele. Marque os que você já fez no seu projeto: <b>o navegador lembra</b>.</p>
+
+  <div class="thread rv" data-demo="checks" data-key="roteiro">
+    <div class="nd" data-n="1"><b>Entenda o problema e escolha a régua de sucesso.</b><p>Qual decisão o modelo apoia? Qual erro dói mais? Isso decide se você vai olhar MAE, RMSE ou R². <span class="muted">Cap. 1 e 3.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="2"><b>Olhe os dados antes de modelar.</b><p>Formato, nulos, duplicados, tipos. Distribuição do alvo. Como cada coluna se relaciona com o alvo. <i>Toda ideia de melhoria nasce aqui.</i> <span class="muted">Cap. 3.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="3"><b>Separe treino e teste e guarde o teste.</b><p>Embaralhe, fixe o <code>random_state</code>, e para comparar com uma referência use <b>a mesma divisão</b> dela. A partir daqui, o teste só é aberto no fim. <span class="muted">Cap. 2.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="4"><b>Meça as referências.</b><p>O modelo bobo (prever a média, R² = 0) e o modelo da aula (baseline). Sem ponto de comparação, nenhum número significa nada. <span class="muted">Cap. 3 e 5.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="5"><b>Monte o Pipeline.</b><p>OneHot para o texto, scaler para os números, modelo no final, tudo dentro de um <code>Pipeline</code>, para nada aprender com o teste. <span class="muted">Cap. 4.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="6"><b>Mude uma coisa por vez.</b><p>Criar uma coluna, remover outra, trocar o scaler, transformar o alvo. Se mudar tudo junto, você nunca saberá o que ajudou. É a <i>ablação</i> (seção 3). <span class="muted">Cap. 4.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="7"><b>Escolha com validação cruzada, só no treino.</b><p>Compare as variantes pelo RMSE da validação cruzada e procure k, pesos e distância com <code>GridSearchCV</code>. <span class="muted">Cap. 3.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="8"><b>Abra o teste uma vez.</b><p>Calcule MAE, MSE, RMSE e R² e compare com as referências. Se não superou <b>todas</b>, analise e justifique. <span class="muted">Cap. 2 e 3.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <div class="nd" data-n="9"><b>Conclua com honestidade.</b><p>O que melhorou e por quê. E o que o trabalho <b>não</b> prova: um único corte, decisões que dependem deste dataset, um modelo que escala mal. <span class="muted">Cap. 3.</span></p><label><input type="checkbox"> já fiz</label></div>
+    <p class="muted" style="margin:6px 0 0"><b class="chk-n">0 de 9</b> passos marcados.</p>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Os passos 3, 5 e 8 giram em torno de uma mesma ideia: proteger o teste. Você sabe reconhecer quando ele foi violado?</div><p>Teste isso agora, num jogo rápido.</p></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="sec" id="vazou">
+  <h2><span class="sn">2</span>Jogo: vazou ou não vazou?</h2>
+  <p class="gancho">Seis situações. Em quais o teste (ou a resposta) escapou para o treino?</p>
+
+  <div class="card sorter rv" data-demo="sorter" data-opts="vaza:Vazou|ok:Está certo">
+    <div class="item" data-ans="vaza"><p>Você faz <code>scaler.fit_transform(X)</code> em todo o X e só depois chama <code>train_test_split</code>.</p><span class="why">Vazou. O scaler calculou média e desvio com as linhas de teste dentro. A régua do teste foi influenciada pelo próprio teste.</span></div>
+    <div class="item" data-ans="ok"><p>Você separa treino e teste, ajusta o scaler só no treino e depois apenas <code>transform</code> no teste.</p><span class="why">Está certo. É exatamente o fluxo recomendado: <code>fit</code> só no treino, <code>transform</code> nos dois.</span></div>
+    <div class="item" data-ans="vaza"><p>Você testa k = 1 a 20, olha o RMSE <b>no teste</b> de cada um e fica com o menor.</p><span class="why">Vazou. O teste participou da <i>escolha</i> do k, então deixou de ser surpresa. A escolha deveria ser por validação cruzada no treino.</span></div>
+    <div class="item" data-ans="ok"><p>Você entrega o Pipeline ao <code>GridSearchCV</code> usando só o treino, e abre o teste uma única vez no fim.</p><span class="why">Está certo. A validação cruzada refaz o scaler em cada rodada com as partes de treino, e o teste fica intocado até a nota final.</span></div>
+    <div class="item" data-ans="vaza"><p>Você cria uma coluna nova de entrada calculada <b>a partir do alvo</b> (por exemplo, uma faixa de custo) para ajudar o modelo.</p><span class="why">Vazou, e é um tipo grave: o modelo recebe a resposta disfarçada de pergunta. Na hora de prever em dados novos, essa coluna não existe.</span></div>
+    <div class="item" data-ans="ok"><p>Você cria uma coluna nova olhando só os valores <b>da própria linha</b> (como "IMC maior ou igual a 30"), antes de separar treino e teste.</p><span class="why">Está certo. A coluna depende só de cada linha, sem estatística do conjunto, então não carrega informação do teste para o treino.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Passo 6: "mude uma coisa por vez". Como registrar isso de um jeito que convença?</div><p>Com uma tabela simples.</p></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="sec" id="ablacao">
+  <h2><span class="sn">3</span>Mude uma coisa por vez</h2>
+  <p class="gancho">Quando você muda cinco coisas e o resultado melhora, qual delas ajudou?</p>
+
+  <p>A <b>ablação</b> responde isso: parte de uma versão base e, a cada linha, muda <b>uma</b> decisão. A diferença entre linhas consecutivas mostra o efeito de cada escolha. É o jeito mais honesto de <i>justificar</i> as decisões, que é o que um trabalho avaliado pede.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Variante</th><th>O que mudou em relação à anterior</th><th class="n">RMSE na validação cruzada</th></tr>
+    <tr><td>A</td><td>Versão base (a da aula)</td><td class="n muted">preencha</td></tr>
+    <tr><td>B</td><td>Mudança 1 (uma só)</td><td class="n muted">preencha</td></tr>
+    <tr><td>C</td><td>Mudança 2 (uma só)</td><td class="n muted">preencha</td></tr>
+    <tr><td>D</td><td>Mudança 3 (uma só)</td><td class="n muted">preencha</td></tr>
+  </table></div>
+  <ul>
+    <li>Compare as variantes pelo <b>RMSE da validação cruzada</b> (treino), nunca pelo teste.</li>
+    <li>Use a <b>mesma</b> divisão em folds em todas (<code>KFold(shuffle=True, random_state=...)</code>), para a comparação ser justa.</li>
+    <li>Diferença minúscula entre variantes é <b>empate</b>, e não vitória. Regra prática (minha, não é da aula): se a diferença for menor que o desvio do RMSE entre os folds, relate como empate.</li>
+  </ul>
+
+  <div class="nota exemplo"><span class="lbl">Como achar o que mudar</span>Volte ao passo 2. Pergunte aos dados: <b>quais colunas mudam bastante a média do alvo e quais mudam pouco?</b> Existe alguma <b>combinação</b> de colunas em que o alvo dispara? A distribuição do alvo é muito assimétrica? As respostas viram as candidatas à lista de mudanças. A ideia não é decorar uma receita, é aprender a perguntar.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E depois de tudo isso, para onde crescer?</div><p>Há uma trilha natural, só com pontos que as suas próprias anotações já deixaram como "a pesquisar".</p></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="sec" id="trilha">
+  <h2><span class="sn">4</span>Trilha para ir além</h2>
+  <p class="gancho">Nada aqui é obrigatório. É o próximo degrau, em ordem.</p>
+
+  <div class="grid2">
+    <div class="card rv"><b>Fechar as bases</b><ul><li><code>accuracy_score</code> e a tabela de acurácia por k no Iris.</li><li>De onde saem as fórmulas fechadas de b0 e b1, e os pressupostos da regressão linear.</li></ul></div>
+    <div class="card rv"><b>Preparação com evidência</b><ul><li>Quando o <code>RobustScaler</code> realmente melhora o KNN.</li><li>Boxplot do IMC e a decisão sobre outliers.</li></ul></div>
+    <div class="card rv"><b>Busca de hiperparâmetros</b><ul><li><code>RandomizedSearchCV</code> contra <code>GridSearchCV</code>: testar uma amostra em vez de tudo.</li><li>Por que a métrica sai negativa no <code>scoring</code>.</li></ul></div>
+    <div class="card rv"><b>Melhorar a regressão linear</b><ul><li>Testar <code>bmi</code> + <code>smoker</code> e uma <b>interação</b> entre os dois.</li><li>Por que o gráfico de resíduos mostra faixas.</li></ul></div>
+  </div>
+  <div class="card rv"><b>Olhar para frente</b><ul><li><b>RAG</b> (recuperar, aumentar, gerar): reduz alucinações e usa dados atualizados.</li><li><b>MLOps</b>: levar modelos para produção e monitorá-los (a fase 6 do CRISP-DM).</li></ul></div>
+
+  <div class="nota exemplo"><span class="lbl">Um jeito de virar diferencial</span>Cada demo desta apostila pode virar um <b>mini-projeto em Python no seu GitHub</b>: o KNN no Iris, o pipeline sem vazamento, a regressão com resíduos. Projeto feito e explicado vale mais do que aula assistida. <span class="muted">(Opinião de estudo, não foi dada em aula.)</span></div>
+</section>
+
+<!-- ============ fechamento ============ -->
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento da apostila</h2>
+
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li><b>Ordem:</b> problema → dados → separar e guardar o teste → referências → pipeline → variantes → validação cruzada → teste uma vez → conclusão.</li>
+    <li><b>Mude uma coisa por vez</b> e compare pelo RMSE da validação cruzada, nunca pelo teste.</li>
+    <li><b>Vazamento:</b> o teste (ou o alvo) nunca pode influenciar treino, escolha ou pré-processamento.</li>
+    <li>Diferença menor que o desvio entre os folds é <b>empate</b>. Relate assim.</li>
+    <li>Se não superar todas as referências, <b>analise e justifique</b>.</li>
+    <li>Toda conclusão honesta tem uma lista de <b>limitações</b>.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que usar a mesma divisão (mesmo <code>random_state</code>) das referências ao comparar modelos?</p>
+    <div class="opts"><button data-k="a">Porque o scikit-learn exige.</button><button data-k="b">Para que a diferença nos números venha do modelo, e não de qual grupo de teste calhou.</button><button data-k="c">Porque assim o modelo fica mais rápido.</button></div>
+    <div class="fb">Com outra divisão, o mesmo modelo daria outro número (você viu isso no holdout do Capítulo 3). Fixar a divisão tira essa sorte da comparação.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Duas variantes têm RMSE de validação cruzada 4.562 e 4.601. O que dizer?</p>
+    <div class="opts"><button data-k="a">A primeira é claramente melhor.</button><button data-k="b">A segunda é melhor porque tem o RMSE maior.</button><button data-k="c">Diferença bem pequena (menos de 1%), provavelmente menor que a variação entre os folds: é praticamente empate e deve ser relatado assim.</button></div>
+    <div class="fb">Com outra divisão em folds, a ordem poderia inverter. Não afirme vitória em diferenças dentro da margem de sorte.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O que você faz quando o seu modelo NÃO supera todas as referências?</p>
+    <div class="opts"><button data-k="a">Analisa e justifica por quê (o que melhorou, o que não, e as hipóteses).</button><button data-k="b">Ajusta até superar no teste, olhando o teste.</button><button data-k="c">Esconde a métrica que ficou pior.</button></div>
+    <div class="fb">As opções b e c são trapaça. O texto de um enunciado típico é claro: resultados que não superam as referências devem ser analisados e justificados. Honestidade vale mais que um número bonito.</div></div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma ablação?</b></span><span class="bk">Mudar uma decisão por vez a partir de uma base, para medir o efeito de cada uma.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é vazamento do alvo?</b></span><span class="bk">Usar o alvo (ou algo calculado dele) como entrada. O modelo "cola", e em dados novos a resposta não existe.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quando abrir o teste?</b></span><span class="bk">Uma única vez, no fim, com o modelo já escolhido.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma referência (baseline)?</b></span><span class="bk">O modelo de comparação (o da aula, ou o que prevê a média). Sem ele, nenhum número significa nada.</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">E agora?</div><div class="q">A apostila continua crescendo.</div><p>A cada domingo entram os capítulos das aulas da semana, no mesmo formato. Volte à <a href="index.html">visão geral</a> para ver o que há de novo.</p></div>
+</section>
+
+</article>
+</body>
+</html>
