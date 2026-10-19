@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: Modelagem entidade-relacionamento | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+<script src="demos/cap-2.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aula 2</div>
+  <h1>Modelagem entidade-relacionamento</h1>
+  <p class="sub">Desenhar o banco antes de criar qualquer tabela: entidades, atributos, relacionamentos e quantos de cada lado.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">2 demos · 1 checklist · 3 testes</span><span class="chip">sem DDL neste capítulo</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 você viu o que é um SGBD, o modelo relacional (tabelas, PK e FK) e por que cada dado deve morar em um lugar só. Ficou a pergunta: <i>antes de criar tabelas, como eu desenho o que o banco precisa guardar?</i></div>
+
+<section class="sec" id="schema">
+  <h2><span class="sn">1</span>Schema, estado e os três níveis de modelo</h2>
+  <p class="gancho">"Modelar" quer dizer o quê, exatamente?</p>
+  <p>Um <b>modelo de dados</b> descreve a <b>estrutura</b> do banco usando conceitos de <b>abstração</b>, que escondem detalhes de armazenamento. Essa estrutura (nomes de tabelas, colunas, tipos, restrições) é o <abbr class="gl" data-def="Descrição do banco: tabelas, colunas, tipos e regras. Não são os dados em si.">schema</abbr>. Os dados que estão lá em um dado momento são o <b>estado</b> (ou <i>snapshot</i>). Ao criar o banco, o estado inicial é <b>vazio</b>; a cada alteração o estado muda, e o SGBD garante que ele sempre respeite o schema.</p>
+  <p>A modelagem acontece em três níveis, cada um respondendo uma pergunta:</p>
+  <div class="grid3">
+    <div class="card rv"><b style="color:var(--c0)">Conceitual</b><p><mark class="hl b">O que</mark> vai ser salvo? Entidades, atributos e relacionamentos, na visão do usuário. Independe de SGBD.</p></div>
+    <div class="card rv"><b style="color:var(--c1)">Lógico</b><p><mark class="hl">Como</mark> vai ser salvo? Tabelas, chaves, tipos de dados e relacionamentos.</p></div>
+    <div class="card rv"><b style="color:var(--c2)">Físico</b><p><mark class="hl g">Onde</mark> vai ser salvo? A implementação num SGBD específico, normalmente em SQL (<code>CREATE TABLE</code>).</p></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O nível conceitual não tem tabelas nem tipos. Do que ele é feito?</div><p>De três peças, e um diagrama para enxergá-las.</p></div>
+</section>
+
+<section class="sec" id="mer">
+  <h2><span class="sn">2</span>Entidade, atributo e relacionamento</h2>
+  <p class="gancho">Três substantivos e um verbo descrevem quase qualquer negócio.</p>
+  <p>O <b>Modelo Entidade-Relacionamento (MER)</b>, criado por Peter Chen em um artigo no MIT, descreve a base com:</p>
+  <ul>
+    <li><b>Entidade:</b> um objeto da vida real sobre o qual guardamos dados. Ex.: Funcionário, Empresa, Aluno.</li>
+    <li><b>Atributo:</b> uma propriedade da entidade. Ex.: nome e salário do Funcionário.</li>
+    <li><b>Relacionamento:</b> a ligação entre entidades. Ex.: um funcionário <i>trabalha em</i> uma empresa.</li>
+  </ul>
+  <p>O <b>DER</b> (Diagrama de Entidade e Relacionamento) é a representação gráfica do MER, com uma noção espacial: retângulos para entidades, losangos para relacionamentos, elipses para atributos. Ferramentas CASE para desenhar: <b>brModelo</b> (gratuita, feita por universidades brasileiras, usada na disciplina), StarUML, DBDesigner (embutido no MySQL Workbench), Astah e Erwin.</p>
+  <div class="ex rv"><span class="t">Exemplo do material: loja de roupas</span>
+    <div class="l"><div><b>Entidades:</b> Cliente, Produto, Pedido.</div></div>
+    <div class="l"><div><b>Relacionamento:</b> Compra (liga Cliente a Pedido, e Pedido a Produto).</div></div>
+    <div class="l"><div><b>Atributos de Cliente:</b> nome, CPF, e-mail. Cada entidade ganha os seus.</div></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Um cliente faz quantos pedidos? Um produto está em quantos pedidos?</div><p>Essa pergunta tem nome: cardinalidade. E decide quantas tabelas você vai precisar.</p></div>
+</section>
+
+<section class="sec" id="cardinalidade">
+  <h2><span class="sn">3</span>Cardinalidade: quantos de cada lado?</h2>
+  <p class="gancho">A pergunta que define tudo: "quantos elementos de um lado podem se relacionar com um elemento do outro?"</p>
+  <p>Cardinalidade é a quantidade <b>máxima e mínima</b> de registros de uma entidade que podem se relacionar com uma instância da outra. Clique em cada tipo e veja as linhas ligando os registros:</p>
+  <div class="demo" data-demo="cardinal"></div>
+  <h3>A notação (mín, máx), a mais usada</h3>
+  <p>O professor destaca a notação <b>(mínimo, máximo)</b>, que é a do brModelo. Ela descreve a <b>participação</b> de cada entidade no relacionamento:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Notação</th><th>Leitura</th><th>Exemplo</th></tr>
+    <tr><td><code>(0,1)</code></td><td>nenhum ou no máximo um</td><td>um funcionário é chefe de nenhum ou de no máximo 1 departamento</td></tr>
+    <tr><td><code>(1,1)</code></td><td>exatamente um</td><td>um funcionário trabalha em exatamente 1 departamento</td></tr>
+    <tr><td><code>(1,n)</code></td><td>um ou mais</td><td>um funcionário participa de um ou mais projetos</td></tr>
+    <tr><td><code>(0,n)</code></td><td>zero ou mais</td><td>(complemento) um cliente pode ter zero ou vários pedidos</td></tr>
+  </table></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Confundir "um ou mais" com "zero ou mais".</b> "Um ou mais" é mínimo <b>1</b>: <code>(1,n)</code>. "Zero ou mais" é <code>(0,n)</code>. No exercício da startup, "cada programa pode conter um ou mais projetos" é <code>(1,n)</code>, e não <code>(0,n)</code>. É um dos lugares onde mais se erra.</div>
+  <div class="nota lembra"><span class="lbl">Lembra (complemento)</span>Existe outra notação muito vista em ferramentas de mercado: o <b>pé de galinha</b> (<i>crow's foot</i>), em que o lado "muitos" vira um tridente. É o mesmo conceito com outro desenho; o brModelo usa (mín, máx).</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Hora de aplicar. Como ficam as entidades de uma startup que aloca funcionários em projetos?</div><p>Esse é o cenário que vai atravessar o resto da disciplina.</p></div>
+</section>
+
+<section class="sec" id="startup">
+  <h2><span class="sn">4</span>A startup alpha: modelando de verdade</h2>
+  <p class="gancho">Pense como o banco: o que existe, e como se liga?</p>
+  <p>Cenário da aula: uma startup de tecnologia precisa de um banco para os <b>projetos</b> que desenvolve para clientes. Cada projeto aloca <b>um ou mais funcionários</b>, e os projetos derivam de <b>programas</b> (áreas de conhecimento parecidas, como IA ou cloud). Cada programa pode ter vários projetos. Os requisitos do exercício, como um checklist:</p>
+  <div class="thread rv" data-demo="checks" data-key="startup">
+    <div class="nd" data-n="1"><b>Funcionário</b> participa de 1 ou mais projetos.<br><label><input type="checkbox"> modelei</label></div>
+    <div class="nd" data-n="2"><b>Projeto</b> tem 1 ou mais funcionários. Logo, funcionário × projeto é <b>N:N</b>, (1,n) dos dois lados.<br><label><input type="checkbox"> modelei</label></div>
+    <div class="nd" data-n="3"><b>Projeto</b> está vinculado a um <b>único programa</b>: lado do projeto é (1,1).<br><label><input type="checkbox"> modelei</label></div>
+    <div class="nd" data-n="4"><b>Programa</b> contém um ou mais projetos: lado do programa é (1,n).<br><label><input type="checkbox"> modelei</label></div>
+    <div class="nd" data-n="5">Atributos: <b>funcionário</b> (nome, sobrenome, CPF); <b>projeto</b> (código, nome, descrição, data de início e de término); <b>programa</b> (código, nome, sigla, descrição).<br><label><input type="checkbox"> modelei</label></div>
+    <p class="muted" style="margin:6px 0 0"><b class="chk-n">0 de 5</b> requisitos conferidos no seu diagrama.</p>
+  </div>
+  <h3>Do N:N para tabelas</h3>
+  <p>Um relacionamento <b>N:N</b> não cabe numa tabela só. Um funcionário em vários projetos e um projeto com vários funcionários exige uma <mark class="hl">tabela associativa</mark> (ou "tabela ponte") no meio, cuja PK é composta pelas duas chaves. Essa tabela ainda pode guardar dados <i>do relacionamento</i>, como as horas de cada pessoa em cada projeto. Você vai criá-la no Capítulo 3. Veja a ideia com os dados reais da startup:</p>
+  <div class="demo" data-demo="ponte"></div>
+  <div class="nota exemplo"><span class="lbl">Exercício da ACME, pensando junto</span>Departamentos têm nome, número único e um chefe (funcionário), com data de início na chefia. Funcionários têm nome, CPF, endereço, salário, sexo e nascimento, trabalham em <b>um</b> departamento e participam de <b>vários</b> projetos (com as horas por projeto). Cada departamento <b>controla</b> projetos, que têm nome, id único e uma única localização. Há dependentes, com vínculo (filho, filha). <b>Entidades:</b> Departamento, Funcionário, Projeto, Dependente. <b>Relacionamentos:</b> Chefia (1:1), Lotação (1:N), Controle (1:N, departamento e projetos), Participação (N:N, com horas), Dependência (1:N). As "várias regiões" (localizações) de um departamento viram uma entidade ou tabela própria, porque são vários valores.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Schema</b> é a estrutura; <b>estado</b> é o conteúdo de agora. O SGBD garante que o estado respeite o schema.</li><li><b>Conceitual</b> (o quê) → <b>lógico</b> (como) → <b>físico</b> (onde, em SQL).</li><li><b>Entidade</b> (objeto), <b>atributo</b> (propriedade) e <b>relacionamento</b> (ligação). O DER é o desenho do MER.</li><li>Cardinalidade: <b>1:1</b>, <b>1:N</b>, <b>N:1</b> e <b>N:N</b>. Notação (mín, máx): (0,1), (1,1), (1,n).</li><li><b>N:N</b> vira uma <b>tabela associativa</b> com PK composta.</li><li>"Um ou mais" é (1,n), e <b>não</b> (0,n).</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Em qual nível de modelo aparece o <code>CREATE TABLE</code>?</p>
+    <div class="opts"><button data-k="a">Conceitual.</button><button data-k="b">Físico (a implementação no SGBD).</button><button data-k="c">Em nenhum: é só código de aplicação.</button></div>
+    <div class="fb">O conceitual descreve o que guardar, o lógico define como (tabelas, chaves, tipos) e o físico é a implementação em SQL.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Cada programa pode ter 'um ou mais' projetos. Qual a cardinalidade do lado do programa?</p>
+    <div class="opts"><button data-k="a">(0,n)</button><button data-k="b">(1,1)</button><button data-k="c">(1,n)</button></div>
+    <div class="fb">'Um ou mais' é mínimo 1 e máximo n. (0,n) seria 'zero ou mais', e (1,1) seria 'exatamente um'.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Funcionário e projeto são N:N. Como isso vira tabelas?</p>
+    <div class="opts"><button data-k="a">Uma terceira tabela associativa, com PK composta pelas duas chaves.</button><button data-k="b">Uma coluna 'projetos' na tabela de funcionários, com uma lista.</button><button data-k="c">Duas tabelas, cada uma com uma coluna do outro lado.</button></div>
+    <div class="fb">A lista numa coluna fere a 1FN, e duas colunas cruzadas não resolvem o N:N. A tabela associativa é o padrão.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Schema x estado?</b></span><span class="bk">Schema é a estrutura (descrição). Estado é o conteúdo do banco em um dado momento.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Entidade em uma frase?</b></span><span class="bk">Um objeto da vida real sobre o qual guardamos dados, como Funcionário ou Projeto.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que significa (1,n)?</b></span><span class="bk">Participação mínima 1 e máxima n: um ou mais.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o N:N precisa de uma tabela ponte?</b></span><span class="bk">Porque uma linha não pode apontar para vários valores sem ferir a 1FN. A associativa guarda um par por linha.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">O desenho está pronto no papel. Como ele vira tabelas de verdade, com regras que o banco faz valer?</div><p>Com o modelo lógico e a linguagem de definição de dados, a DDL.</p></div>
+</section>
+
+</article>
+</body>
+</html>

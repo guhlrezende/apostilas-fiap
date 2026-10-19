@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: JOINs e UNION | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+<script src="demos/cap-6.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Aula 6</div>
+  <h1>JOINs e UNION</h1>
+  <p class="sub">Juntar o que a normalização espalhou: INNER, LEFT, RIGHT, FULL e UNION.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">9 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 5 você resumiu as alocações com GROUP BY, mas só conseguia falar em <i>idProjeto</i>, porque o nome do projeto mora em outra tabela. Esse é o motivo de normalizar (Capítulo 1): os dados se espalham em tabelas, e o <b>JOIN</b> é como você os junta de volta quando precisa.</div>
+
+<section class="sec" id="porque">
+  <h2><span class="sn">1</span>Por que existe o JOIN</h2>
+  <p class="gancho">Normalizar espalha os dados. Como colá-los de novo?</p>
+  <p>Numa papelaria, o <b>pedido</b> guarda só o <code>idCliente</code>, e o nome do cliente está na tabela <code>cliente</code>. Para listar "pedido e nome do cliente", você junta as duas tabelas pela coluna que as liga: a FK do pedido com a PK do cliente. Esse é o <code>JOIN</code>.</p>
+  <div class="formula">SELECT ... FROM tabelaA JOIN tabelaB ON tabelaA.chave = tabelaB.chave;<small>O ON diz como as linhas se casam: normalmente FK = PK.</small></div>
+  <p>A papelaria tem cinco clientes, mas <b>só duas pessoas fizeram pedido</b> (Júlia e Amanda). Guarde isso: é o que faz os tipos de JOIN darem resultados diferentes.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E as linhas que não têm par na outra tabela? Somem, ou ficam?</div><p>Depende do tipo de JOIN. Vamos testar os quatro.</p></div>
+</section>
+
+<section class="sec" id="tipos">
+  <h2><span class="sn">2</span>INNER, LEFT, RIGHT e FULL</h2>
+  <p class="gancho">A diferença está no destino de quem não tem par.</p>
+  <div class="demo" data-demo="joins"></div>
+  <div class="tablewrap"><table>
+    <tr><th>JOIN</th><th>Devolve</th><th>Quem não tem par</th></tr>
+    <tr><td><b>INNER</b></td><td>só as linhas casadas dos dois lados</td><td>some</td></tr>
+    <tr><td><b>LEFT</b></td><td>todas da tabela da <b>esquerda</b> (a do FROM)</td><td>a direita vem com NULL</td></tr>
+    <tr><td><b>RIGHT</b></td><td>todas da tabela da <b>direita</b> (a do JOIN)</td><td>a esquerda vem com NULL</td></tr>
+    <tr><td><b>FULL</b></td><td>todas dos dois lados</td><td>o lado sem par vem com NULL</td></tr>
+  </table></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Não saber qual lado é a "esquerda".</b> É a tabela que vem depois do <code>FROM</code>. E repare: <code>A LEFT JOIN B</code> faz exatamente o mesmo que <code>B RIGHT JOIN A</code>. Na prática, quase todo mundo usa só LEFT e escreve a tabela principal primeiro.</div>
+  <p>Agora os exercícios da aula, na base da papelaria. Primeiro o <b>INNER</b>, produto e fornecedor (5 produtos, todos com fornecedor):</p>
+<div class="demo" data-demo="sql" data-db="papelaria" data-expect="5" data-titulo="INNER JOIN: produto e fornecedor"><pre class="q">SELECT P.dscProduto, F.Nome AS fornecedor
+FROM produto P
+INNER JOIN fornecedor F ON P.idFornecedor = F.idFornecedor;</pre></div>
+  <p>Em seguida, <b>LEFT</b> e <b>RIGHT</b> entre pedido e cliente. No LEFT, o ponto de partida são os <b>pedidos</b> (4), e Roberto, Mariana e Miguel não aparecem. No RIGHT, o ponto de partida são os <b>clientes</b> (5), e os três sem pedido vêm com <code>idPedido</code> NULL:</p>
+<div class="demo" data-demo="sql" data-db="papelaria" data-expect="4" data-titulo="LEFT JOIN: parte dos pedidos"><pre class="q">SELECT P.idPedido, C.Nome
+FROM pedido P
+LEFT JOIN cliente C ON P.idCliente = C.idCliente;</pre></div><div class="demo" data-demo="sql" data-db="papelaria" data-expect="7" data-titulo="RIGHT JOIN: parte dos clientes"><pre class="q">SELECT P.idPedido, C.Nome
+FROM pedido P
+RIGHT JOIN cliente C ON P.idCliente = C.idCliente;</pre></div>
+  <div class="nota lembra"><span class="lbl">Complemento: achar quem NÃO tem par</span>O LEFT JOIN com <code>WHERE ... IS NULL</code> é o jeito clássico de achar o que falta: clientes que nunca compraram, funcionários sem projeto. Veja na alpha, onde 5 pessoas não estão em projeto nenhum:</div>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="5" data-titulo="Funcionários sem alocação"><pre class="q">SELECT F.nome
+FROM Funcionario F
+LEFT JOIN ProjetoFuncionario PF ON PF.idFuncionario = F.idFuncionario
+WHERE PF.idFuncionario IS NULL;</pre></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se a informação que eu quero estiver espalhada em quatro tabelas?</div><p>Dá para encadear JOINs, e usar apelidos para não se perder.</p></div>
+</section>
+
+<section class="sec" id="varias">
+  <h2><span class="sn">3</span>Várias tabelas e apelidos</h2>
+  <p class="gancho">Cliente, pedido, itens e produto: quem comprou o quê?</p>
+  <p>Cada <code>JOIN</code> adiciona uma tabela. O <b>apelido</b> (alias) da tabela (<code>C</code>, <code>P</code>, <code>I</code>, <code>PR</code>) encurta o texto e evita ambiguidade quando duas tabelas têm colunas com o mesmo nome (<code>Nome</code> existe em cliente e em fornecedor):</p>
+<div class="demo" data-demo="sql" data-db="papelaria" data-expect="6" data-titulo="Quatro tabelas encadeadas"><pre class="q">SELECT C.Nome, P.idPedido, PR.dscProduto
+FROM cliente C
+INNER JOIN pedido P     ON P.idCliente = C.idCliente
+INNER JOIN itempedido I ON I.idPedido = P.idPedido
+INNER JOIN produto PR   ON PR.idProduto = I.idProduto
+ORDER BY P.idPedido;</pre></div>
+  <p>Resultado: Júlia no pedido 1 (Caderno e Lápis) e no 3 (Borracha); Amanda no pedido 2 (Estojo) e no 4 (Caderno e Lápis). São 6 linhas, uma por item vendido.</p>
+  <p>O mesmo vale na alpha: o relatório de "funcionário e projeto onde está alocado" são 21 linhas, uma por alocação:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="21" data-titulo="Relatório de alocações"><pre class="q">SELECT F.nome AS funcionario, P.nome AS projeto
+FROM ProjetoFuncionario PF
+INNER JOIN Funcionario F ON PF.idFuncionario = F.idFuncionario
+INNER JOIN Projeto P     ON PF.idProjeto = P.idProjeto;</pre></div>
+  <div class="nota cuidado"><span class="lbl">Cuidado: o alias do slide</span>O slide do RIGHT JOIN escreve <code>FP</code> como apelido, mas a tabela foi apelidada como <code>PF</code>. Copiado, dá erro de coluna desconhecida. Sempre confira se o apelido do <code>SELECT</code> é o mesmo do <code>FROM</code>.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O MySQL não tem FULL JOIN. Como obter "todos dos dois lados"?</div><p>Empilhando dois resultados com UNION.</p></div>
+</section>
+
+<section class="sec" id="union">
+  <h2><span class="sn">4</span>UNION e UNION ALL</h2>
+  <p class="gancho">JOIN coloca tabelas lado a lado. UNION empilha resultados.</p>
+  <p>O <code>UNION</code> junta os resultados de dois <code>SELECT</code> <b>um embaixo do outro</b>, e eles precisam ter o mesmo número de colunas (e tipos compatíveis). A diferença entre as duas versões:</p>
+  <div class="grid2">
+    <div class="card rv"><b>UNION</b><p>Remove duplicados.</p></div>
+    <div class="card rv"><b>UNION ALL</b><p>Mantém tudo (e é mais rápido, porque não precisa checar duplicidade).</p></div>
+  </div>
+<div class="demo" data-demo="sql" data-db="papelaria" data-expect="6" data-titulo="UNION: cidades sem repetição"><pre class="q">SELECT Cidade FROM fornecedor
+UNION
+SELECT Cidade FROM cliente;</pre></div><div class="demo" data-demo="sql" data-db="papelaria" data-expect="8" data-titulo="UNION ALL: com repetição"><pre class="q">SELECT Cidade FROM fornecedor
+UNION ALL
+SELECT Cidade FROM cliente;</pre></div>
+  <p>São 3 fornecedores e 5 clientes, ou seja, 8 linhas. "São Paulo" aparece <b>3 vezes</b> (um fornecedor e dois clientes). O <code>UNION</code> deixa uma só, e dá 6.</p>
+  <h3>FULL JOIN simulado</h3>
+  <p>No MySQL, "todos dos dois lados" se obtém juntando um LEFT e um RIGHT com UNION (que ainda elimina as linhas repetidas):</p>
+<pre><code><span class="k">SELECT</span> PF.idProjeto, PF.idFuncionario, F.nome
+<span class="k">FROM</span> ProjetoFuncionario PF <span class="k">LEFT JOIN</span> Funcionario F <span class="k">ON</span> PF.idFuncionario = F.idFuncionario
+<span class="k">UNION</span>
+<span class="k">SELECT</span> PF.idProjeto, PF.idFuncionario, F.nome
+<span class="k">FROM</span> ProjetoFuncionario PF <span class="k">RIGHT JOIN</span> Funcionario F <span class="k">ON</span> PF.idFuncionario = F.idFuncionario;</code></pre>
+  <p>Na alpha dá 26 linhas: as 21 alocações, mais os 5 funcionários sem projeto, que vêm com <code>idProjeto</code> NULL. (O SQLite do navegador já aceita <code>FULL JOIN</code> direto, mas você precisa saber a versão com UNION, porque é a do MySQL.)</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>JOIN</b> junta tabelas pelo <code>ON</code>, normalmente FK = PK.</li><li><b>INNER</b>: só os casados. <b>LEFT</b>: todos da esquerda. <b>RIGHT</b>: todos da direita. <b>FULL</b>: todos dos dois lados.</li><li><code>A LEFT JOIN B</code> é o mesmo que <code>B RIGHT JOIN A</code>. A esquerda é a tabela do <code>FROM</code>.</li><li>LEFT JOIN + <code>WHERE ... IS NULL</code> acha o que <b>não tem par</b>.</li><li><b>Alias</b> de tabela encurta e desambigua. Confira se o apelido é o mesmo no SELECT e no FROM.</li><li><b>UNION</b> remove duplicados; <b>UNION ALL</b> mantém. FULL JOIN no MySQL = LEFT + UNION + RIGHT.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Na papelaria, quantos clientes aparecem em <code>cliente C INNER JOIN pedido P</code>?</p>
+    <div class="opts"><button data-k="a">Os 5 clientes.</button><button data-k="b">Nenhum.</button><button data-k="c">Só os que fizeram pedido: Júlia e Amanda (4 linhas, porque cada uma tem 2 pedidos).</button></div>
+    <div class="fb">O INNER descarta quem não tem par. Roberto, Mariana e Miguel nunca pediram. São 4 linhas porque Júlia e Amanda têm dois pedidos cada.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Como listar os clientes que nunca fizeram pedido?</p>
+    <div class="opts"><button data-k="a">LEFT JOIN de cliente com pedido, filtrando <code>WHERE P.idPedido IS NULL</code>.</button><button data-k="b">INNER JOIN de cliente com pedido.</button><button data-k="c">UNION ALL de cliente com pedido.</button></div>
+    <div class="fb">O LEFT mantém todos os clientes, e quem não tem pedido vem com NULL na coluna do pedido. O filtro IS NULL deixa só esses.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Qual a diferença entre UNION e UNION ALL?</p>
+    <div class="opts"><button data-k="a">UNION junta tabelas lado a lado.</button><button data-k="b">UNION remove linhas duplicadas; UNION ALL mantém todas.</button><button data-k="c">Não há diferença de resultado.</button></div>
+    <div class="fb">As cidades de fornecedores e clientes dão 6 linhas com UNION e 8 com UNION ALL.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o ON de um JOIN?</b></span><span class="bk">A condição que casa as linhas das duas tabelas, em geral FK = PK.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>LEFT x INNER?</b></span><span class="bk">O LEFT mantém todas as linhas da esquerda, mesmo sem par. O INNER descarta as sem par.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como simular FULL JOIN no MySQL?</b></span><span class="bk">LEFT JOIN UNION RIGHT JOIN.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o alias de tabela?</b></span><span class="bk">Encurtar o texto e distinguir colunas com o mesmo nome em tabelas diferentes.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">Meus comandos ficaram enormes e eu reescrevo os mesmos JOINs. Dá para guardar isso no banco?</div><p>Dá: views, functions, procedures e triggers.</p></div>
+</section>
+
+</article>
+</body>
+</html>

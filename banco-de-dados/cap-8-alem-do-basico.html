@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 8: Para ir além (complemento) | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+<script src="demos/cap-8.js"></script>
+</head>
+<body data-cap="8" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 8 · Complemento</div>
+  <h1>Para ir além (complemento)</h1>
+  <p class="sub">O que separa um banco que funciona de um que funciona bem: índices, transações, segurança e outros modelos.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">6 demos · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <span class="num">8</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Ao longo dos capítulos 1 a 7 você viu o essencial: modelar, criar, manipular, resumir, juntar e programar o banco. Este último capítulo é <b>complemento</b>: não foi dado em aula, mas é o que separa quem sabe escrever SQL de quem sabe construir sistemas confiáveis. Tudo aqui é conhecimento geral de bancos de dados, e os exemplos rodam de verdade.</div>
+
+<section class="sec" id="indices">
+  <h2><span class="sn">1</span>Índices: a diferença entre achar e procurar</h2>
+  <p class="gancho">Por que o slide dizia que o SGBD é bom em buscas rápidas?</p>
+  <p>Sem índice, para achar o funcionário "Ana" o banco lê a tabela <b>inteira</b>, linha por linha (<i>full scan</i>). Com um <b>índice</b> (normalmente uma <b>B-tree</b>, uma árvore balanceada ordenada pela coluna), ele desce a árvore em poucos passos, como achar uma palavra num dicionário aberto no meio. O custo da busca passa de proporcional ao tamanho da tabela para proporcional ao <i>logaritmo</i> dele.</p>
+  <p>Peça ao banco para mostrar o <b>plano</b> de execução (<code>EXPLAIN</code>) antes e depois de criar um índice:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-titulo="Antes e depois do índice"><pre class="q">EXPLAIN QUERY PLAN SELECT * FROM Funcionario WHERE nome = 'Ana';
+CREATE INDEX idx_func_nome ON Funcionario(nome);
+EXPLAIN QUERY PLAN SELECT * FROM Funcionario WHERE nome = 'Ana';
+EXPLAIN QUERY PLAN SELECT * FROM Funcionario WHERE nome LIKE '%na';</pre></div>
+  <p>Leia os três planos: o primeiro diz <b>SCAN</b> (lê tudo), o segundo diz <b>SEARCH ... USING INDEX</b> (desce a árvore) e o terceiro volta a <b>SCAN</b>, porque <code>LIKE '%na'</code> começa com curinga e o índice, ordenado pelo começo do texto, não ajuda. (No MySQL o comando é <code>EXPLAIN SELECT ...</code>, com uma saída mais detalhada.)</p>
+  <div class="tablewrap"><table>
+    <tr><th>Índices ajudam</th><th>Índices custam</th></tr>
+    <tr><td>leituras com <code>WHERE</code>, <code>JOIN</code> e <code>ORDER BY</code> sobre a coluna indexada</td><td>espaço em disco, e cada <code>INSERT</code>, <code>UPDATE</code> e <code>DELETE</code> precisa atualizar o índice (escritas ficam mais lentas)</td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">Lembra</span>PK e <code>UNIQUE</code> já criam índice automaticamente. Indexe as colunas que você <b>de fato filtra e junta</b>, e não todas. Colunas com poucos valores distintos (como sexo) ajudam pouco.</div>
+</section>
+
+<section class="sec" id="transacoes">
+  <h2><span class="sn">2</span>Transações e ACID</h2>
+  <p class="gancho">Transferir dinheiro são dois UPDATEs. E se o segundo falhar?</p>
+  <p>Uma <b>transação</b> agrupa comandos que devem acontecer <b>todos ou nenhum</b>. Se algo dá errado no meio, o <code>ROLLBACK</code> desfaz tudo; se está tudo certo, o <code>COMMIT</code> confirma. As propriedades que um SGBD confiável garante se chamam <b>ACID</b>:</p>
+  <div class="grid2">
+    <div class="card rv"><b>A</b>tomicidade<p>Tudo ou nada.</p></div>
+    <div class="card rv"><b>C</b>onsistência<p>O banco sai de um estado válido para outro estado válido (respeitando as regras).</p></div>
+    <div class="card rv"><b>I</b>solamento<p>Transações simultâneas não enxergam o meio uma da outra.</p></div>
+    <div class="card rv"><b>D</b>urabilidade<p>O que foi confirmado (<code>COMMIT</code>) sobrevive a uma falha.</p></div>
+  </div>
+<div class="demo" data-demo="sql" data-db="vazia" data-titulo="Transferência desfeita com ROLLBACK"><pre class="q">CREATE TABLE conta (id INTEGER PRIMARY KEY, dono TEXT, saldo REAL);
+INSERT INTO conta VALUES (1, 'Ana', 100), (2, 'Bia', 50);
+
+BEGIN;
+UPDATE conta SET saldo = saldo - 80 WHERE id = 1;   -- debita a Ana
+SELECT dono, saldo FROM conta;                       -- no meio da transação
+ROLLBACK;                                            -- desiste: desfaz tudo
+SELECT dono, saldo FROM conta;                       -- como se nada tivesse acontecido</pre></div>
+  <p>Dentro da transação a Ana ficou com 20; depois do <code>ROLLBACK</code> voltou a ter 100. Num sistema real, o segundo passo (creditar a Bia) viria antes do <code>COMMIT</code>, e uma falha entre os dois jamais deixaria o dinheiro "sumido".</p>
+</section>
+
+<section class="sec" id="subconsultas">
+  <h2><span class="sn">3</span>Subconsultas, CTE e funções de janela</h2>
+  <p class="gancho">Quando uma consulta precisa da resposta de outra.</p>
+  <p>Uma <b>subconsulta</b> é um SELECT dentro de outro. Quais alocações têm mais horas que a <b>média geral</b>? A média precisa ser calculada antes:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="9" data-titulo="Alocações acima da média (6,33)"><pre class="q">SELECT idFuncionario, idProjeto, horas
+FROM ProjetoFuncionario
+WHERE horas &gt; (SELECT AVG(horas) FROM ProjetoFuncionario);</pre></div>
+  <p>Quando a consulta fica longa, uma <b>CTE</b> (<code>WITH</code>) dá nome a cada etapa e deixa o código legível. Quem soma mais de 10 horas no total?</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Consulta em etapas, com CTE"><pre class="q">WITH total AS (
+  SELECT idFuncionario, SUM(horas) AS h
+  FROM ProjetoFuncionario
+  GROUP BY idFuncionario
+)
+SELECT f.nome, t.h
+FROM total t JOIN Funcionario f ON f.idFuncionario = t.idFuncionario
+WHERE t.h &gt; 10;</pre></div>
+  <p>E as <b>funções de janela</b> (<code>RANK() OVER (...)</code>) calculam sobre um conjunto de linhas sem colapsá-las como o GROUP BY faz. Disponíveis no MySQL 8 e no SQLite moderno:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-titulo="Ranking sem agrupar"><pre class="q">SELECT f.nome, pf.horas,
+       RANK() OVER (ORDER BY pf.horas DESC) AS posicao
+FROM ProjetoFuncionario pf
+JOIN Funcionario f ON f.idFuncionario = pf.idFuncionario
+ORDER BY posicao, f.nome;</pre></div>
+</section>
+
+<section class="sec" id="injecao">
+  <h2><span class="sn">4</span>Injeção de SQL: o ataque que mais derruba sistemas</h2>
+  <p class="gancho">O erro de montar SQL com texto que veio do usuário.</p>
+  <p>Se o programa monta a consulta <b>colando</b> o que o usuário digitou dentro do texto SQL, o usuário pode digitar <i>pedaços de SQL</i>. Brinque com a tela de busca abaixo: ela roda de verdade sobre a base alpha. Primeiro com um nome normal, depois com os botões de ataque. Por fim, marque "consulta parametrizada".</p>
+  <div class="demo" data-demo="inject"></div>
+  <p>A defesa é <b>nunca concatenar</b>. Em vez disso, use <b>consultas parametrizadas</b> (<i>prepared statements</i>): o SQL é fixo, com um marcador (<code>?</code>), e o valor viaja à parte, sempre tratado como <b>dado</b>, nunca como código. É assim em qualquer linguagem. Também vale dar ao usuário do banco da aplicação o <b>mínimo de permissões</b> (se ele não pode fazer <code>DROP</code>, o ataque do botão três falha de qualquer jeito). Esse ataque aparece no catálogo de ameaças da apostila de Cibersegurança.</p>
+</section>
+
+<section class="sec" id="nosql">
+  <h2><span class="sn">5</span>E o NoSQL? Quando usar</h2>
+  <p class="gancho">O slide de panorama citava documentos, chave-valor, grafos e colunas. O que cada um resolve?</p>
+  <div class="tablewrap"><table>
+    <tr><th>Tipo</th><th>Ideia</th><th>Bom para</th><th>Exemplos</th></tr>
+    <tr><td><b>Documento</b></td><td>registros em JSON, com estrutura flexível</td><td>catálogos, conteúdo, dados que mudam de formato</td><td>MongoDB</td></tr>
+    <tr><td><b>Chave-valor</b></td><td>um dicionário gigante: chave aponta para um valor</td><td>cache, sessão de usuário, filas simples</td><td>Redis</td></tr>
+    <tr><td><b>Colunas</b></td><td>dados organizados por coluna, distribuídos em muitos servidores</td><td>volumes enormes de escrita, séries de tempo</td><td>Cassandra</td></tr>
+    <tr><td><b>Grafo</b></td><td>nós e arestas como cidadãos de primeira classe</td><td>redes sociais, recomendação, caminhos</td><td>Neo4j</td></tr>
+  </table></div>
+  <p>A escolha é um <b>trade-off</b>: bancos NoSQL costumam trocar parte das garantias de consistência e dos JOINs por escala horizontal e flexibilidade. Para a maioria dos sistemas de negócio (cadastros, pedidos, finanças), o <b>relacional continua sendo a escolha segura</b>. E muitos sistemas usam os dois: o relacional como fonte da verdade e o NoSQL (como o Redis) para acelerar.</p>
+  <div class="nota exemplo"><span class="lbl">Ligação com a nuvem</span>Na apostila de AWS você vai encontrar o <b>RDS</b>, que roda MySQL gerenciado pela AWS, e o <b>S3</b>. É nesse tipo de serviço que o banco desta disciplina vai morar em produção.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento da apostila</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Índice</b> (B-tree) acelera leituras e atrasa escritas. <code>LIKE '%x'</code> não usa índice. Confira com <code>EXPLAIN</code>.</li><li><b>Transação</b>: tudo ou nada (<code>COMMIT</code>/<code>ROLLBACK</code>). <b>ACID</b>: atomicidade, consistência, isolamento, durabilidade.</li><li><b>Subconsulta</b>, <b>CTE</b> (<code>WITH</code>) e <b>funções de janela</b> organizam consultas complexas.</li><li><b>Injeção de SQL</b>: nunca concatene entrada do usuário. Use <b>consultas parametrizadas</b> e permissões mínimas.</li><li><b>NoSQL</b> é trade-off (flexibilidade e escala x garantias). O relacional segue sendo o padrão para dados de negócio.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que a consulta <code>WHERE nome LIKE '%na'</code> não se beneficia de um índice em <code>nome</code>?</p>
+    <div class="opts"><button data-k="a">Porque LIKE não é permitido com índices.</button><button data-k="b">Porque o índice é ordenado pelo começo do texto, e o padrão começa com curinga.</button><button data-k="c">Porque o índice só funciona com números.</button></div>
+    <div class="fb">O índice B-tree ordena pelo início do valor. Com o curinga na frente, o banco não sabe por onde começar e lê tudo.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">A melhor defesa contra injeção de SQL é:</p>
+    <div class="opts"><button data-k="a">Esconder os nomes das tabelas.</button><button data-k="b">Pedir ao usuário que não digite aspas.</button><button data-k="c">Consultas parametrizadas, que tratam a entrada sempre como dado.</button></div>
+    <div class="fb">Filtros de caracteres falham. Parametrizar separa definitivamente o código (SQL) do dado (o que o usuário digitou).</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Numa transferência bancária, o que a atomicidade garante?</p>
+    <div class="opts"><button data-k="a">Ou o débito e o crédito acontecem juntos, ou nenhum acontece.</button><button data-k="b">Que o dinheiro nunca falte.</button><button data-k="c">Que a operação seja a mais rápida possível.</button></div>
+    <div class="fb">Atomicidade é 'tudo ou nada'. Foi o que o ROLLBACK mostrou.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um índice B-tree?</b></span><span class="bk">Uma árvore ordenada que permite achar valores em poucos passos, sem ler a tabela inteira.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma CTE?</b></span><span class="bk">Uma consulta com nome (WITH), usada para dividir uma consulta grande em etapas.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que significa ACID?</b></span><span class="bk">Atomicidade, Consistência, Isolamento e Durabilidade.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quando preferir NoSQL?</b></span><span class="bk">Quando flexibilidade de formato ou escala horizontal pesam mais do que JOINs e garantias fortes.</span></button></div>
+  <div class="ponte rv"><div class="t">E agora?</div><div class="q">Você percorreu a história inteira da startup alpha.</div><p>Da modelagem ao banco que reage sozinho. Volte à <a href="index.html">visão geral</a> e refaça os exercícios sem olhar. E leve esse conhecimento para a nuvem, na apostila de AWS.</p></div>
+</section>
+
+</article>
+</body>
+</html>

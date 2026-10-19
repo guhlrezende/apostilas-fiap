@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: DML: INSERT, SELECT, UPDATE, DELETE | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aula 4</div>
+  <h1>DML: INSERT, SELECT, UPDATE, DELETE</h1>
+  <p class="sub">Colocar dados nas tabelas, achar o que interessa, mudar e apagar sem estragar nada.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">12 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 você criou as tabelas da alpha com PK, FK e restrições, e viu o banco recusar dados inválidos. Só que a estrutura estava <b>vazia</b>. Agora a startup precisa incluir funcionários, achar quem tem certas habilidades, mudar dados e filtrar projetos por período.</div>
+
+<section class="sec" id="crud">
+  <h2><span class="sn">1</span>CRUD: as quatro operações</h2>
+  <p class="gancho">Quatro verbos resolvem quase todo sistema.</p>
+  <p><b>DML</b> (Data Manipulation Language) é a parte do SQL que altera e consulta os <b>dados</b>. Todo o <b>CRUD</b> sai dela:</p>
+  <div class="tablewrap"><table>
+    <tr><th>CRUD</th><th>Comando</th><th>Faz</th></tr>
+    <tr><td><b>C</b>reate</td><td><code>INSERT</code></td><td>inclui uma linha</td></tr>
+    <tr><td><b>R</b>ead</td><td><code>SELECT</code></td><td>consulta (o slide escreve "Request", o nome comum é <i>Read</i>)</td></tr>
+    <tr><td><b>U</b>pdate</td><td><code>UPDATE</code></td><td>altera linhas existentes</td></tr>
+    <tr><td><b>D</b>elete</td><td><code>DELETE</code></td><td>exclui linhas</td></tr>
+  </table></div>
+  <p>As quatro perguntas da aula, e a resposta de cada uma: <i>incluir e consultar funcionários</i> (<code>INSERT</code> e <code>SELECT</code>); <i>filtrar por habilidades</i> (<code>WHERE</code> com <code>LIKE</code>, <code>AND</code>, <code>OR</code>); <i>atualizar habilidades</i> (<code>UPDATE</code>); <i>filtrar projetos por período</i> (<code>BETWEEN</code>).</p>
+  <div class="nota cuidado"><span class="lbl">Cuidado: SQLite x MySQL</span>Os exemplos rodam no navegador (SQLite). Três diferenças aparecem neste capítulo: <code>NOW()</code> vira <code>datetime('now')</code>, <code>CONCAT(a, b)</code> vira <code>a || b</code>, e <code>DATE_SUB(d, INTERVAL 35 DAY)</code> vira <code>date(d, '-35 day')</code>. O resto (INSERT, SELECT, WHERE, LIKE, BETWEEN) é igual.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como entra o primeiro funcionário?</div><p>Com um INSERT, e o banco vai conferir cada regra do Capítulo 3.</p></div>
+</section>
+
+<section class="sec" id="insert">
+  <h2><span class="sn">2</span>INSERT: incluir</h2>
+  <p class="gancho">Você diz em que colunas e com que valores. O resto o banco completa.</p>
+  <div class="formula">INSERT INTO tabela (coluna1, coluna2, ...) VALUES (valor1, valor2, ...);</div>
+  <p>O <code>idFuncionario</code> não aparece na lista: o <code>AUTO_INCREMENT</code> gera sozinho. Rode e depois tente inserir uma segunda pessoa com <b>o mesmo CPF</b> (como faz o slide):</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Incluindo a Luana"><pre class="q">INSERT INTO Funcionario (CPF, nome, sobrenome, habilidades, email)
+VALUES ('98765432110', 'Luana', 'Santos', 'python, sql, aws', 'luana@email.com');
+SELECT idFuncionario, nome FROM Funcionario WHERE CPF = '98765432110';</pre></div><div class="demo" data-demo="sql" data-db="alpha" data-titulo="O mesmo CPF de outra pessoa"><pre class="q">INSERT INTO Funcionario (CPF, nome, sobrenome, habilidades, email)
+VALUES ('12345678901', 'Alice', 'Pereira', 'python, sql, aws, mongodb', 'alice@email.com');</pre></div>
+  <p>O banco recusou por causa do <code>UNIQUE</code> do CPF (no MySQL: <code>ERROR 1062 Duplicate entry</code>). No slide, o segundo INSERT repete o CPF da Luana de propósito, ou por descuido, e também usa uma <b>aspa tipográfica</b> (<code>’</code>) no lugar da aspa simples, o que dá erro de sintaxe antes mesmo da checagem. <b>Cuidado ao copiar código de slide.</b></p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Os dados entraram. Como leio só o que me interessa?</div><p>Com SELECT, e as cláusulas que filtram, ordenam e limitam.</p></div>
+</section>
+
+<section class="sec" id="select">
+  <h2><span class="sn">3</span>SELECT: consultar, filtrar, ordenar</h2>
+  <p class="gancho">Quais colunas, de quais tabelas, sob quais condições.</p>
+  <div class="formula">SELECT colunas FROM tabelas WHERE condição ORDER BY coluna LIMIT n;</div>
+  <ul>
+    <li><code>*</code> traz todas as colunas.</li>
+    <li><code>WHERE</code> filtra as <b>linhas</b>.</li>
+    <li><code>ORDER BY</code> ordena. O padrão é crescente (<code>ASC</code>); <code>DESC</code> inverte.</li>
+    <li><code>LIMIT n</code> corta o resultado em <i>n</i> linhas.</li>
+  </ul>
+<div class="demo" data-demo="sql" data-db="alpha" data-titulo="Os três últimos sobrenomes (de Z a A)"><pre class="q">SELECT nome, sobrenome FROM Funcionario ORDER BY sobrenome DESC LIMIT 3;</pre></div>
+  <p>O resultado traz Camila <b>Teixeira</b>, Rodrigo <b>Tavares</b> e Carlos <b>Souza</b>.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Achar que <code>LIMIT 1</code> devolve "o primeiro".</b> Sem <code>ORDER BY</code>, o SQL <b>não garante</b> ordem nenhuma. Na prática o MySQL costuma devolver pela chave primária, mas isso é detalhe de implementação. Para pegar "o primeiro" de verdade, ordene.</div>
+
+  <h3>Operadores de comparação e lógicos</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Operador</th><th>Significado</th></tr>
+    <tr><td><code>=</code></td><td>igual</td></tr>
+    <tr><td><code>&lt;&gt;</code> (ou <code>!=</code>)</td><td>diferente</td></tr>
+    <tr><td><code>&gt;</code> <code>&gt;=</code> <code>&lt;</code> <code>&lt;=</code></td><td>maior, maior ou igual, menor, menor ou igual (a tabela do slide esqueceu <code>&gt;</code> e <code>&lt;</code>)</td></tr>
+    <tr><td><code>AND</code> / <code>OR</code></td><td>E, OU entre condições</td></tr>
+    <tr><td><code>BETWEEN a AND b</code></td><td>entre a e b, <b>incluindo</b> os dois extremos</td></tr>
+    <tr><td><code>LIKE</code></td><td>filtra parte de um texto; <code>%</code> significa "qualquer coisa"</td></tr>
+  </table></div>
+  <p>O slide define "alocação integral" como acima de 4 horas e "parcial" como até 6. Confira quantas linhas cada uma devolve:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="17" data-titulo="Alocação integral (horas > 4)"><pre class="q">SELECT * FROM ProjetoFuncionario WHERE horas &gt; 4;</pre></div><div class="demo" data-demo="sql" data-db="alpha" data-expect="12" data-titulo="Alocação parcial (horas <= 6)"><pre class="q">SELECT * FROM ProjetoFuncionario WHERE horas &lt;= 6;</pre></div>
+  <p>17 + 12 = 29, mas a tabela só tem <b>21</b> alocações. Oito linhas (as de 5 e 6 horas) aparecem <b>nas duas listas</b>: os critérios do slide se sobrepõem. Para separar de verdade, o corte tem de ser o mesmo número (por exemplo <code>&gt; 6</code> e <code>&lt;= 6</code>).</p>
+
+  <h3>LIKE: poderoso e traiçoeiro</h3>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="10" data-titulo="Começa com 'sql'"><pre class="q">SELECT nome, habilidades FROM Funcionario WHERE habilidades LIKE 'sql%';</pre></div><div class="demo" data-demo="sql" data-db="alpha" data-expect="18" data-titulo="Tem 'sql' em qualquer lugar"><pre class="q">SELECT nome, habilidades FROM Funcionario WHERE habilidades LIKE '%sql%';</pre></div>
+  <p><code>'sql%'</code> devolve 10 pessoas, <code>'%sql'</code> (termina com) devolve 2 e <code>'%sql%'</code> devolve 18. Duas pegadinhas que o slide não avisa:</p>
+  <ol>
+    <li>O <code>LIKE</code> <b>não diferencia maiúscula de minúscula</b> nessa base (no MySQL isso depende da <i>collation</i>): <code>'sql%'</code> acha "SQL Server".</li>
+    <li>Ele procura <b>texto, não palavra</b>. Procurar <code>'%sql%'</code> acha também "MySQL" e "PostgreSQL". Filtrar habilidade com LIKE numa coluna de texto separado por vírgula é <b>impreciso</b>. O jeito certo é uma tabela de habilidades ligada ao funcionário (é a 1FN do Capítulo 1 cobrando a conta).</li>
+  </ol>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="2" data-titulo="AND: quem tem aws e sql (depois de duas mudanças)"><pre class="q">UPDATE Funcionario SET habilidades = habilidades || ', aws' WHERE idFuncionario = 1;
+INSERT INTO Funcionario (CPF, nome, sobrenome, habilidades, email)
+VALUES ('98765432110', 'Luana', 'Santos', 'python, sql, aws', 'luana@email.com');
+SELECT idFuncionario, nome, habilidades FROM Funcionario
+WHERE habilidades LIKE '%aws%' AND habilidades LIKE '%sql%';</pre></div>
+  <p>O resultado de <code>AND</code> depende do que os comandos anteriores deixaram: na base original, ninguém tem "aws", e ele devolveria <b>0 linhas</b>. O estado do banco muda o que a consulta responde.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se eu quiser mudar ou apagar? Qual a diferença de errar um SELECT e errar um UPDATE?</div><p>Errar um SELECT custa uma releitura. Errar um UPDATE custa dados.</p></div>
+</section>
+
+<section class="sec" id="update-delete">
+  <h2><span class="sn">4</span>UPDATE e DELETE: o poder do WHERE</h2>
+  <p class="gancho">Um comando de duas palavras que pode acabar com sua tabela.</p>
+  <div class="grid2">
+    <div class="card rv"><b>UPDATE</b><pre style="margin:6px 0 0"><code>UPDATE Funcionario
+SET habilidades = 'python, sql'
+WHERE idFuncionario = 1;</code></pre></div>
+    <div class="card rv"><b>DELETE</b><pre style="margin:6px 0 0"><code>DELETE FROM Projeto
+WHERE idProjeto = 3;</code></pre></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Esquecer o WHERE.</b> Sem ele, o <code>UPDATE</code> muda <b>todas</b> as linhas, e o <code>DELETE</code> apaga <b>todas</b>. Escreva o <code>WHERE</code> primeiro, ou confira com um <code>SELECT</code> usando a mesma condição antes de rodar. (O MySQL Workbench tem o modo <i>safe updates</i>, que recusa UPDATE e DELETE sem WHERE com chave.)</div>
+  <p>O <code>DELETE</code> do slide apaga o projeto 3 (NeuralNet), que tem 3 alocações. O que acontece depende de a FK existir. Na base do script da aula, que <b>não declara FK</b>, apaga e deixa alocações <b>órfãs</b>. Rode e conte:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Sem FK: alocações órfãs"><pre class="q">DELETE FROM Projeto WHERE idProjeto = 3;
+SELECT COUNT(*) AS alocacoes_orfas FROM ProjetoFuncionario WHERE idProjeto = 3;</pre></div>
+  <p>As 3 alocações continuam apontando para um projeto que não existe. Com as FKs do Capítulo 3, o mesmo <code>DELETE</code> seria <b>bloqueado</b>. Por isso integridade referencial importa.</p>
+  <div class="nota lembra"><span class="lbl">Lembra</span>O <code>AUTO_INCREMENT</code> <b>não reaproveita</b> número apagado: se você apaga o funcionário 26, o próximo recebe 27. E use o <code>CPF</code> (ou outra chave natural) no <code>WHERE</code> quando não souber o id gerado.</div>
+
+  <h3>BETWEEN e datas (e a armadilha do slide)</h3>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Projetos que terminam na 2ª quinzena de setembro"><pre class="q">SELECT nome, dtTermino FROM Projeto WHERE dtTermino BETWEEN '2026-09-17' AND '2026-09-30';</pre></div>
+  <p>Só o <b>MobileApp</b> (término em 20/09) cai no intervalo. O <code>BETWEEN</code> é <b>inclusivo</b> nos dois extremos. Já o <code>UPDATE</code> do slide tem um problema de lógica: ele faz <code>SET dtInicio = NOW(), dtTermino = DATE_SUB(dtInicio, INTERVAL 35 DAY)</code>. O MySQL executa os <code>SET</code> <b>da esquerda para a direita</b>, então o <code>dtInicio</code> já é o novo, e o término fica <b>35 dias antes</b> do início. Provavelmente a intenção era 35 dias <i>depois</i> (<code>DATE_ADD</code>).</p>
+</section>
+
+<section class="sec" id="exercicios">
+  <h2><span class="sn">5</span>Exercícios do slide, com solução (as soluções são de estudo: complemento)</h2>
+  <p class="gancho">Tente você antes de abrir. Depois confira.</p>
+  <p><b>Exercício:</b> (a) inserir um registro seu com as habilidades <code>aws, mysql</code>; (b) acrescentar <code>mariadb</code> às habilidades, sem perder as que já tinha; (c) listar quem tem mariadb; (d) excluir o seu registro.</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Resolva e rode"><pre class="q">-- (a)
+INSERT INTO Funcionario (CPF, nome, sobrenome, habilidades, email)
+VALUES ('00000000001', 'Seu', 'Nome', 'aws, mysql', 'teste@exemplo.com');
+-- (b) concatenar mantém o que já havia (no MySQL: CONCAT(habilidades, ', mariadb'))
+UPDATE Funcionario SET habilidades = habilidades || ', mariadb' WHERE CPF = '00000000001';
+-- (c)
+SELECT idFuncionario, nome, habilidades FROM Funcionario WHERE habilidades LIKE '%mariadb%';</pre></div>
+  <div class="ex rv"><span class="t">Por que usar o CPF no WHERE?</span>
+    <div class="l"><div>O id é gerado pelo banco, e você não sabe qual foi. O CPF você mesmo informou, e é <b>UNIQUE</b>.</div></div>
+    <div class="l"><div>Assim o <code>UPDATE</code> e o <code>DELETE</code> miram exatamente uma linha.</div></div>
+  </div>
+  <p><b>Exercício extra (slide 21; a resposta é complemento):</b> "projetos do mês atual". A frase é ambígua, e vale responder as duas leituras: projetos que <b>terminam</b> no mês (<code>MONTH(dtTermino) = MONTH(CURDATE())</code> no MySQL), ou projetos <b>em andamento</b> em algum dia do mês, que é <code>dtInicio &lt;= fim_do_mês AND dtTermino &gt;= início_do_mês</code>. Para setembro de 2026, a segunda leitura devolve 7 projetos:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="7" data-titulo="Projetos em andamento em setembro/2026"><pre class="q">SELECT nome FROM Projeto
+WHERE dtInicio &lt;= '2026-09-30' AND dtTermino &gt;= '2026-09-01';</pre></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>CRUD</b> = INSERT, SELECT, UPDATE, DELETE. É a DML.</li><li><code>SELECT cols FROM tab WHERE cond ORDER BY col LIMIT n</code>. Sem ORDER BY, a ordem <b>não é garantida</b>.</li><li><b>BETWEEN</b> é inclusivo. <b>LIKE</b> com <code>%</code> busca texto, não palavra.</li><li><b>UPDATE/DELETE sem WHERE</b> afetam a tabela inteira. Teste a condição com SELECT antes.</li><li>Sem FK, o DELETE deixa linhas <b>órfãs</b>. Com FK, o banco bloqueia.</li><li>Duas condições com cortes diferentes (&gt; 4 e &lt;= 6) podem <b>se sobrepor</b>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Você roda <code>UPDATE Funcionario SET email = 'x@exemplo.com';</code> sem WHERE. O que acontece?</p>
+    <div class="opts"><button data-k="a">O banco recusa, porque falta o WHERE.</button><button data-k="b">Todos os funcionários ficam com o mesmo e-mail.</button><button data-k="c">Só a primeira linha é alterada.</button></div>
+    <div class="fb">O SQL não exige WHERE. Sem ele, o comando age em todas as linhas. Por isso se escreve (ou se testa com SELECT) a condição primeiro.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq"><code>horas BETWEEN 4 AND 6</code> equivale a:</p>
+    <div class="opts"><button data-k="a">horas &gt; 4 AND horas &lt; 6</button><button data-k="b">horas = 4 OR horas = 6</button><button data-k="c">horas &gt;= 4 AND horas &lt;= 6</button></div>
+    <div class="fb">BETWEEN inclui os dois extremos. As alternativas a e b deixam valores de fora.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Por que <code>LIKE '%sql%'</code> não é um bom filtro de 'sabe SQL'?</p>
+    <div class="opts"><button data-k="a">Porque busca texto: acha também MySQL e PostgreSQL.</button><button data-k="b">Porque só funciona em maiúsculas.</button><button data-k="c">Porque o % não é permitido no meio.</button></div>
+    <div class="fb">O LIKE não conhece 'palavras'. O ideal é uma tabela de habilidades ligada ao funcionário.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é CRUD?</b></span><span class="bk">Create, Read, Update, Delete: INSERT, SELECT, UPDATE, DELETE.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>LIMIT 1 garante o primeiro?</b></span><span class="bk">Não. Sem ORDER BY a ordem não é garantida.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma linha órfã?</b></span><span class="bk">Uma linha que aponta (por FK) para uma linha-pai que não existe mais.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o % faz no LIKE?</b></span><span class="bk">Representa qualquer sequência de caracteres, de qualquer tamanho.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">Consigo achar linhas. Mas e se eu quiser resumos, como médias e totais por projeto?</div><p>Com as funções de agregação, o GROUP BY e o HAVING.</p></div>
+</section>
+
+</article>
+</body>
+</html>

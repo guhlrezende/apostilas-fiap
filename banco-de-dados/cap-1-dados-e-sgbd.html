@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: Dados, SGBD e normalização | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 1</div>
+  <h1>Dados, SGBD e normalização</h1>
+  <p class="sub">O que é um banco de dados, o que um SGBD faz por você e por que cada informação deve morar em um lugar só.</p>
+  <div class="meta"><span class="chip"><b>~30 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo, então não precisa saber nada de bancos. Basta já ter usado uma planilha. Daqui em diante, cada capítulo abre lembrando o que ficou em aberto no anterior.</div>
+
+<section class="sec" id="dado-informacao">
+  <h2><span class="sn">1</span>Dado não é informação</h2>
+  <p class="gancho">Antes de guardar qualquer coisa, qual é a coisa?</p>
+  <p><b>Dados</b> são fatos ou valores brutos, registros que podem ser gravados e têm algum significado inerente: nomes, telefones, endereços. Veja um exemplo do material: <i>"o aluno A tirou 10 na prova de Matemática em 03/04/2025"</i>. Cada pedaço (aluno, nota, disciplina, data) é um dado.</p>
+  <p>A <mark class="hl">informação</mark> nasce quando você organiza e interpreta esses dados para responder uma pergunta: <i>"qual foi a média da turma em Matemática?"</i> A mesma tabela de dados gera informações diferentes conforme a pergunta. Por isso um banco de dados precisa guardar o dado de um jeito que permita perguntar muitas coisas depois.</p>
+  <div class="ex rv"><span class="t">Exemplo: do dado à informação</span>
+    <div class="l"><div><b>Dados:</b> João, 10, Matemática · Maria, 9, Português · Ana, 8, Matemática.</div></div>
+    <div class="l"><div><b>Pergunta:</b> qual a nota média em Matemática?</div></div>
+    <div class="l"><div><b>Informação:</b> (10 + 8) ÷ 2 = <b>9</b>. Os dados sozinhos não diziam isso. Foi a pergunta que os transformou.</div></div>
+  </div>
+<div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Onde guardar esses dados para poder perguntar muita coisa, para muita gente, sem bagunça?</div><p>Em um banco de dados. E quem cuida dele para você é o SGBD.</p></div>
+</section>
+
+<section class="sec" id="sgbd">
+  <h2><span class="sn">2</span>Banco de dados e SGBD</h2>
+  <p class="gancho">Uma pasta de planilhas já é um banco de dados?</p>
+  <p>Segundo Elmasri e Navathe (a bibliografia da disciplina), <b>um banco de dados é uma coleção de dados relacionados</b>. O slide completa: uma coleção organizada de informações tratadas como uma unidade, para <b>coletar, armazenar e recuperar</b> informações para uso por aplicativos. Um detalhe curioso: um banco de dados <b>pode ser mantido manualmente</b>. Um fichário de papel é um banco de dados. O que mudou foi o jeito de operar.</p>
+  <p>Quem opera é o <abbr class="gl" data-def="Sistema Gerenciador de Banco de Dados. Em inglês, DBMS (Database Management System). Exemplos: MySQL, PostgreSQL, Oracle, SQL Server, SQLite, MariaDB.">SGBD</abbr>: o software que permite <b>definir, construir, manipular e compartilhar</b> bancos de dados. Você não mexe nos arquivos do disco. Você pede ao SGBD, normalmente em SQL, e ele cuida do resto.</p>
+
+  <h3>Por que não bastam arquivos soltos?</h3>
+  <p>Num sistema "tradicional", cada programa guarda seus próprios arquivos, e os mesmos dados acabam copiados em vários lugares. O SGBD existe para resolver cinco problemas:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Requisito</th><th>O problema que resolve</th></tr>
+    <tr><td><b>Controle de redundância</b></td><td>O mesmo dado em locais diferentes ocupa espaço e se contradiz.</td></tr>
+    <tr><td><b>Consistência</b></td><td>Todo usuário enxerga os mesmos valores.</td></tr>
+    <tr><td><b>Compartilhamento e concorrência</b></td><td>Duas pessoas não podem alterar o mesmo dado ao mesmo tempo e corromper o resultado.</td></tr>
+    <tr><td><b>Segurança</b></td><td>Autenticação (quem é você) e autorização (o que você pode fazer).</td></tr>
+    <tr><td><b>Backup e recuperação</b></td><td>Um registro (log) de todas as transações permite restaurar depois de uma falha.</td></tr>
+  </table></div>
+  <p>Há ainda vantagens extras: busca mais rápida por <b>índices</b> (estruturas em árvore, as <i>B-tree</i>, que você vê no Capítulo 8), persistência, ferramentas de backup, vários usuários e <b>regras (constraints)</b>, como "só pode existir um número de matrícula por aluno".</p>
+
+  <h3>Por dentro de um SGBD</h3>
+  <p>Quando você manda uma consulta, ela atravessa camadas. Avance:</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Você escreve SQL</b><p><code>SELECT nome FROM Funcionario WHERE idFuncionario = 1;</code> É a linguagem em que você conversa com o SGBD.</p></div>
+      <div class="st"><b>2. O processador de consultas</b><p>Interpreta o comando, gerencia memória e <b>otimiza</b>: decide o caminho mais rápido até os dados (por exemplo, usar um índice).</p></div>
+      <div class="st"><b>3. O dicionário de dados</b><p>Um catálogo com a definição da <b>estrutura</b> (tabelas, colunas, tipos, chaves) e dos usuários. É a camada central do desenho do livro e a que mais se esquece.</p></div>
+      <div class="st"><b>4. Os dados armazenados</b><p>Só aqui o disco entra. O resultado volta pelo mesmo caminho até você.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Existem vários jeitos de organizar dados dentro do SGBD. Qual a disciplina usa, e por quê?</div><p>O mais famoso de todos: o modelo relacional.</p></div>
+</section>
+
+<section class="sec" id="relacional">
+  <h2><span class="sn">3</span>O modelo relacional, de Codd</h2>
+  <p class="gancho">Como organizar dados para que o computador não precise "seguir ponteiros"?</p>
+  <p>Na década de 1960 os bancos eram <b>hierárquicos</b> (IBM). Em 1970, <b>Edgar "Ted" Codd</b>, também da IBM, propôs outro caminho: guardar tudo em <b>tabelas</b>, <mark class="hl g">sem ponteiros</mark>, ligadas só pelos <b>valores</b> dos dados. É o modelo relacional, e é o que esta disciplina usa. Depois vieram os bancos orientados a objetos (anos 1980), a web (1990) e, a partir dos anos 2000, o NoSQL e o Big Data.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Aluno</th><th>Nota</th><th>Disciplina</th></tr>
+    <tr><td>João</td><td>10</td><td>Matemática</td></tr>
+    <tr><td>Maria</td><td>9</td><td>Português</td></tr>
+  </table></div>
+  <p>Três ideias sustentam o modelo:</p>
+  <ul>
+    <li><b>Tabelas</b> (conjuntos de linhas). Cada linha é um registro; cada coluna, um atributo.</li>
+    <li><b>Sem ponteiros</b>: duas tabelas se ligam porque uma guarda o valor que identifica uma linha da outra.</li>
+    <li><b>Chaves</b>: a <b>chave primária (PK)</b> identifica unicamente cada linha da própria tabela; a <b>chave estrangeira (FK)</b> guarda a PK de outra tabela e cria a ligação.</li>
+  </ul>
+  <p>Os SGBDs relacionais mais usados: MySQL, PostgreSQL, Oracle, SQL Server, SQLite, MariaDB e DB2. O MySQL e o MariaDB falam praticamente o mesmo SQL, porque o MariaDB nasceu em 2009 como um <i>fork</i> do MySQL, feito pelo mesmo criador logo depois da compra do MySQL pela Oracle.</p>
+  <div class="nota lembra"><span class="lbl">Lembra</span>Repare nas duas palavras que vão voltar em todo capítulo: <b>PK</b> (identifica a linha) e <b>FK</b> (aponta para a PK de outra tabela). Quem entende as duas já domina a base de qualquer modelagem.</div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O professor perguntou, olhando uma base de faculdade: "é possível melhorar? Existem redundâncias?"</div><p>Há um método para responder isso sem depender do "achismo": a normalização.</p></div>
+</section>
+
+<section class="sec" id="normalizacao">
+  <h2><span class="sn">4</span>Normalização: cada informação em um lugar só</h2>
+  <p class="gancho">Se o mesmo dado aparece em várias linhas, o que acontece quando ele muda?</p>
+  <p>O próprio Codd formalizou regras para eliminar redundância e inconsistência: as <b>formas normais</b>. A ideia: cada informação fica guardada <mark class="hl">em um único lugar</mark>. Sem isso aparecem três problemas, as <b>anomalias</b>:</p>
+  <div class="grid3">
+    <div class="card rv"><b>Inserção</b><p>Não dá para cadastrar um cliente sem inventar um pedido.</p></div>
+    <div class="card rv"><b>Atualização</b><p>O dado repetido em várias linhas exige mudar todas as cópias. Esquecer uma gera contradição.</p></div>
+    <div class="card rv"><b>Exclusão</b><p>Apagar o único pedido de alguém apaga, sem querer, os dados do cliente.</p></div>
+  </div>
+  <p>Veja a anomalia de atualização acontecer. A tabela <code>pedido_flat</code> repete o nome e a cidade da Júlia em cada pedido dela. Mude a cidade em <b>uma</b> linha só e depois olhe os clientes distintos:</p>
+<div class="demo" data-demo="sql" data-db="loja" data-titulo="Anomalia de atualização"><pre class="q">UPDATE pedido_flat SET cliente_cidade = 'Campinas' WHERE idPedido = 1;
+SELECT DISTINCT cliente_nome, cliente_cidade FROM pedido_flat;</pre></div>
+  <p>A Júlia agora mora em <b>duas cidades</b> ao mesmo tempo. Foi isso que a redundância causou. A versão normalizada separa o cliente (uma linha só) dos pedidos. Repita o mesmo ajuste nela e veja o resultado:</p>
+<div class="demo" data-demo="sql" data-db="loja" data-titulo="Mesma mudança, agora normalizada"><pre class="q">UPDATE cliente_n SET cidade = 'Campinas' WHERE cliente_id = 10;
+SELECT p.idPedido, c.nome, c.cidade, p.produto
+FROM pedido_n p JOIN cliente_n c ON c.cliente_id = p.cliente_id;</pre></div>
+  <h3>As formas normais, em ordem de rigor</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Forma</th><th>Exige</th><th>O que elimina</th><th>Exemplo de violação</th></tr>
+    <tr><td><b>1FN</b></td><td>valores <b>atômicos</b> (indivisíveis)</td><td>grupos repetitivos</td><td>colunas <code>telefone1, telefone2, telefone3</code>, ou uma célula com "python, sql, aws"</td></tr>
+    <tr><td><b>2FN</b></td><td>1FN e nada depende de <b>parte</b> da chave</td><td>dependências parciais</td><td>com PK composta (pedido, produto), o nome do produto depende só do produto</td></tr>
+    <tr><td><b>3FN</b></td><td>2FN e nada depende de outro atributo não-chave</td><td>dependências transitivas</td><td><code>cliente_nome</code> e <code>cliente_cidade</code> dentro de Pedido: dependem do cliente, não do pedido</td></tr>
+    <tr><td><b>BCNF</b></td><td>todo determinante é uma <b>superchave</b></td><td>casos raros de chaves candidatas sobrepostas</td><td>versão mais rígida da 3FN</td></tr>
+  </table></div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Normalizar demais fragmenta o banco e custa JOINs (Capítulo 6). Por isso muitos sistemas de produção param na <b>3FN</b>, e às vezes <b>desnormalizam de propósito</b> por performance. É um trade-off, não um erro.</div>
+  <div class="nota exemplo"><span class="lbl">Sua vez: exercício do slide</span>"Uma empresa quer guardar produtos, clientes e fornecedores. Quantas tabelas? Que relacionamentos?" Resposta de partida: <b>3 entidades, logo 3 tabelas</b>. Produto e fornecedor costumam ser N:1 (cada produto tem um fornecedor), e cliente e produto se ligam por meio de <b>pedidos</b>, que viram uma 4ª tabela (e uma tabela de itens, para o N:N). No Capítulo 2 você faz esse raciocínio com cardinalidade.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Dado</b> é o fato bruto; <b>informação</b> é o dado interpretado para responder uma pergunta.</li><li><b>SGBD</b> define, constrói, manipula e compartilha bancos. Resolve redundância, consistência, concorrência, segurança e backup.</li><li><b>Relacional</b> (Codd, 1970): tabelas sem ponteiros, ligadas por chaves. <b>PK</b> identifica a linha; <b>FK</b> aponta para a PK de outra tabela.</li><li><b>Normalização:</b> cada informação em um só lugar. Anomalias de inserção, atualização e exclusão.</li><li><b>1FN</b> atômico · <b>2FN</b> sem dependência parcial · <b>3FN</b> sem dependência transitiva · <b>BCNF</b> determinante é superchave.</li><li>Na prática, a <b>3FN</b> é o ponto de equilíbrio. Desnormalizar é uma escolha consciente.</li></ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Uma coluna <code>habilidades</code> guarda 'python, sql, aws' numa única célula. Qual forma normal ela viola?</p>
+    <div class="opts"><button data-k="a">2FN</button><button data-k="b">1FN: o valor não é atômico.</button><button data-k="c">3FN</button></div>
+    <div class="fb">A 1FN exige valores indivisíveis. O ideal seria uma tabela de habilidades ligada ao funcionário. (No Capítulo 4 você vê por que filtrar essa coluna com LIKE é impreciso.)</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">A cidade de um cliente aparece repetida em todos os pedidos dele. Que problema isso causa?</p>
+    <div class="opts"><button data-k="a">Anomalia de exclusão apenas.</button><button data-k="b">Nenhum, só ocupa espaço.</button><button data-k="c">Anomalia de atualização: mudar a cidade em uma linha deixa as outras desatualizadas.</button></div>
+    <div class="fb">É a redundância clássica. Basta esquecer uma cópia para o cliente 'morar' em duas cidades, como você viu no exemplo.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">A diferença entre PK e FK é:</p>
+    <div class="opts"><button data-k="a">PK identifica unicamente a linha na própria tabela; FK guarda a PK de outra tabela para ligá-las.</button><button data-k="b">PK é opcional e FK é obrigatória.</button><button data-k="c">As duas identificam a linha na própria tabela.</button></div>
+    <div class="fb">Toda tabela tem uma PK. A FK é a ponte que cria o relacionamento e permite ao SGBD impedir ligações para linhas que não existem.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um SGBD?</b></span><span class="bk">O software que define, constrói, manipula e compartilha bancos de dados (DBMS em inglês).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que 'sem ponteiros'?</b></span><span class="bk">No modelo relacional as tabelas se ligam pelos valores (chaves), e não por endereços de memória.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>3FN em uma frase?</b></span><span class="bk">Nenhum atributo não-chave depende de outro atributo não-chave: só da chave.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quando desnormalizar?</b></span><span class="bk">Quando a performance de leitura compensa a redundância, sabendo que é um trade-off.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Já sei o que é um banco e por que normalizar. Como desenho o que vai dentro dele, antes de criar qualquer tabela?</div><p>Com um diagrama que qualquer pessoa do negócio consegue ler: o modelo entidade-relacionamento.</p></div>
+</section>
+
+</article>
+</body>
+</html>

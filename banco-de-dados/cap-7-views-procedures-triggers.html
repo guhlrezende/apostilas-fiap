@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: Programando no banco | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Aula 7</div>
+  <h1>Programando no banco</h1>
+  <p class="sub">Guardar código dentro do banco para reaproveitar: views, functions, procedures e triggers.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">6 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 6 você juntou tabelas com JOIN, mas os comandos ficaram grandes: alguns JOINs com várias tabelas você reescreve toda hora, e certos dados precisam de tratamento antes de aparecer. O professor fez três perguntas: <i>como reaproveitar SQL extenso?</i> <i>como agrupar vários comandos numa chamada?</i> <i>como programar trechos reutilizáveis?</i></div>
+
+<section class="sec" id="mapa">
+  <h2><span class="sn">1</span>Quatro objetos, quatro jeitos de guardar código no banco</h2>
+  <p class="gancho">Em vez de copiar e colar o mesmo SQL, dê um nome a ele.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Objeto</th><th>Para que serve</th><th>Como se usa</th></tr>
+    <tr><td><b>View</b></td><td>salvar uma <b>consulta</b> (por exemplo, vários JOINs)</td><td><code>SELECT * FROM minha_view;</code> como se fosse uma tabela</td></tr>
+    <tr><td><b>Function</b></td><td>um cálculo ou regra que <b>devolve um valor</b></td><td><code>SELECT minha_funcao(...);</code>, serve dentro de outras consultas</td></tr>
+    <tr><td><b>Procedure</b></td><td>um ou mais comandos guardados, com parâmetros</td><td><code>CALL minha_proc(...);</code></td></tr>
+    <tr><td><b>Trigger</b></td><td>código que dispara <b>sozinho</b> num INSERT, UPDATE ou DELETE</td><td>não se chama: o evento chama</td></tr>
+  </table></div>
+  <div class="nota cuidado"><span class="lbl">Cuidado: o que roda no navegador</span>O SQLite do navegador tem <b>views</b> e <b>triggers</b>, mas <b>não tem functions nem procedures</b> (isso é do MySQL e de outros). Por isso as views e triggers abaixo são executáveis (com a sintaxe do SQLite, que difere um pouco), e as functions e procedures vêm com um passo a passo do código MySQL das aulas.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Começando pelo mais simples: como guardo um JOIN grande com um nome?</div><p>Com uma view.</p></div>
+</section>
+
+<section class="sec" id="view">
+  <h2><span class="sn">2</span>View: a consulta com nome</h2>
+  <p class="gancho">Escreveu o JOIN uma vez? Chame de novo pelo nome.</p>
+  <p>Uma view é uma consulta salva. Ela <b>não guarda dados</b> (a consulta roda de novo a cada uso), esconde o JOIN e pode mostrar só algumas colunas, o que ajuda em relatórios e em controle de acesso.</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="21" data-titulo="Criando e usando uma view"><pre class="q">CREATE VIEW ViewProjetosEmAndamento AS
+  SELECT P.nome AS nomeProjeto, F.nome, PF.horas
+  FROM ProjetoFuncionario PF
+  LEFT JOIN Projeto P ON PF.idProjeto = P.idProjeto
+  LEFT JOIN Funcionario F ON PF.idFuncionario = F.idFuncionario
+  ORDER BY P.nome, F.nome;
+
+SELECT * FROM ViewProjetosEmAndamento;</pre></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Confiar no nome.</b> A <code>ViewProjetosEmAndamento</code> do slide <b>não filtra "em andamento"</b>: ela traz as 21 alocações, sem nenhum WHERE. O nome é só um nome. Quem lê o código, e não o rótulo, não se engana.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E quando preciso de uma conta que devolve um valor, como o IMC?</div><p>Uma function.</p></div>
+</section>
+
+<section class="sec" id="function">
+  <h2><span class="sn">3</span>Function: devolve um valor</h2>
+  <p class="gancho">Por que toda função do MySQL começa com um tal de DELIMITER?</p>
+  <p>O cliente do MySQL entende <code>;</code> como "fim do comando". Mas dentro de <code>BEGIN ... END</code> há vários <code>;</code>, e o cliente cortaria no primeiro. Por isso se <b>troca o delimitador</b> (<code>//</code> ou <code>$$</code>), cria-se o objeto e se volta para <code>;</code>. Percorra o código:</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"titulo": "Função IMC, passo a passo", "code": ["DELIMITER //", "CREATE FUNCTION IMC (peso FLOAT, altura FLOAT)", "RETURNS FLOAT DETERMINISTIC", "BEGIN", "  RETURN peso/(altura*altura);", "END//", "DELIMITER ;", "SELECT IMC(70, 1.70);"], "steps": [{"l": 0, "v": {}, "o": "", "n": "O cliente do MySQL trata <code>;<\/code> como fim de comando. Como o corpo da função terá <code>;<\/code>, trocamos o delimitador para <code>//<\/code>."}, {"l": 1, "v": {}, "o": "", "n": "Nome da função e parâmetros com tipo. Ainda nada é executado: só está sendo <b>definida<\/b>."}, {"l": 2, "v": {}, "o": "", "n": "<code>RETURNS FLOAT<\/code>: toda função devolve <b>um valor<\/b>, e o tipo é declarado. <code>DETERMINISTIC<\/code> promete que a mesma entrada dá sempre a mesma saída."}, {"l": 4, "v": {}, "o": "", "n": "O corpo, entre <code>BEGIN<\/code> e <code>END<\/code>. Aqui ele devolve a conta do IMC."}, {"l": 5, "v": {}, "o": "", "n": "O <code>//<\/code> fecha a criação. Só agora o MySQL guarda a função no banco."}, {"l": 6, "v": {}, "o": "", "n": "Volta o delimitador para <code>;<\/code>."}, {"l": 7, "v": {"peso": 70, "altura": 1.7}, "o": "", "n": "Chamada dentro de um SELECT: os argumentos entram nos parâmetros."}, {"l": 4, "v": {"peso": 70, "altura": 1.7, "retorno": 24.2215}, "o": "IMC(70, 1.70)\n24.2215", "n": "70 / (1,7 × 1,7) = 70 / 2,89 = <b>24,2215<\/b>. O valor volta como se fosse uma coluna do SELECT."}]}</script></div>
+  <p>Uma segunda função do slide lê uma tabela e usa variável. Ela soma as horas de um funcionário (o Carlos, id 2, está em dois projetos e dá 11):</p>
+<pre><code><span class="k">CREATE FUNCTION</span> fn_total_horas_funcionario(p_idFuncionario <span class="k">INT</span>)
+<span class="k">RETURNS INT DETERMINISTIC</span>
+<span class="k">BEGIN</span>
+    <span class="k">DECLARE</span> v_total <span class="k">INT DEFAULT</span> <span class="n">0</span>;
+    <span class="k">SELECT SUM</span>(horas) <span class="k">INTO</span> v_total
+    <span class="k">FROM</span> ProjetoFuncionario <span class="k">WHERE</span> idFuncionario = p_idFuncionario;
+    <span class="k">RETURN</span> v_total;
+<span class="k">END</span></code></pre>
+  <div class="nota lembra"><span class="lbl">Complemento, conferido rodando</span>Para um funcionário <b>sem projeto</b> (a Vanessa, por exemplo), essa função devolve <b>NULL</b>, e não 0: o <code>SUM</code> de nenhuma linha é <code>NULL</code> e sobrescreve o <code>DEFAULT 0</code> da variável. Para devolver 0, use <code>COALESCE(SUM(horas), 0)</code>. Além disso, o slide marca a função como <code>DETERMINISTIC</code>, mas ela lê uma tabela, e o resultado muda quando os dados mudam. O MySQL aceitou assim no teste; marcar como <code>READS SQL DATA</code> seria mais fiel.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se eu quiser guardar um bloco de comandos, e não um valor?</div><p>Uma stored procedure.</p></div>
+</section>
+
+<section class="sec" id="procedure">
+  <h2><span class="sn">4</span>Stored procedure: comandos guardados</h2>
+  <p class="gancho">Uma function responde "quanto?". Uma procedure executa "faça isto".</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"titulo": "Procedure com parâmetro, passo a passo", "code": ["DELIMITER //", "CREATE PROCEDURE sp_exibir_funcionario(id INT)", "BEGIN", "  SELECT * FROM funcionario FP WHERE idFuncionario = id;", "END //", "DELIMITER ;", "CALL sp_exibir_funcionario(1);"], "steps": [{"l": 1, "v": {}, "o": "", "n": "Define a procedure com um parâmetro <code>id<\/code>."}, {"l": 3, "v": {}, "o": "", "n": "O corpo guarda um (ou mais) comandos SQL. Nada roda ainda."}, {"l": 6, "v": {"id": 1}, "o": "", "n": "<code>CALL<\/code> chama a procedure e passa <code>id = 1<\/code>."}, {"l": 3, "v": {"id": 1}, "o": "idFuncionario  nome  sobrenome  habilidades\n1              Ana   Silva      MySQL, SQL", "n": "O SELECT guardado roda com <code>id = 1<\/code>. Diferente da function, <b>não há RETURN<\/b>: o resultado é a própria consulta."}]}</script></div>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Function</th><th>Procedure</th></tr>
+    <tr><td><b>Devolve</b></td><td>um valor, com <code>RETURN</code></td><td>nada (o resultado é a própria consulta que ela roda)</td></tr>
+    <tr><td><b>Como se chama</b></td><td>dentro de um SELECT: <code>SELECT IMC(70, 1.7)</code></td><td>sozinha: <code>CALL sp_exibir_funcionario(1)</code></td></tr>
+    <tr><td><b>Pode agrupar vários comandos</b></td><td>pouco usual</td><td>sim, é o uso principal</td></tr>
+  </table></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se eu quisesse que algo acontecesse automaticamente quando alguém altera um dado?</div><p>Aí nenhuma chamada serve: o banco precisa reagir sozinho. É a trigger.</p></div>
+</section>
+
+<section class="sec" id="trigger">
+  <h2><span class="sn">5</span>Trigger: o banco reage sozinho</h2>
+  <p class="gancho">"Quem excluiu o registro XYZ?" Só dá para responder se alguém anotou na hora.</p>
+  <p>Uma trigger (gatilho) fica ligada a <b>uma tabela</b> e a <b>um evento</b> (<code>INSERT</code>, <code>UPDATE</code> ou <code>DELETE</code>), em um momento (<code>BEFORE</code> ou <code>AFTER</code>), e roda <b>uma vez por linha afetada</b> (<code>FOR EACH ROW</code>). Usos do slide: <b>validar dados</b> e <b>auditar</b>. Dentro dela, <code>OLD</code> é a linha antes da mudança (existe em UPDATE e DELETE) e <code>NEW</code> é a linha depois (existe em INSERT e UPDATE).</p>
+<div class="demo" data-demo="trace"><script type="application/json">{"titulo": "Trigger de auditoria, passo a passo", "code": ["CREATE TRIGGER trg_antes_atualizar_funcionario", "  BEFORE UPDATE ON funcionario", " FOR EACH ROW", "INSERT INTO FuncionarioAuditoria", "SET habilidades = OLD.habilidades,", "    data = NOW(), usuario = CURRENT_USER();", "", "UPDATE funcionario", "SET habilidades = CONCAT(habilidades, ', python')", "WHERE idFuncionario = 1;"], "steps": [{"l": 0, "v": {"funcionario.habilidades (id 1)": "MySQL, SQL", "FuncionarioAuditoria": "(vazia)"}, "o": "", "n": "A trigger fica <b>ligada à tabela<\/b> e ao evento. A partir de agora ela dispara sozinha."}, {"l": 7, "v": {"funcionario.habilidades (id 1)": "MySQL, SQL", "FuncionarioAuditoria": "(vazia)"}, "o": "", "n": "Você roda um UPDATE normal. Você não chama a trigger: o <b>evento<\/b> chama."}, {"l": 3, "v": {"OLD.habilidades": "MySQL, SQL", "NEW.habilidades": "MySQL, SQL, python", "FuncionarioAuditoria": "(vazia)"}, "o": "", "n": "Como a trigger é <code>BEFORE<\/code>, ela roda <b>antes<\/b> da mudança ser gravada. <code>OLD<\/code> é a linha como estava; <code>NEW<\/code> é como vai ficar."}, {"l": 4, "v": {"OLD.habilidades": "MySQL, SQL", "FuncionarioAuditoria": "1 linha: 'MySQL, SQL'"}, "o": "", "n": "A trigger grava a versão <b>antiga<\/b> na tabela de auditoria."}, {"l": 9, "v": {"funcionario.habilidades (id 1)": "MySQL, SQL, python", "FuncionarioAuditoria": "1 linha: 'MySQL, SQL'"}, "o": "", "n": "Só então o UPDATE é gravado. Resultado: a tabela tem o valor novo e a auditoria guarda o antigo, com a data e o usuário. Responde \"quem mudou isto?\"."}]}</script></div>
+  <p>Agora rode você, no SQLite. A sintaxe muda um pouco (o corpo fica entre <code>BEGIN</code> e <code>END</code>, e no lugar de <code>NOW()</code> e <code>CURRENT_USER()</code> uso <code>date('now')</code> e um texto):</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Trigger de auditoria em ação"><pre class="q">CREATE TABLE FuncionarioAuditoria (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  habilidades VARCHAR(100) NOT NULL,
+  usuario VARCHAR(50) NOT NULL,
+  data DATE,
+  acao VARCHAR(50)
+);
+CREATE TRIGGER trg_antes_atualizar_funcionario
+BEFORE UPDATE ON Funcionario
+FOR EACH ROW
+BEGIN
+  INSERT INTO FuncionarioAuditoria (habilidades, usuario, data)
+  VALUES (OLD.habilidades, 'estudante', date('now'));
+END;
+
+UPDATE Funcionario SET habilidades = habilidades || ', python' WHERE idFuncionario = 1;
+SELECT * FROM FuncionarioAuditoria;</pre></div>
+  <p>A tabela de auditoria guardou <code>MySQL, SQL</code> (o valor <b>antigo</b>), e a <code>Funcionario</code> agora tem <code>MySQL, SQL, python</code>. Detalhe do código do slide: essa trigger <b>não tem condição</b>, então dispara em <b>qualquer</b> UPDATE de <code>funcionario</code>, mesmo que ele não mude as habilidades.</p>
+  <h3>Exercício 3 do slide: auditar só mudança de nome de projeto (a solução é complemento)</h3>
+  <p>A solução usa uma condição para disparar só quando o nome muda (no MySQL, <code>IF OLD.nome &lt;&gt; NEW.nome</code> dentro de <code>BEGIN...END</code>; no SQLite, <code>WHEN</code> no cabeçalho). Mude o nome do projeto 1 e depois só a descrição do 2, e veja que só a primeira mudança é registrada:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Só auditar quando o nome muda"><pre class="q">CREATE TABLE ProjetoAuditoria (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome_antigo TEXT, nome_novo TEXT, usuario TEXT, data DATE
+);
+CREATE TRIGGER trg_projeto_nome
+BEFORE UPDATE ON Projeto
+FOR EACH ROW WHEN OLD.nome &lt;&gt; NEW.nome
+BEGIN
+  INSERT INTO ProjetoAuditoria (nome_antigo, nome_novo, usuario, data)
+  VALUES (OLD.nome, NEW.nome, 'estudante', date('now'));
+END;
+
+UPDATE Projeto SET nome = 'Omega 2' WHERE idProjeto = 1;
+UPDATE Projeto SET descricao = 'novo texto' WHERE idProjeto = 2;
+SELECT * FROM ProjetoAuditoria;</pre></div>
+  <div class="nota cuidado"><span class="lbl">Complemento: BEFORE ou AFTER?</span><b>BEFORE</b> roda antes de gravar, então serve para <b>validar ou ajustar</b> o dado que vai entrar (e até impedir a operação). <b>AFTER</b> roda depois de gravar, e serve para <b>reagir</b> ao que já aconteceu (auditoria, atualizar totais). Triggers também escondem lógica: quem lê só o <code>UPDATE</code> não vê o que ela faz, e muitas triggers encadeadas dificultam o diagnóstico.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>View</b>: consulta salva, usada como tabela. Não guarda dados.</li><li><b>Function</b>: devolve um valor (<code>RETURN</code>) e se usa dentro de um SELECT.</li><li><b>Procedure</b>: comandos guardados, chamada com <code>CALL</code>, sem RETURN.</li><li><b>Trigger</b>: dispara sozinha num INSERT, UPDATE ou DELETE. <code>OLD</code> é o valor antes; <code>NEW</code>, o depois.</li><li><b>DELIMITER</b> troca o fim de comando para que os <code>;</code> do corpo não cortem a criação.</li><li>O nome de um objeto <b>não garante</b> o que ele faz: leia o código.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Qual objeto você usaria para registrar automaticamente quem mudou um dado?</p>
+    <div class="opts"><button data-k="a">View</button><button data-k="b">Function</button><button data-k="c">Trigger</button></div>
+    <div class="fb">Só a trigger dispara por conta própria quando o evento acontece. View e function precisam ser chamadas.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Para que serve o DELIMITER ao criar uma function?</p>
+    <div class="opts"><button data-k="a">Trocar o terminador de comando, para os ; do corpo não encerrarem a criação.</button><button data-k="b">Delimitar o intervalo de datas da função.</button><button data-k="c">Limitar quantas linhas a função devolve.</button></div>
+    <div class="fb">O cliente corta no primeiro ponto e vírgula. Trocando o delimitador para // ou $$, o BEGIN...END chega inteiro ao servidor.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Numa trigger BEFORE UPDATE, OLD.habilidades é:</p>
+    <div class="opts"><button data-k="a">O novo valor, que vai ser gravado.</button><button data-k="b">O valor que a coluna tinha antes da alteração.</button><button data-k="c">Sempre NULL.</button></div>
+    <div class="fb">OLD é a linha como estava; NEW é como vai ficar.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>View guarda dados?</b></span><span class="bk">Não. Guarda a consulta, que roda de novo a cada uso.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Function x procedure?</b></span><span class="bk">Function devolve um valor e vai dentro de um SELECT. Procedure é chamada com CALL e não tem RETURN.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é FOR EACH ROW?</b></span><span class="bk">A trigger roda uma vez para cada linha afetada pelo comando.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>OLD e NEW?</b></span><span class="bk">OLD: a linha antes da mudança (UPDATE, DELETE). NEW: a linha depois (INSERT, UPDATE).</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 8</div><div class="q">Tenho o essencial de SQL. O que separa um banco que funciona de um que funciona bem?</div><p>Índices, transações, subconsultas e segurança. É o complemento final.</p></div>
+</section>
+
+</article>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: Agregações, GROUP BY e HAVING | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Aula 5</div>
+  <h1>Agregações, GROUP BY e HAVING</h1>
+  <p class="sub">Transformar tabelas em indicadores: quantos, quanto, qual a média, e por grupo.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">6 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 4 você aprendeu a incluir, achar, mudar e apagar linhas. Só que o gestor da startup não quer ler 21 alocações: ele quer <b>indicadores</b>. Quantos funcionários há em cada projeto? Qual a média de horas? Qual projeto aloca mais gente? Isso é <b>análise exploratória</b> (EDA) com SQL.</div>
+
+<section class="sec" id="funcoes">
+  <h2><span class="sn">1</span>Funções de agregação: muitas linhas, um valor</h2>
+  <p class="gancho">Em vez de olhar linha por linha, resuma.</p>
+  <p>As <b>funções de agregação</b> pegam várias linhas e devolvem <mark class="hl">um valor só</mark>:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Função</th><th>Devolve</th></tr>
+    <tr><td><code>MIN(col)</code></td><td>o menor valor</td></tr>
+    <tr><td><code>MAX(col)</code></td><td>o maior valor</td></tr>
+    <tr><td><code>AVG(col)</code></td><td>a média</td></tr>
+    <tr><td><code>SUM(col)</code></td><td>a soma</td></tr>
+    <tr><td><code>COUNT(col)</code></td><td>quantas linhas têm valor <b>não nulo</b> em <i>col</i> (<code>COUNT(*)</code> conta linhas, e <code>COUNT(DISTINCT col)</code> conta valores sem repetição)</td></tr>
+  </table></div>
+  <p>O cenário usa a base <b>alpha</b>: <code>Funcionario</code> (25 linhas), <code>Projeto</code> (10) e <code>ProjetoFuncionario</code> (21 alocações). Tente a primeira pergunta: a média e a soma de horas do projeto 1.</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Projeto 1 (Omega): média 7, soma 14, 2 pessoas"><pre class="q">SELECT AVG(horas) AS media, SUM(horas) AS soma, COUNT(horas) AS pessoas
+FROM ProjetoFuncionario
+WHERE idProjeto = 1;</pre></div>
+  <p>E o resumo geral. Rode e depois mude as funções para ver o que cada uma devolve:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="Resumo de todas as alocações"><pre class="q">SELECT MAX(horas) AS maximo, MIN(horas) AS minimo, AVG(horas) AS media,
+       COUNT(*) AS alocacoes, COUNT(DISTINCT idFuncionario) AS pessoas
+FROM ProjetoFuncionario;</pre></div>
+  <div class="ex rv"><span class="t">Por que COUNT(*) e COUNT(DISTINCT) divergem?</span>
+    <div class="l"><div>Há <b>21 alocações</b> (linhas da tabela associativa).</div></div>
+    <div class="l"><div>Mas o Carlos (id 2) está em <b>dois</b> projetos, então ele aparece em duas linhas.</div></div>
+    <div class="l"><div><code>COUNT(DISTINCT idFuncionario)</code> conta <b>pessoas</b>: <b>20</b>. E dos 25 funcionários cadastrados, 5 não estão em nenhum projeto.</div></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>COUNT(coluna) ignora NULL.</b> <code>COUNT(*)</code> conta todas as linhas; <code>COUNT(horas)</code> conta só as que têm <code>horas</code> preenchido. O mesmo vale para <code>AVG</code>, <code>SUM</code>, <code>MIN</code> e <code>MAX</code>: <b>NULL fica de fora</b> das contas. E o <code>SUM</code> de nenhuma linha devolve <code>NULL</code>, não zero.</div>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="1" data-titulo="COUNT ignorando NULL (NULLIF troca 8 por NULL)"><pre class="q">SELECT COUNT(*) AS linhas, COUNT(NULLIF(horas, 8)) AS sem_as_de_8h FROM ProjetoFuncionario;</pre></div>
+  <p>O <code>NULLIF(horas, 8)</code> vira <code>NULL</code> quando <code>horas</code> vale 8. Das 21 alocações, 9 têm 8 horas, então o <code>COUNT</code> enxerga 12.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quero a média de horas <i>de cada projeto</i>, e não da tabela inteira. Preciso rodar uma consulta por projeto?</div><p>Não: o GROUP BY faz isso numa só.</p></div>
+</section>
+
+<section class="sec" id="groupby">
+  <h2><span class="sn">2</span>GROUP BY: uma resposta por grupo</h2>
+  <p class="gancho">A mesma função, aplicada a cada subgrupo.</p>
+  <p>O <code>GROUP BY</code> divide as linhas em grupos pelo valor de uma coluna e aplica a agregação <b>a cada grupo</b>. Veja quantas pessoas há em cada projeto (a barra mostra o tamanho):</p>
+  <div class="demo" data-demo="sql" data-db="alpha" data-bar="1" data-titulo="Funcionários por projeto"><pre class="q">SELECT idProjeto, COUNT(1) AS QtdProgramadores
+FROM ProjetoFuncionario
+GROUP BY idProjeto;</pre></div>
+  <p>São 10 grupos (um por projeto). A regra que o SQL impõe (complemento, não dada em aula): toda coluna do <code>SELECT</code> que <b>não</b> está dentro de uma função de agregação tem de estar no <code>GROUP BY</code>. (Um detalhe: o <code>COUNT(1)</code> do slide conta linhas, igual a <code>COUNT(*)</code>.)</p>
+  <h3>O alias AS</h3>
+  <p><code>AS</code> dá um nome legível à coluna do resultado (<code>AS QtdProgramadores</code>). Não muda nada nos dados, só o cabeçalho. Útil em relatórios, e necessário para ordenar por uma conta.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Agora só quero os projetos com mais de um funcionário. Posso filtrar com WHERE?</div><p>Não, e a razão é a ordem em que o SQL executa as cláusulas.</p></div>
+</section>
+
+<section class="sec" id="having">
+  <h2><span class="sn">3</span>HAVING: filtrar grupos (e a ordem de execução)</h2>
+  <p class="gancho">WHERE olha linhas. HAVING olha grupos.</p>
+  <p>O <code>WHERE</code> roda <b>antes</b> do agrupamento, então não enxerga o resultado de um <code>COUNT</code>. Para filtrar pelo valor agregado, use <code>HAVING</code>:</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="9" data-titulo="Projetos com mais de um funcionário"><pre class="q">SELECT idProjeto, COUNT(1) AS qtd
+FROM ProjetoFuncionario
+GROUP BY idProjeto
+HAVING COUNT(1) &gt; 1;</pre></div>
+  <p>Dos 10 projetos, 9 passam (o projeto 10 tem uma pessoa só). Isso sugere uma imagem para guardar: a <b>ordem lógica</b> em que o SQL processa um comando é diferente da ordem em que você o escreve.</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. FROM</b><p>Escolhe a tabela (ou junta várias, no Capítulo 6).</p></div>
+      <div class="st"><b>2. WHERE</b><p>Filtra <b>linhas</b>. Ainda não existem grupos nem agregações.</p></div>
+      <div class="st"><b>3. GROUP BY</b><p>Forma os grupos com as linhas que sobraram.</p></div>
+      <div class="st"><b>4. HAVING</b><p>Filtra <b>grupos</b>, agora que as agregações existem.</p></div>
+      <div class="st"><b>5. SELECT</b><p>Calcula as colunas do resultado (e os aliases).</p></div>
+      <div class="st"><b>6. ORDER BY e LIMIT</b><p>Ordena e corta. Por isso o ORDER BY consegue usar um alias do SELECT, e o WHERE não consegue.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Lembra (complemento)</span>Esta ordem lógica explica três erros clássicos: usar um alias no <code>WHERE</code> (ele ainda não existe), usar <code>COUNT()</code> no <code>WHERE</code> (ainda não há grupos) e filtrar por <code>HAVING</code> algo que caberia num <code>WHERE</code> (funciona, mas processa mais linhas do que precisava).</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">As respostas às três perguntas do gestor estão a um passo.</div><p>Vamos fechar o cenário, e ver de onde vem o problema do próximo capítulo.</p></div>
+</section>
+
+<section class="sec" id="cenario">
+  <h2><span class="sn">4</span>Respondendo ao gestor</h2>
+  <p class="gancho">Três perguntas, três consultas.</p>
+  <div class="grid3">
+    <div class="card rv"><b>1. Quantos por projeto?</b><p><code>GROUP BY idProjeto</code> com <code>COUNT</code>. (Acima.)</p></div>
+    <div class="card rv"><b>2. Média de horas?</b><p><code>AVG(horas)</code> da tabela toda: cerca de <b>6,33</b> horas.</p></div>
+    <div class="card rv"><b>3. Qual projeto aloca mais?</b><p>Ordene a contagem em ordem decrescente. Empate no topo: <b>AlphaBI</b> e <b>NeuralNet</b>, com 3 pessoas cada.</p></div>
+  </div>
+  <p>A terceira consulta mostra um problema. Para responder com <b>nomes</b> de projeto (e não ids) precisamos trazer a coluna <code>nome</code>, que mora em outra tabela. Aqui vai uma prévia de como isso se resolve, com um <code>JOIN</code> (o assunto do próximo capítulo). Em qual projeto se somam mais horas?</p>
+<div class="demo" data-demo="sql" data-db="alpha" data-expect="3" data-titulo="Top 3 projetos por horas somadas"><pre class="q">SELECT p.nome, SUM(pf.horas) AS total_horas
+FROM ProjetoFuncionario pf
+JOIN Projeto p ON p.idProjeto = pf.idProjeto
+GROUP BY p.nome
+ORDER BY total_horas DESC
+LIMIT 3;</pre></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Agregações</b> resumem muitas linhas em um valor: MIN, MAX, AVG, SUM, COUNT.</li><li><code>COUNT(*)</code> conta linhas; <code>COUNT(col)</code> ignora NULL; <code>COUNT(DISTINCT col)</code> conta valores únicos.</li><li><b>GROUP BY</b> faz uma agregação por grupo. Colunas fora da agregação devem estar no GROUP BY.</li><li><b>WHERE</b> filtra linhas (antes do agrupamento); <b>HAVING</b> filtra grupos (depois).</li><li>Ordem lógica: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.</li><li><b>AS</b> dá nome legível à coluna do resultado.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">COUNT(*) dá 21 e COUNT(DISTINCT idFuncionario) dá 20 na tabela de alocações. Por quê?</p>
+    <div class="opts"><button data-k="a">Porque um funcionário tem NULL no id.</button><button data-k="b">Porque há um funcionário alocado em dois projetos, então ele aparece em duas linhas.</button><button data-k="c">Porque o DISTINCT remove linhas ao acaso.</button></div>
+    <div class="fb">COUNT(*) conta as alocações (linhas). COUNT(DISTINCT) conta pessoas. O Carlos está em dois projetos.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Quero projetos com mais de 5 pessoas. Onde ponho a condição?</p>
+    <div class="opts"><button data-k="a">No WHERE, porque filtra.</button><button data-k="b">No SELECT.</button><button data-k="c">No HAVING, porque depende de uma agregação (COUNT).</button></div>
+    <div class="fb">O WHERE roda antes do agrupamento e não enxerga o COUNT. A condição sobre o valor agregado vai no HAVING.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O que acontece com o NULL em AVG(horas)?</p>
+    <div class="opts"><button data-k="a">Ele é ignorado: a média considera só os valores preenchidos.</button><button data-k="b">Ele vira zero e puxa a média para baixo.</button><button data-k="c">A consulta dá erro.</button></div>
+    <div class="fb">As funções de agregação ignoram NULL (exceto COUNT(*)). Se quiser tratar NULL como zero, use COALESCE(horas, 0).</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>WHERE x HAVING?</b></span><span class="bk">WHERE filtra linhas antes do agrupamento. HAVING filtra grupos depois, e pode usar agregações.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o AS?</b></span><span class="bk">Dá um nome (alias) à coluna ou à tabela no resultado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>COUNT(*) x COUNT(col)?</b></span><span class="bk">COUNT(*) conta linhas. COUNT(col) conta só as com valor não nulo.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Ordem lógica do SQL?</b></span><span class="bk">FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY, LIMIT.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">Os resumos estão por id. E se o nome do projeto mora em outra tabela?</div><p>Então precisamos juntar tabelas. É o assunto dos JOINs.</p></div>
+</section>
+
+</article>
+</body>
+</html>

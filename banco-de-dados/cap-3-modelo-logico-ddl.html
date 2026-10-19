@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: Modelo lógico e DDL | Apostila de Bancos de Dados e SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="bases.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Aula 3</div>
+  <h1>Modelo lógico e DDL</h1>
+  <p class="sub">Transformar o desenho em tabelas, com tipos, chaves e regras que o próprio banco faz valer.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 2 você desenhou a startup alpha: funcionário e projeto em N:N, projeto ligado a um único programa. Mas era um desenho. Falta transformar isso em <b>tabelas com tipos de dados, chaves e regras</b> que o banco faça valer sozinho. É o modelo lógico e a DDL.</div>
+
+<section class="sec" id="cenario">
+  <h2><span class="sn">1</span>Três problemas concretos</h2>
+  <p class="gancho">Desenhar é fácil. Impedir que alguém grave lixo é outra história.</p>
+  <p>A alpha precisa alocar funcionários em projetos e pagar por hora trabalhada. Isso levanta três perguntas que toda modelagem lógica responde:</p>
+  <ol>
+    <li><b>Que tipo de dado</b> cada campo deve ter (data, número, texto)?</li>
+    <li><b>Como garantir</b> que ninguém insira dado inválido (funcionário sem CPF, projeto sem data)?</li>
+    <li><b>Como criar</b> de fato as tabelas?</li>
+  </ol>
+  <p>A grande ideia da aula: <mark class="hl">as regras de negócio podem morar no próprio banco</mark>, e não só na aplicação. Assim nenhum programa, nem um script mal escrito, nem um acesso direto consegue burlá-las.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quais são essas regras que o banco sabe impor?</div><p>As restrições (constraints), e duas chaves que sustentam o relacionamento entre tabelas.</p></div>
+</section>
+
+<section class="sec" id="chaves">
+  <h2><span class="sn">2</span>Chaves e restrições</h2>
+  <p class="gancho">PK, FK e cinco regras que cabem numa linha cada.</p>
+  <div class="grid2">
+    <div class="card rv"><b>Chave primária (PK)</b><p>Identifica <b>unicamente</b> cada registro da própria tabela. Só existe uma por tabela, mas pode ser <b>composta</b> por mais de uma coluna, como <code>PRIMARY KEY (idProjeto, idFuncionario)</code> na tabela associativa.</p></div>
+    <div class="card rv"><b>Chave estrangeira (FK)</b><p>É uma coluna que <b>referencia a PK de outra tabela</b>. É o mecanismo do relacionamento: impede, por exemplo, uma alocação para um projeto que não existe. Isso se chama <b>integridade referencial</b>.</p></div>
+  </div>
+  <div class="tablewrap"><table>
+    <tr><th>Restrição</th><th>Resolve o problema de...</th><th>Exemplo</th></tr>
+    <tr><td><code>NOT NULL</code></td><td>campo obrigatório ficar vazio</td><td><code>nome VARCHAR(50) NOT NULL</code></td></tr>
+    <tr><td><code>DEFAULT</code></td><td>ter um valor sensato quando nada é informado</td><td><code>pais VARCHAR(30) DEFAULT 'Brasil'</code></td></tr>
+    <tr><td><code>UNIQUE</code></td><td>duplicidade (dois clientes com o mesmo CPF)</td><td><code>CPF CHAR(11) UNIQUE</code></td></tr>
+    <tr><td><code>CHECK</code></td><td>limitar o intervalo aceitável</td><td><code>CHECK (idade &gt;= 18)</code></td></tr>
+    <tr><td><code>AUTO_INCREMENT</code></td><td>gerar identificadores sem controle manual</td><td><code>idFuncionario INT AUTO_INCREMENT</code></td></tr>
+  </table></div>
+  <p>Teste as regras de verdade. Rode o script, depois tente quebrar cada uma: repita o <code>INSERT</code> com o mesmo CPF, ponha <code>idade</code> 15, ou deixe o CPF de fora.</p>
+<div class="demo" data-demo="sql" data-db="vazia" data-titulo="Restrições em ação"><pre class="q">CREATE TABLE cliente (
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  cpf   CHAR(11) NOT NULL UNIQUE,
+  idade INT CHECK (idade &gt;= 18),
+  pais  VARCHAR(30) DEFAULT 'Brasil'
+);
+INSERT INTO cliente (cpf, idade) VALUES ('11111111111', 30);
+SELECT * FROM cliente;</pre></div>
+  <div class="nota cuidado"><span class="lbl">Cuidado: SQLite x MySQL</span>O navegador roda <b>SQLite</b>. Nele a chave automática se escreve <code>INTEGER PRIMARY KEY AUTOINCREMENT</code>; no MySQL, <code>INT NOT NULL AUTO_INCREMENT</code>. O resto (NOT NULL, UNIQUE, CHECK, DEFAULT, FOREIGN KEY) é igual. No MySQL, o <code>CHECK</code> só passou a ser realmente aplicado a partir da versão 8.0.16.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E os tipos de dados? Qual escolher para cada coluna?</div><p>A escolha muda o espaço usado e o que o banco aceita.</p></div>
+</section>
+
+<section class="sec" id="tipos">
+  <h2><span class="sn">3</span>Tipos de dados</h2>
+  <p class="gancho">Tudo cabe em texto. Por que não usar só VARCHAR?</p>
+  <p>Porque o tipo define <b>quanto espaço</b> o dado usa e <b>que operações</b> fazem sentido (somar datas, comparar números). No MySQL, os principais:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Grupo</th><th>Tipos</th><th>Observação</th></tr>
+    <tr><td><b>Inteiros</b></td><td><code>TINYINT</code> (1 byte), <code>SMALLINT</code> (2), <code>MEDIUMINT</code> (3), <code>INT</code> (4), <code>BIGINT</code> (8)</td><td><code>TINYINT</code> vai de -128 a 127 (ou 0 a 255 sem sinal). Por isso <code>horas</code> na alpha é <code>tinyint</code>: cabe de sobra.</td></tr>
+    <tr><td><b>Decimais</b></td><td><code>FLOAT</code>, <code>DECIMAL</code>, <code>NUMERIC</code></td><td><code>DECIMAL(10,2)</code> é o padrão para dinheiro (exato, sem erro de arredondamento binário).</td></tr>
+    <tr><td><b>Data e hora</b></td><td><code>DATE</code>, <code>TIME</code>, <code>DATETIME</code>, <code>TIMESTAMP</code>, <code>YEAR</code></td><td>No MySQL 8 o modo padrão recusa datas "zeradas" como <code>0000-00-00</code>.</td></tr>
+    <tr><td><b>Texto</b></td><td><code>CHAR(n)</code>, <code>VARCHAR(n)</code>, <code>TEXT</code></td><td>Veja a comparação abaixo.</td></tr>
+  </table></div>
+  <h3>CHAR x VARCHAR</h3>
+  <p><code>CHAR(4)</code> sempre ocupa 4 bytes (completa com espaços). <code>VARCHAR(4)</code> ocupa o tamanho do texto <b>mais 1 byte</b>. Por isso <code>VARCHAR</code> é melhor para textos de tamanho variável, e <code>CHAR</code> para valores de tamanho fixo (CPF de 11 dígitos, sigla de estado).</p>
+  <div class="tablewrap"><table>
+    <tr><th>Valor</th><th class="n">CHAR(4)</th><th class="n">VARCHAR(4)</th></tr>
+    <tr><td><code>''</code> (vazio)</td><td class="n">4 bytes</td><td class="n">1 byte</td></tr>
+    <tr><td><code>'ab'</code></td><td class="n">4 bytes</td><td class="n">3 bytes</td></tr>
+    <tr><td><code>'abcd'</code></td><td class="n">4 bytes</td><td class="n">5 bytes</td></tr>
+  </table></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Com tipos e regras na cabeça, como se escreve a tabela inteira?</div><p>Com <code>CREATE</code>, e depois <code>ALTER</code> quando a estrutura precisar mudar.</p></div>
+</section>
+
+<section class="sec" id="ddl">
+  <h2><span class="sn">4</span>DDL: criar e alterar a estrutura</h2>
+  <p class="gancho">DDL define a estrutura. DML mexe nos dados. Não confunda.</p>
+  <div class="grid2">
+    <div class="card rv"><b>DDL</b> (Data Definition Language)<p>Define a <b>estrutura</b>: <code>CREATE</code>, <code>ALTER</code>, <code>DROP</code>. Usada uma vez, ou quando a estrutura muda.</p></div>
+    <div class="card rv"><b>DML</b> (Data Manipulation Language)<p>Manipula os <b>dados dentro</b> da estrutura: <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>SELECT</code>. É o que você usa o tempo todo. (Capítulo 4.)</p></div>
+  </div>
+  <p>Este é o DDL da alpha, a versão corrigida do que o slide mostra. A tabela do meio é a associativa do N:N, com PK composta e duas FKs:</p>
+<div class="demo" data-demo="sql" data-db="vazia" data-expect="3" data-titulo="Criando as três tabelas"><pre class="q">CREATE TABLE Projeto (
+  idProjeto INTEGER PRIMARY KEY AUTOINCREMENT,
+  sigla     VARCHAR(10) NOT NULL,
+  dtInicio  DATE,
+  dtTermino DATE
+);
+CREATE TABLE Funcionario (
+  idFuncionario INTEGER PRIMARY KEY AUTOINCREMENT,
+  CPF           VARCHAR(11) NOT NULL UNIQUE,
+  nome          VARCHAR(50) NOT NULL,
+  sobrenome     VARCHAR(50) NOT NULL,
+  email         VARCHAR(50),
+  habilidades   TEXT
+);
+CREATE TABLE ProjetoFuncionario (
+  idProjeto     INT NOT NULL,
+  idFuncionario INT NOT NULL,
+  horas         INT,
+  dtInicio      DATE,
+  dtTermino     DATE,
+  ativo         INT,
+  PRIMARY KEY (idProjeto, idFuncionario),
+  FOREIGN KEY (idProjeto)     REFERENCES Projeto(idProjeto),
+  FOREIGN KEY (idFuncionario) REFERENCES Funcionario(idFuncionario)
+);
+SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';</pre></div>
+  <div class="tablewrap"><table>
+    <tr><th>Em MySQL</th><th>Para quê</th><th>No navegador (SQLite)</th></tr>
+    <tr><td><code>CREATE DATABASE alpha;</code> e <code>USE alpha;</code></td><td>criar e escolher a base (<code>SCHEMA</code> é sinônimo de <code>DATABASE</code>)</td><td>não existe: cada base é um arquivo</td></tr>
+    <tr><td><code>SHOW TABLES;</code></td><td>listar as tabelas</td><td><code>SELECT name FROM sqlite_master WHERE type='table';</code></td></tr>
+    <tr><td><code>DESC Projeto;</code></td><td>mostrar as colunas de <b>uma</b> tabela</td><td><code>PRAGMA table_info(Projeto);</code></td></tr>
+    <tr><td><code>ALTER TABLE T ADD coluna ...;</code></td><td>acrescentar coluna no fim</td><td>igual</td></tr>
+    <tr><td><code>ALTER TABLE T MODIFY COLUMN c ...;</code></td><td>mudar o tipo de uma coluna</td><td>não existe no SQLite</td></tr>
+    <tr><td><code>ALTER TABLE T DROP COLUMN c;</code></td><td>remover coluna (e os dados dela)</td><td>igual (a partir da versão 3.35)</td></tr>
+  </table></div>
+
+  <h3>Integridade referencial na prática</h3>
+  <p>Agora uma base com as FKs declaradas. Tente apagar um projeto que tem alocações, e depois alocar alguém que não existe:</p>
+<div class="demo" data-demo="sql" data-db="alpha_fk" data-titulo="FK bloqueando um DELETE"><pre class="q">-- 1) apagar um projeto que tem alocações
+DELETE FROM Projeto WHERE idProjeto = 3;</pre></div><div class="demo" data-demo="sql" data-db="alpha_fk" data-titulo="FK bloqueando um INSERT"><pre class="q">-- 2) alocar um funcionário que não existe
+INSERT INTO ProjetoFuncionario (idFuncionario, idProjeto, ativo, horas) VALUES (999, 1, 1, 4);</pre></div>
+  <p>No MySQL as mensagens são <code>ERROR 1451</code> (não dá para apagar a linha-pai) e <code>ERROR 1452</code> (a linha-pai não existe). O banco defendeu a consistência sem você escrever uma linha de validação.</p>
+
+  <h3>As pegadinhas do slide (para você não cair)</h3>
+  <div class="tablewrap"><table>
+    <tr><th>No slide</th><th>O problema</th><th>O certo</th></tr>
+    <tr><td><code>idFuncionario NOT NULL,</code></td><td>faltou o tipo: dá erro de sintaxe</td><td><code>idFuncionario INT NOT NULL,</code></td></tr>
+    <tr><td><code>CREATE SCHEMA ALPHA AUTHORIZATION 'JSilva';</code></td><td><code>AUTHORIZATION</code> é do SQL padrão e do SQL Server, e não existe no MySQL</td><td><code>CREATE DATABASE ALPHA;</code></td></tr>
+    <tr><td><code>dtFim</code> num slide e <code>dtTermino</code> em outro</td><td>a mesma tabela com colunas diferentes</td><td>fique com <code>dtTermino</code>, como o resto do material</td></tr>
+    <tr><td>tabela <code>Funcionario</code> sem <code>sobrenome</code></td><td>os <code>INSERT</code> da aula seguinte usam <code>sobrenome</code> e dão erro de coluna desconhecida</td><td><code>ALTER TABLE Funcionario ADD sobrenome VARCHAR(50) NOT NULL;</code></td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">Complemento: CHECK ou TRIGGER?</span>As duas impõem regras, mas de jeitos diferentes. O <b>CHECK</b> é declarativo e olha só a própria linha ("idade &gt;= 18"). Já o <b>trigger</b> (Capítulo 7) é imperativo: pode consultar outras tabelas e ter efeitos colaterais, mas é mais difícil de manter. A regra prática: use CHECK quando der, e trigger só quando o CHECK não alcançar.</div>
+  <div class="nota cuidado"><span class="lbl">Complemento: AUTO_INCREMENT exposto</span>Usar o número sequencial como identificador visível numa API (<code>/cliente/17</code>) deixa o sistema previsível: quem vê o 17 tenta o 18, e se faltar checagem de permissão acessa dados alheios. Em APIs públicas se costuma expor um identificador aleatório (como UUID) e guardar o sequencial só por dentro.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Modelo lógico</b> define como os dados são guardados: tabelas, tipos, chaves e relacionamentos.</li><li><b>PK</b> identifica a linha (pode ser composta). <b>FK</b> referencia a PK de outra tabela e garante a integridade referencial.</li><li><b>Restrições:</b> NOT NULL, DEFAULT, UNIQUE, CHECK e AUTO_INCREMENT. Regras no banco ninguém burla.</li><li><b>DDL</b> = estrutura (CREATE, ALTER, DROP). <b>DML</b> = dados (INSERT, UPDATE, DELETE, SELECT).</li><li><b>CHAR</b> tem tamanho fixo; <b>VARCHAR</b> ocupa o tamanho do texto mais 1 byte.</li><li>N:N vira <b>tabela associativa</b> com PK composta e duas FKs.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Para que serve uma chave estrangeira?</p>
+    <div class="opts"><button data-k="a">Para deixar a consulta mais rápida, apenas.</button><button data-k="b">Para identificar unicamente a linha da própria tabela.</button><button data-k="c">Para referenciar a PK de outra tabela e impedir ligações com linhas inexistentes.</button></div>
+    <div class="fb">A identificação única é papel da PK. A FK cria o relacionamento e protege a integridade referencial (as mensagens 1451 e 1452 do MySQL).</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Por que a PK da tabela ProjetoFuncionario é composta por (idProjeto, idFuncionario)?</p>
+    <div class="opts"><button data-k="a">Porque cada par funcionário-projeto deve aparecer uma só vez, mesmo que cada id se repita em outras linhas.</button><button data-k="b">Porque o MySQL não aceita PK simples em tabela associativa.</button><button data-k="c">Para economizar espaço em disco.</button></div>
+    <div class="fb">Um funcionário está em vários projetos e um projeto tem vários funcionários, então nenhum id sozinho é único. O par é.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Qual comando é DDL?</p>
+    <div class="opts"><button data-k="a">UPDATE Funcionario SET nome = 'Ana';</button><button data-k="b">ALTER TABLE Funcionario ADD sobrenome VARCHAR(50);</button><button data-k="c">INSERT INTO Funcionario VALUES (...);</button></div>
+    <div class="fb">ALTER muda a estrutura (DDL). UPDATE e INSERT manipulam os dados (DML).</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que pôr regra no banco?</b></span><span class="bk">Porque nenhuma aplicação ou script consegue burlar uma regra que o próprio banco impõe.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>CHAR(4) x VARCHAR(4)?</b></span><span class="bk">CHAR sempre ocupa 4 bytes. VARCHAR ocupa o tamanho do texto mais 1 byte.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é tabela associativa?</b></span><span class="bk">A tabela do meio de um N:N: PK composta pelas duas chaves e, se preciso, dados do relacionamento.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>DDL x DML?</b></span><span class="bk">DDL cria e altera a estrutura. DML lê e altera os dados dentro dela.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">As tabelas existem, mas estão vazias. Como coloco, procuro e mudo os dados?</div><p>Com a DML: INSERT, SELECT, UPDATE e DELETE, o CRUD inteiro.</p></div>
+</section>
+
+</article>
+</body>
+</html>
