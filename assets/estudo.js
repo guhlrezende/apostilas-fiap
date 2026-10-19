@@ -172,6 +172,15 @@
         '<p class="muted" style="font-size:.8rem;margin-top:8px">' + c.aula + (c.tempo ? " · ~" + c.tempo + " min" : "") + '</p></a>';
     }).join("");
   }
+
+  function buildThread() {
+    var host = $("#thread"), A = window.APOSTILA; if (!host || !A) return;
+    host.innerHTML = A.caps.map(function (c, i) {
+      var last = i === A.caps.length - 1;
+      return '<div class="nd rv" data-n="' + c.n + '"><a href="' + (c.file || "#") + '">' + c.titulo + '</a><div class="ask">' + (c.pergunta || (last ? "Pronto: você chegou ao fim." : "")) + '</div></div>';
+    }).join("");
+  }
+
   function buildRoot() {
     var host = $("#apostilas"); if (!host || !window.APOSTILAS) return;
     host.innerHTML = window.APOSTILAS.map(function (a) {
@@ -236,6 +245,7 @@
   function initGlossary() { $$("abbr.gl").forEach(function (a) { a.tabIndex = 0; a.addEventListener("click", function () { a.classList.toggle("open"); }); a.addEventListener("blur", function () { a.classList.remove("open"); }); }); }
   function initCode() {
     $$("pre").forEach(function (p) {
+      if (p.classList.contains("q") || p.closest("[data-demo]")) return;
       var b = document.createElement("button"); b.className = "copy"; b.type = "button"; b.textContent = "copiar";
       b.addEventListener("click", function () {
         var t = p.innerText.replace(/copiar$|copiado!$/, "").trimEnd();
@@ -286,6 +296,46 @@
     });
   };
 
+
+  /* ---- rastreador de código: linhas, variáveis e saída passo a passo ----
+     <div class="demo" data-demo="trace"><script type="application/json">
+       {"titulo":"...","code":["x = 5","print(x)"],"steps":[{"l":0,"v":{"x":5},"o":"","n":"nota"}, ...]}
+     </script></div>   (l = índice da linha em destaque; v = variáveis; o = saída acumulada; n = explicação) */
+  /* mostra valores do trace como o Python os mostraria (True, None, 'texto', 150.0) */
+  function pyRepr(v) {
+    if (v === null || v === undefined) return "None";
+    if (v === true) return "True";
+    if (v === false) return "False";
+    if (typeof v === "string") return "'" + v.replace(/'/g, "\'") + "'";
+    if (typeof v === "number") return String(v);
+    if (Array.isArray(v)) return "[" + v.map(pyRepr).join(", ") + "]";
+    if (typeof v === "object") { if ("__py" in v) return v.__py; return "{" + Object.keys(v).map(function (k) { return pyRepr(k) + ": " + pyRepr(v[k]); }).join(", ") + "}"; }
+    return String(v);
+  }
+  Estudo.demos.trace = function (el) {
+    var sc = el.querySelector('script[type="application/json"]'), D = JSON.parse(sc.textContent), i = 0, timer = 0;
+    function esc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    el.innerHTML = '<h4>' + esc(D.titulo || "Passo a passo") + '</h4><div class="trc"><div><pre class="trc-code"></pre></div><div><div class="trc-vars"></div><div class="trc-out"></div></div></div><div class="read trc-n"></div>' +
+      '<div class="ctrls"><button class="btn sm" type="button" data-t="prev">← Passo</button><button class="btn sm pri" type="button" data-t="next">Passo →</button><button class="btn sm" type="button" data-t="play">▶ Reproduzir</button><button class="btn sm" type="button" data-t="reset">↺</button><span class="muted trc-c"></span></div>';
+    var code = el.querySelector(".trc-code"), vars = el.querySelector(".trc-vars"), out = el.querySelector(".trc-out"), note = el.querySelector(".trc-n"), cnt = el.querySelector(".trc-c");
+    function render() {
+      var st = D.steps[i], prev = i ? D.steps[i - 1].v || {} : {};
+      code.innerHTML = D.code.map(function (ln, k) { return '<span class="ln' + (k === st.l ? " on" : "") + '"><i>' + (k + 1) + '</i>' + esc(ln) + '</span>'; }).join("");
+      var names = Object.keys(st.v || {});
+      vars.innerHTML = names.length ? '<table><tr><th>variável</th><th>valor</th></tr>' + names.map(function (k) { var ch = JSON.stringify(prev[k]) !== JSON.stringify(st.v[k]); return '<tr class="' + (ch ? "dest" : "") + '"><td><code>' + esc(k) + '</code></td><td>' + esc(pyRepr(st.v[k])) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted" style="margin:0">Nenhuma variável ainda.</p>';
+      out.innerHTML = st.o ? '<b>Saída</b><pre>' + esc(st.o) + '</pre>' : "";
+      note.innerHTML = st.n || "&nbsp;"; cnt.textContent = "passo " + (i + 1) + " de " + D.steps.length;
+      var on = code.querySelector(".on"); if (on && on.scrollIntoView && false) on.scrollIntoView({ block: "nearest" });
+    }
+    function go(n) { i = Math.max(0, Math.min(D.steps.length - 1, n)); render(); }
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-t]"); if (!b) return; var a = b.getAttribute("data-t");
+      if (a === "prev") go(i - 1); if (a === "next") go(i + 1); if (a === "reset") { clearInterval(timer); go(0); }
+      if (a === "play") { clearInterval(timer); go(0); timer = setInterval(function () { if (i >= D.steps.length - 1) { clearInterval(timer); return; } go(i + 1); }, 1300); }
+    });
+    render();
+  };
+
   /* ---- lista de verificação que lembra o que você marcou (data-demo=checks) ---- */
   Estudo.demos.checks = function (el) {
     var key = "estudo:checks:" + location.pathname + ":" + (el.getAttribute("data-key") || "x"), saved = store.get(key, {}), boxes = $$("input[type=checkbox]", el), out = $(".chk-n", el);
@@ -295,7 +345,7 @@
   };
 
   document.addEventListener("DOMContentLoaded", function () {
-    buildShell(); buildHub(); buildRoot();
+    buildShell(); buildHub(); buildThread(); buildRoot();
     initCode(); initQuiz(); initFlash(); initStepper(); initGlossary(); initTransitions(); initReveal();
     document.dispatchEvent(new Event("estudo:ready"));
     initDemos();

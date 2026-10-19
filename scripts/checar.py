@@ -24,8 +24,15 @@ PROIBIDOS = [
     (r"André\s+de\s+De" + r"us", "nome de professor"),
     (r"[\w.+-]+@[\w-]+\.[\w.]+", "e-mail"),
     (r"\u2014", "travessão"),
+    (r"Sem\s+Par" + r"ar", "empresa parceira"),
+    (r"Fleet" + r"Force", "grupo do Challenge"),
+    (r"Flex" + r"media", "empresa de exemplo da aula"),
+    (r"Net" + r"Guard", "trabalho da faculdade"),
+    (r"Vac" + r"cine\s+Sense", "trabalho em aberto"),
+    (r"jogo\s+da\s+vel" + r"ha", "trabalho em aberto"),
 ]
 
+DOMINIOS_FICTICIOS = ("@empresa.com", "@exemplo.com", "@email.com", "@example.com")
 EXT_TEXTO = (".html", ".js", ".css", ".md", ".py", ".json", ".txt")
 IGNORAR = (os.sep + ".git" + os.sep, "ml-data.js")
 
@@ -45,7 +52,10 @@ for p in todos:
     s = ler(p)
     rel = os.path.relpath(p, RAIZ)
     for pad, nome in PROIBIDOS:
-        if re.search(pad, s):
+        achou = [m for m in re.finditer(pad, s)]
+        if nome == "e-mail":  # e-mails fictícios de exemplo são permitidos
+            achou = [m for m in achou if not m.group(0).lower().endswith(DOMINIOS_FICTICIOS)]
+        if achou:
             erros.append(f"{rel}: contém {nome}")
 
 # 2) demos registradas (e sem registro duplicado)

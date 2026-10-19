@@ -7,3 +7,4 @@ __pycache__/
 .env.*
 CLAUDE.local.md
 .claude/settings.local.json
+Rplots.pdf
