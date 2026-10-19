@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Lambda: código sob demanda | Apostila de Cloud e AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cloud.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Aula 6</div>
+  <h1>Lambda: código sob demanda</h1>
+  <p class="sub">Executar código sem servidor e ligar S3, Lambda e RDS num fluxo completo.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">fluxo S3 → Lambda → banco</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Até aqui cada serviço apareceu sozinho: EC2 (máquina), S3 (arquivos), RDS (banco). A startup agora quer somar as <b>horas de cada funcionário em cada projeto</b>, e todo mês chega um arquivo atualizado para ser processado e inserido no banco. Dois problemas: como <b>processar arquivos</b>, e como <b>executar código</b> na nuvem sem manter um servidor ligado esperando.</div>
+<section class="sec" id="lambda">
+  <h2><span class="sn">1</span>Lambda: código que só existe quando roda</h2>
+  <p class="gancho">Para um arquivo que chega uma vez por mês, ter uma máquina ligada é desperdício.</p>
+  <p>A <b>AWS Lambda</b> executa código <b>sob demanda, sem gerenciar servidor</b> (<i>serverless</i>). Você sobe só o código, a AWS o roda quando algo o aciona e cobra <b>por execução</b>, considerando duração e memória usada. Linguagens: Python, Node.js, Java, Go, .NET, Ruby. Usos citados: <b>ETL</b> (extrair, transformar, carregar), integração com APIs e com mensageria.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Característica</th><th>Valor citado na aula</th></tr>
+    <tr><td>Cobrança</td><td>por chamada, conforme duração e memória ("pay per use")</td></tr>
+    <tr><td>Nível gratuito</td><td>1 milhão de solicitações por mês</td></tr>
+    <tr><td>Tempo limite</td><td><b>15 minutos</b> por execução</td></tr>
+    <tr><td>Execuções simultâneas</td><td>até 1000 (o limite padrão pode ser menor em contas novas)</td></tr>
+    <tr><td>Pacote de implantação</td><td>até 250 MB descompactado</td></tr>
+    <tr><td>Memória máxima</td><td>3008 MB no slide</td></tr>
+  </table></div>
+  <div class="nota cuidado"><span class="lbl">Complemento: limites mudam</span>Os números do slide são de uma época anterior. Hoje a documentação da AWS permite memórias maiores (até cerca de 10 GB), por exemplo. O <b>tempo limite de 15 minutos</b> segue válido e é o que define o tipo de trabalho adequado: tarefas curtas e pontuais, e não processos longos. Confira sempre a documentação atual.</div>
+  <p>Compare com a EC2: ela cobra enquanto está ligada, mesmo esperando. A Lambda cobra <b>só quando roda</b>. Para um arquivo mensal, a diferença é enorme.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quem avisa a função de que o arquivo chegou?</div><p>O próprio S3, por um gatilho.</p></div>
+</section>
+
+<section class="sec" id="fluxo">
+  <h2><span class="sn">2</span>O fluxo completo: S3, gatilho, Lambda, RDS</h2>
+  <p class="gancho">Quatro serviços, um fluxo.</p>
+<pre><code>CSV  →  S3  <span class="c">--(gatilho)--&gt;</span>  Lambda  <span class="c">--(INSERT INTO)--&gt;</span>  RDS</code></pre>
+  <p>O laboratório, em ordem: <b>(1)</b> criar o bucket; <b>(2)</b> criar o MySQL no RDS e anotar o endpoint; <b>(3)</b> criar a tabela; <b>(4)</b> criar a função Lambda (runtime Python) com um <b>perfil de execução</b> (a role do laboratório); <b>(5)</b> subir o código empacotado; <b>(6)</b> criar o <b>gatilho do S3</b>; <b>(7)</b> subir o CSV no bucket; <b>(8)</b> ver o log no <b>CloudWatch</b>; <b>(9)</b> consultar o RDS. Faça você o passo 7: o banco abaixo é de verdade, e a tabela tem a mesma chave primária composta do laboratório.</p>
+  <div class="demo" data-demo="lambdalab"></div>
+  <div class="ex rv"><span class="t">O que você acabou de ver</span>
+    <div class="l"><div>A <b>chave primária</b> é (<code>idProjeto</code>, <code>idFuncionario</code>): o funcionário 1 pode estar em dois projetos, mas o <b>mesmo par</b> não pode aparecer duas vezes.</div></div>
+    <div class="l"><div>Na <b>segunda</b> subida do mesmo CSV, todas as linhas violam a chave primária. O código faz <code>rollback</code>: <b>ou entram todas, ou nenhuma</b>.</div></div>
+    <div class="l"><div>O erro apareceria no <b>CloudWatch</b>, onde tudo o que a função imprime (<code>print</code>) vira log.</div></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E o código por dentro? Como a função sabe o que fazer?</div><p>Passo a passo.</p></div>
+</section>
+
+<section class="sec" id="codigo">
+  <h2><span class="sn">3</span>O código, por dentro</h2>
+  <p class="gancho">Ler o arquivo, quebrar em linhas, inserir, confirmar.</p>
+<pre><code><span class="k">import</span> boto3, pymysql
+<span class="c"># versão resumida: troque pelos valores do seu laboratório</span>
+bucket, arquivo = <span class="s">"meu-bucket"</span>, <span class="s">"horasalocadas.csv"</span>
+endpoint, usuario, senha, banco = <span class="s">"..."</span>, <span class="s">"..."</span>, <span class="s">"..."</span>, <span class="s">"..."</span>   <span class="c"># na prática: variáveis de ambiente</span>
+s3 = boto3.<span class="f">client</span>(<span class="s">'s3'</span>)
+
+<span class="k">def</span> <span class="f">lambda_handler</span>(event, context):      <span class="c"># o ponto de entrada que a AWS chama</span>
+    <span class="f">inserir_dados_mysql</span>()
+    <span class="k">return</span> {<span class="s">'statusCode'</span>: <span class="n">200</span>, <span class="s">'body'</span>: <span class="s">'Processamento realizado com sucesso!'</span>}
+
+<span class="k">def</span> <span class="f">ler_arquivo_csv_s3</span>():
+    response = s3.<span class="f">get_object</span>(Bucket=bucket, Key=arquivo)
+    dados = response[<span class="s">'Body'</span>].<span class="f">read</span>().<span class="f">decode</span>(<span class="s">'utf-8'</span>)
+    <span class="k">return</span> dados.<span class="f">splitlines</span>()               <span class="c"># lista de linhas do CSV</span>
+
+<span class="k">def</span> <span class="f">inserir_dados_mysql</span>():
+    linhas = <span class="f">ler_arquivo_csv_s3</span>()
+    conexao = pymysql.<span class="f">connect</span>(host=endpoint, user=usuario, passwd=senha, db=banco)
+    <span class="k">try</span>:
+        <span class="k">with</span> conexao.<span class="f">cursor</span>() <span class="k">as</span> cursor:
+            <span class="k">for</span> linha <span class="k">in</span> linhas[<span class="n">1</span>:]:               <span class="c"># [1:] pula o cabeçalho</span>
+                <span class="k">if not</span> linha.<span class="f">strip</span>(): <span class="k">continue</span>
+                p = linha.<span class="f">split</span>(<span class="s">";"</span>)               <span class="c"># este CSV usa ponto e vírgula</span>
+                cursor.<span class="f">execute</span>(<span class="s">"INSERT INTO projetoFuncionario (idProjeto, idFuncionario, horas) VALUES (%s, %s, %s)"</span>, (p[<span class="n">0</span>], p[<span class="n">1</span>], p[<span class="n">2</span>]))
+        conexao.<span class="f">commit</span>()                     <span class="c"># grava tudo de uma vez</span>
+    <span class="k">except</span> Exception:
+        conexao.<span class="f">rollback</span>()                   <span class="c"># desfaz a execução inteira</span>
+        <span class="k">raise</span>
+    <span class="k">finally</span>:
+        conexao.<span class="f">close</span>()</code></pre>
+  <ul>
+    <li><b><code>lambda_handler(event, context)</code></b> é a função que a AWS chama. O nome precisa bater com o handler configurado.</li>
+    <li><b>O código ignora o <code>event</code></b>: o bucket e o arquivo estão fixos no código. Para o seu laboratório, troque pelo seu bucket e pelo seu endpoint. (Melhor: usar o <code>event</code>, que traz o nome do bucket e do arquivo que dispararam a função.)</li>
+    <li><b><code>%s</code> com tupla</b> em vez de montar o SQL concatenando texto: o driver escapa os valores e evita SQL injection.</li>
+    <li><b><code>commit()</code> só no fim, <code>rollback()</code> no erro</b>: transação de verdade (Bancos de Dados, Capítulo 8).</li>
+    <li>O <b>pacote</b> (<code>.zip</code>) leva a pasta do <code>pymysql</code> junto: a Lambda já traz o <code>boto3</code>, mas <b>não traz o driver do MySQL</b>. (Alternativa mais limpa: <i>layers</i>.)</li>
+  </ul>
+  <div class="nota erro"><span class="lbl">Cuidado: senha no código</span>O arquivo do exemplo traz endpoint, usuário e senha escritos no próprio <code>.py</code>. Funciona no laboratório, mas em produção a senha vai para <b>variáveis de ambiente</b> da Lambda ou, melhor, para o <b>Secrets Manager</b>. Nunca no repositório.</div>
+  <div class="nota lembra"><span class="lbl">Por que a role (LabRole)</span>A Lambda precisa <b>ler o S3</b>, o que exige permissão. Em vez de uma chave de acesso no código, a função <b>assume uma role</b>. É o Capítulo 2 na prática: a role não tem senha e serve para um <b>serviço</b> ganhar permissão.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Lambda</b>: código sob demanda, sem servidor; cobra por execução. Limite de <b>15 min</b> por execução.</li><li>Fluxo do laboratório: <b>CSV → S3 → gatilho → Lambda → RDS</b>, com log no <b>CloudWatch</b>.</li><li><code>lambda_handler(event, context)</code> é o ponto de entrada. O <code>event</code> traz quem disparou.</li><li>Role de execução no lugar de chave de acesso. <b>Senha</b> em variável de ambiente ou Secrets Manager, nunca no código.</li><li>Mesmo CSV duas vezes: <b>erro de chave primária</b> e <code>rollback</code>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O que dispara a função no laboratório?</p>
+    <div class="opts"><button data-k="a">Um horário fixo.</button><button data-k="b">O upload do CSV no bucket, por meio do gatilho do S3.</button><button data-k="c">Uma chamada manual no console, sempre.</button></div>
+    <div class="fb">O gatilho do S3 avisa a Lambda quando o objeto é criado. Isso é o 'event-driven'.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Por que a função precisa de uma role?</p>
+    <div class="opts"><button data-k="a">Para ficar mais rápida.</button><button data-k="b">Para guardar a senha do banco.</button><button data-k="c">Para ter permissão de ler o S3 sem uma chave de acesso no código.</button></div>
+    <div class="fb">A role entrega credenciais temporárias ao serviço. Isso evita segredo fixo.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual o tempo máximo de uma execução da Lambda?</p>
+    <div class="opts"><button data-k="a">15 minutos.</button><button data-k="b">1 hora.</button><button data-k="c">Ilimitado.</button></div>
+    <div class="fb">Por isso a Lambda serve para tarefas curtas. Processos longos pedem outra solução.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é serverless?</b></span><span class="bk">Você não administra servidor: sobe o código e a nuvem o executa e cobra por uso.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um gatilho?</b></span><span class="bk">Uma regra que dispara a função quando um evento acontece (por exemplo, um objeto criado no S3).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Onde ver os prints da função?</b></span><span class="bk">No CloudWatch Logs.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que usar %s no INSERT?</b></span><span class="bk">Para o driver escapar os valores, evitando SQL injection.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">Os serviços funcionam juntos. Como eles se conectam por baixo, e como não gastar o que não devo?</div><p>Com a rede da AWS (VPC) e algumas boas práticas de custo.</p></div>
+</section>
+
+</article>
+</body>
+</html>

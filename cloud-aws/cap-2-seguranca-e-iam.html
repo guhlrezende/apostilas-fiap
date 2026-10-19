@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: Segurança e IAM | Apostila de Cloud e AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cloud.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Aula 2</div>
+  <h1>Segurança e IAM</h1>
+  <p class="sub">Quem protege o quê na nuvem, e como o IAM decide quem pode fazer cada coisa.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">avaliador de políticas</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 1 você viu o que é nuvem e como ela se organiza. Agora o cenário muda: você criou uma conta e precisa <b>compartilhar</b> os recursos com colegas. Quem entra? O que pode fazer? E, se algo vazar, de quem é a culpa? A segurança na nuvem começa por essas perguntas.</div>
+<section class="sec" id="compartilhada">
+  <h2><span class="sn">1</span>Responsabilidade compartilhada</h2>
+  <p class="gancho">A AWS protege o prédio. Você protege o que põe dentro.</p>
+  <p>A regra mental para decorar: a AWS cuida da segurança <b>DA</b> nuvem, e o cliente cuida da segurança <b>NA</b> nuvem.</p>
+  <div class="grid2">
+    <div class="card rv"><b style="color:var(--c0)">Responsabilidade da AWS</b><ul><li>Segurança física (acesso controlado aos data centers)</li><li>Detecção de intrusão</li><li>Isolamento entre instâncias de clientes diferentes</li><li>Hardware e virtualização</li></ul></div>
+    <div class="card rv"><b style="color:var(--c1)">Responsabilidade do cliente</b><ul><li>Patches de segurança (o SO das suas instâncias)</li><li>Gestão de contas e permissões (<b>IAM</b>)</li><li>Firewall (<i>Security Group</i>) e rede (<i>VPC</i>)</li><li>Criptografia: em trânsito (<b>TLS</b>) e em repouso (<b>KMS</b>)</li><li>Seus dados e sua aplicação</li></ul></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span><b>Achar que "está na nuvem, então a AWS protege".</b> A maioria dos vazamentos em nuvem vem de configuração do cliente (um bucket aberto, uma porta liberada para o mundo, uma senha fraca), e não de invasão aos data centers.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">A gestão de contas é do cliente. Como se faz essa gestão na AWS?</div><p>Com o IAM.</p></div>
+</section>
+
+<section class="sec" id="iam">
+  <h2><span class="sn">2</span>IAM: quem pode fazer o quê</h2>
+  <p class="gancho">Autenticação diz quem você é. Autorização diz o que você pode fazer.</p>
+  <p>O <b>IAM</b> (<i>Identity and Access Management</i>) é o serviço <b>gratuito</b> de identificação e controle de acesso. Ele define <b>quem</b> acessa, <b>quais recursos</b> e <b>como</b>. A regra fundamental é o <mark class="hl">privilégio mínimo</mark>: uma conta nova nasce <b>sem permissão nenhuma</b>, e tudo precisa ser concedido explicitamente.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Objeto</th><th>O que é</th><th>Detalhe</th></tr>
+    <tr><td><b>User</b> (usuário)</td><td>conta de uma pessoa ou aplicativo, com login e senha</td><td>identidade permanente</td></tr>
+    <tr><td><b>Group</b> (grupo)</td><td>conjunto de usuários com a mesma autorização</td><td>facilita conceder permissões (devs, infra, admins)</td></tr>
+    <tr><td><b>Policy</b> (política)</td><td>documento JSON que diz quais recursos e que nível de acesso</td><td>é o que concede ou nega de fato</td></tr>
+    <tr><td><b>Role</b> (função)</td><td>conjunto de permissões que pode ser <b>assumido</b> temporariamente</td><td><b>sem login e senha</b>; serve a usuários e a <b>serviços</b></td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">Ponto de prova</span>A diferença central entre <b>User</b> e <b>Role</b>: o User tem credenciais fixas; a Role não tem e é assumida temporariamente (por baixo, a AWS entrega credenciais que expiram). É por isso que uma função Lambda recebe uma role, e não uma chave de acesso escrita no código.</div>
+  <h3>Anatomia de uma política</h3>
+<pre><code>{
+  <span class="s">"Version"</span>: <span class="s">"2012-10-17"</span>,
+  <span class="s">"Statement"</span>: [
+    {
+      <span class="an" tabindex="0" data-t="Allow ou Deny.">"Effect"</span>: <span class="s">"Allow"</span>,
+      <span class="an" tabindex="0" data-t="A operação, no formato serviço:Operação. O curinga * vale: ec2:Describe* = todas as ações de leitura do EC2.">"Action"</span>: <span class="s">"ec2:Describe*"</span>,
+      <span class="an" tabindex="0" data-t="Sobre quais recursos vale. * significa todos.">"Resource"</span>: <span class="s">"*"</span>
+    }
+  ]
+}</code></pre>
+  <p>Esta política permite <b>somente leitura</b> do EC2: listar e descrever, mas não criar, parar ou destruir. Há dois tipos: políticas <b>baseadas em identidade</b> (anexadas a um usuário, grupo ou role) e <b>baseadas em recurso</b> (anexadas ao recurso, como um bucket S3, dizendo quem o acessa).</p>
+  <h3>A regra de ouro: o Deny vence</h3>
+  <p>Quando várias políticas se aplicam, a avaliação segue uma ordem fixa: <b>1)</b> um <b>Deny explícito</b> sempre vence; <b>2)</b> se não há Deny, um <b>Allow</b> permite; <b>3)</b> se nada casa, vale o <b>Deny implícito</b>. Anexe políticas e teste ações:</p>
+  <div class="demo" data-demo="iam"></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E a conta de administrador criada junto com a conta da AWS?</div><p>O root pede cuidado especial.</p></div>
+</section>
+
+<section class="sec" id="root">
+  <h2><span class="sn">3</span>Root, MFA e chaves de acesso</h2>
+  <p class="gancho">A chave mestra não vai no bolso.</p>
+  <ul>
+    <li>O usuário <b>root</b> nasce com a conta e tem <b>acesso total</b>. Habilite o <b>MFA</b> (autenticação multifator) nele e <b>não o use no dia a dia</b>: crie contas IAM para você e para seus colegas.</li>
+    <li>Dois jeitos de autenticar: <b>usuário e senha</b> para o console (gestão de recursos) e <b>chave de acesso</b> (<i>Access Key</i> e <i>Secret Key</i>) para o acesso <b>programático</b> (SDKs, CLI, <code>boto3</code>).</li>
+  </ul>
+  <div class="nota cuidado"><span class="lbl">Chaves de acesso são segredos</span>Nunca as coloque no código nem num repositório (lembra do Git?). Prefira <b>roles</b> sempre que um serviço da AWS precisar de acesso, e se uma chave vazar, desative-a na hora. <span class="muted">(Complemento: hoje a própria AWS recomenda o IAM Identity Center, antigo AWS SSO, em vez de usuários IAM de longa duração para pessoas.)</span></div>
+  <div class="nota lembra"><span class="lbl">Laboratório do curso</span>A tarefa da aula era associar usuários a grupos (S3-Support, EC2-Support, EC2-Admin), logar com um deles e <b>conferir que só dava para fazer o que a política do grupo permitia</b> (por exemplo, apenas listar, parar e iniciar instâncias). É parecido com a demo acima, na prática (a demo usa nomes e permissões simplificados).</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>AWS cuida da segurança <b>DA</b> nuvem; o cliente, <b>NA</b> nuvem (contas, SO, firewall, criptografia, dados).</li><li><b>IAM</b>: User, Group, Policy, Role. Conta nova nasce <b>sem permissão</b> (privilégio mínimo).</li><li><b>Role</b>: sem login e senha, assumida temporariamente, vale para serviços.</li><li>Política: <code>Effect</code>, <code>Action</code>, <code>Resource</code>. <b>Deny explícito vence</b> qualquer Allow; sem nada, <b>Deny implícito</b>.</li><li><b>Root</b> com MFA e fora do uso diário. <b>Chave de acesso</b> para código, <b>senha</b> para o console.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Um usuário tem uma política que permite ec2:* e outra que nega ec2:TerminateInstances. Ele consegue terminar uma instância?</p>
+    <div class="opts"><button data-k="a">Não: o Deny explícito vence o Allow.</button><button data-k="b">Sim: o Allow é mais amplo.</button><button data-k="c">Depende da ordem em que as políticas foram criadas.</button></div>
+    <div class="fb">Não há desempate por ordem nem por amplitude. Um Deny explícito que casa sempre prevalece.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Por que dar uma role a uma função Lambda, em vez de colocar uma chave de acesso no código?</p>
+    <div class="opts"><button data-k="a">Porque roles são mais baratas.</button><button data-k="b">Porque a Lambda não aceita chaves.</button><button data-k="c">Porque a role não tem credencial fixa para vazar: a AWS entrega credenciais temporárias.</button></div>
+    <div class="fb">Segredo no código é risco: ele vai para o repositório e vaza. A role elimina o segredo fixo.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Quem é responsável por aplicar patches de segurança no sistema operacional de uma instância EC2?</p>
+    <div class="opts"><button data-k="a">A AWS.</button><button data-k="b">O cliente.</button><button data-k="c">Ninguém: instâncias não precisam de patches.</button></div>
+    <div class="fb">Na EC2 (IaaS) o sistema operacional é do cliente. A AWS cuida do hardware e do isolamento.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Autenticação x autorização?</b></span><span class="bk">Autenticação: quem é você. Autorização: o que você pode fazer.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é privilégio mínimo?</b></span><span class="bk">Dar só as permissões necessárias. Contas novas nascem sem nenhuma.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que usar MFA no root?</b></span><span class="bk">Porque o root tem acesso total: uma senha roubada sozinha não deve bastar.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma política baseada em recurso?</b></span><span class="bk">Uma política anexada ao próprio recurso (como um bucket), que diz quem pode acessá-lo.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">Já sei quem pode o quê. Como crio de fato uma máquina e a conecto?</div><p>Com o EC2.</p></div>
+</section>
+
+</article>
+</body>
+</html>

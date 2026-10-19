@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: S3: arquivos sem servidor | Apostila de Cloud e AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cloud.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Aula 4</div>
+  <h1>S3: arquivos sem servidor</h1>
+  <p class="sub">Guardar e servir arquivos sem nenhuma máquina, e entender por que o acesso tem duas camadas.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">simulador de acesso</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 3 o site rodou numa instância EC2 com Apache, ligada 24 horas por dia, só para entregar arquivos HTML. Duas perguntas aparecem: <i>será que precisamos pagar uma máquina ligada só para isso?</i> E <i>como compartilhar arquivos entre equipes</i>, por exemplo, para treinar modelos de machine learning?</div>
+<section class="sec" id="s3">
+  <h2><span class="sn">1</span>S3: objetos, não máquinas</h2>
+  <p class="gancho">Aqui não existe sistema operacional para cuidar.</p>
+  <p>O <b>S3</b> (<i>Simple Storage Service</i>) é um serviço de <b>armazenamento de objetos</b>. Dois conceitos:</p>
+  <ul>
+    <li><b>Bucket</b>: o contêiner dos objetos. O nome precisa ser <b>globalmente único</b> em toda a AWS (não só na sua conta).</li>
+    <li><b>Objeto</b>: um par chave-valor: qualquer arquivo (HTML, imagem, CSV, JSON), endereçado por uma <b>chave</b> (o "caminho" no bucket). Cada objeto tem uma <b>URL única</b>: <code>https://nome-do-bucket.s3.regiao.amazonaws.com/arquivo</code>.</li>
+  </ul>
+  <div class="nota cuidado"><span class="lbl">Limitação</span>Não existe edição parcial de um objeto. Para mudar uma linha de um CSV, é preciso <b>substituir o objeto inteiro</b>. (Complemento: o <i>versionamento</i> do S3 guarda as versões anteriores, o que evita perder o arquivo antigo ao substituir.)</div>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>EC2</th><th>S3</th></tr>
+    <tr><td><b>O que é</b></td><td>máquina virtual</td><td>armazenamento de objetos</td></tr>
+    <tr><td><b>Sistema operacional</b></td><td>você gerencia</td><td>não existe</td></tr>
+    <tr><td><b>Servidor web</b></td><td>você instala e configura</td><td>o próprio S3 serve o site estático</td></tr>
+    <tr><td><b>Quem configura a infraestrutura</b></td><td>você</td><td>a AWS</td></tr>
+    <tr><td><b>Ideal para</b></td><td>aplicações que executam código</td><td>arquivos e conteúdo estático</td></tr>
+  </table></div>
+  <p>O ponto central da aula é uma <mark class="hl">mudança de modelo mental</mark>: dá para publicar um site estático <b>sem nenhuma máquina virtual</b>. O "servidor" é o próprio serviço de armazenamento. <i>Complemento:</i> para o bucket se comportar como site, com um documento padrão (como o <code>index.html</code>), ainda se ativa o recurso de hospedagem de site estático; sem ele, a URL do objeto abre o arquivo, mas não funciona como site.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Subi o arquivo e a URL deu AccessDenied. O que faltou?</div><p>Duas camadas de proteção, e é preciso entender as duas.</p></div>
+</section>
+
+<section class="sec" id="publico">
+  <h2><span class="sn">2</span>Publicar um site: as duas camadas</h2>
+  <p class="gancho">Destravar a porta não é abrir a porta.</p>
+  <ol>
+    <li><b>Criar o bucket</b>: escolha a região e um nome único.</li>
+    <li><b>Desbloquear o acesso público</b>: por padrão a AWS <b>bloqueia todo acesso público</b> de um bucket novo, como proteção contra exposição acidental. Você desmarca e confirma que sabe do risco.</li>
+    <li><b>Fazer o upload</b> do <code>index.html</code>.</li>
+    <li><b>Testar a URL</b>: ainda dá <code>AccessDenied</code>!</li>
+    <li><b>Editar a política do bucket</b> com um JSON que autoriza a leitura pública dos objetos.</li>
+    <li><b>Testar de novo</b>: agora o site abre.</li>
+  </ol>
+<pre><code>{
+  <span class="s">"Version"</span>: <span class="s">"2012-10-17"</span>,
+  <span class="s">"Statement"</span>: [{
+    <span class="s">"Principal"</span>: {<span class="s">"AWS"</span>: <span class="s">"*"</span>},               <span class="c">// qualquer pessoa</span>
+    <span class="s">"Effect"</span>: <span class="s">"Allow"</span>,
+    <span class="s">"Action"</span>: [<span class="s">"s3:GetObject"</span>],         <span class="c">// só ler objetos</span>
+    <span class="s">"Resource"</span>: [<span class="s">"arn:aws:s3:::meu-bucket/*"</span>]  <span class="c">// todos os objetos do bucket</span>
+  }]
+}</code></pre>
+  <p>Por que o passo 5 é necessário, se o 2 já "liberou"? Porque desbloquear <b>só remove uma trava</b> que impediria políticas públicas de funcionar. <b>Não concede acesso.</b> São duas camadas independentes: uma destrava a porta, a outra a abre. Combine as duas e veja o resultado:</p>
+  <div class="demo" data-demo="s3acesso"></div>
+  <div class="nota lembra"><span class="lbl">A mesma sintaxe do IAM</span>A política do bucket usa o <code>Effect</code>/<code>Action</code>/<code>Resource</code> do Capítulo 2. Aqui ela é <b>baseada em recurso</b> (está colada no próprio bucket) e tem um <code>Principal</code> dizendo <i>quem</i>.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quanto isso custa? E como se compara a EBS e EFS?</div><p>Cobrança, e uma tabela de três armazenamentos.</p></div>
+</section>
+
+<section class="sec" id="comparar">
+  <h2><span class="sn">3</span>Cobrança e EBS x EFS x S3</h2>
+  <p class="gancho">Três armazenamentos que não são concorrentes.</p>
+  <p><b>Cobrança do S3:</b> paga-se pelo <b>GB armazenado por mês</b>, pela transferência <b>para fora</b> da AWS e pelas solicitações (<code>PUT</code>, <code>COPY</code>, <code>POST</code>, <code>LIST</code>, <code>GET</code>). <b>Não</b> se paga por transferências <i>dentro</i> do S3, nem do S3 para o CloudFront ou para uma EC2 <b>na mesma região</b>. É um modelo parecido com o do Google Drive: você paga pelo espaço usado, não por uma máquina rodando.</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>EBS</th><th>EFS</th><th>S3</th></tr>
+    <tr><td><b>Natureza</b></td><td>volume em <b>blocos</b> (HDD/SSD)</td><td><b>sistema de arquivos</b> compartilhado (NFS)</td><td>armazenamento de <b>objetos</b></td></tr>
+    <tr><td><b>Anexado a</b></td><td>uma instância por vez</td><td><b>várias</b> instâncias ao mesmo tempo</td><td>nenhuma: acesso por API/URL</td></tr>
+    <tr><td><b>Exemplo</b></td><td>o <code>C:</code> da VM</td><td>pasta de rede compartilhada</td><td>backups, imagens, CSVs, HTML</td></tr>
+    <tr><td><b>Bom para</b></td><td>disco do SO de uma instância</td><td>servidores editando os <b>mesmos arquivos</b> juntos (só Linux)</td><td>sites estáticos, dados de ML, backups</td></tr>
+  </table></div>
+  <p>Resposta à segunda pergunta do cenário: para <b>distribuir</b> um conjunto de dados de treino entre equipes, o <b>S3</b>. Para várias instâncias <b>editarem</b> os mesmos arquivos ao mesmo tempo, o <b>EFS</b>.</p>
+  <div class="nota exemplo"><span class="lbl">Complemento: CloudFront</span>Para sites com visitantes no mundo todo, costuma-se colocar o <b>CloudFront</b> (uma CDN, rede de distribuição de conteúdo) na frente do bucket: ele guarda cópias perto dos usuários, reduzindo a latência, e permite HTTPS com um domínio próprio.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>S3</b> guarda <b>objetos</b> em <b>buckets</b> (nome único global). Sem SO, sem servidor para cuidar.</li><li>Não há edição parcial: substitui-se o objeto inteiro.</li><li>Site estático no S3: <b>desbloquear</b> o acesso público <b>e</b> ter uma <b>política do bucket</b> que autorize <code>s3:GetObject</code>. São duas camadas.</li><li>Cobrança: GB armazenado, tráfego <b>para fora</b> e solicitações. Dentro da mesma região, para EC2 ou CloudFront, não.</li><li><b>EBS</b>: disco de uma instância. <b>EFS</b>: arquivos compartilhados (Linux). <b>S3</b>: objetos, por URL.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Você desmarcou o bloqueio de acesso público e o site ainda dá AccessDenied. O que falta?</p>
+    <div class="opts"><button data-k="a">Reiniciar o bucket.</button><button data-k="b">Trocar a região.</button><button data-k="c">Uma política do bucket que autorize s3:GetObject para os visitantes.</button></div>
+    <div class="fb">Desbloquear só remove a trava. A autorização vem da política do bucket.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Qual serviço escolher para várias instâncias EC2 Linux editarem os mesmos arquivos ao mesmo tempo?</p>
+    <div class="opts"><button data-k="a">EFS.</button><button data-k="b">EBS.</button><button data-k="c">S3.</button></div>
+    <div class="fb">O EBS é anexado a uma instância por vez, e o S3 não é um sistema de arquivos montável. O EFS é o sistema de arquivos compartilhado.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Qual a grande vantagem do S3 sobre uma EC2 para um site estático?</p>
+    <div class="opts"><button data-k="a">Ele roda código Python.</button><button data-k="b">Não há máquina ligada para administrar nem para pagar enquanto espera.</button><button data-k="c">Ele usa menos portas.</button></div>
+    <div class="fb">O S3 serve os arquivos direto. Para executar código no servidor (aplicações dinâmicas), a EC2 continua sendo necessária.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um bucket?</b></span><span class="bk">O contêiner de objetos do S3, com nome único em toda a AWS.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um objeto?</b></span><span class="bk">Um arquivo (par chave-valor) guardado em um bucket, com URL própria.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>S3 serve site dinâmico?</b></span><span class="bk">Não: só conteúdo estático. Para código no servidor, EC2 ou Lambda.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quando o S3 não cobra transferência?</b></span><span class="bk">Dentro do S3, e do S3 para CloudFront ou EC2 na mesma região.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">Guardo arquivos sem servidor. E o banco de dados, precisa mesmo de uma máquina?</div><p>Não: o RDS entrega o banco já gerenciado.</p></div>
+</section>
+
+</article>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: Rede, custos e boas práticas (complemento) | Apostila de Cloud e AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cloud.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Complemento</div>
+  <h1>Rede, custos e boas práticas (complemento)</h1>
+  <p class="sub">A rede por baixo dos serviços, os dois firewalls e como evitar surpresas de custo e de segurança.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 checklist · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Nos capítulos 3 a 6 você usou quatro serviços e viu, três vezes, o mesmo padrão: <b>duas camadas</b> (a trava e a autorização, o endereço e o firewall). Este capítulo, que é <b>complemento</b> (não foi dado em aula), explica a rede por baixo disso tudo e junta as boas práticas para não ter surpresa no custo nem na segurança.</div>
+<section class="sec" id="vpc">
+  <h2><span class="sn">1</span>VPC: a sua rede dentro da AWS</h2>
+  <p class="gancho">Quando o RDS "só é alcançável de dentro da VPC", de que rede se fala?</p>
+  <p>A <b>VPC</b> (<i>Virtual Private Cloud</i>) é uma rede virtual <b>isolada</b>, só sua, dentro de uma região. Dentro dela você divide o espaço de endereços em <b>sub-redes</b> (<i>subnets</i>), cada uma em uma zona de disponibilidade.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Peça</th><th>Papel</th></tr>
+    <tr><td><b>Sub-rede pública</b></td><td>tem rota para a internet por um <b>Internet Gateway</b>; abriga o que precisa ser alcançado de fora (um servidor web)</td></tr>
+    <tr><td><b>Sub-rede privada</b></td><td>sem rota direta da internet; abriga o que não deve ser exposto (um banco)</td></tr>
+    <tr><td><b>NAT Gateway</b></td><td>deixa recursos privados <b>saírem</b> para a internet (atualizações, por exemplo) sem que a internet <b>entre</b> neles</td></tr>
+    <tr><td><b>Security Group</b></td><td>firewall da <b>instância</b></td></tr>
+    <tr><td><b>NACL</b></td><td>firewall da <b>sub-rede</b></td></tr>
+  </table></div>
+  <p>É por isso que o banco "ideal" nem deveria ter acesso público: ele fica numa sub-rede <b>privada</b>, e só a aplicação (numa pública ou na mesma VPC) chega até ele.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Existem dois firewalls. Por que, e qual a diferença?</div><p>Um lembra o que passou. O outro não.</p></div>
+</section>
+
+<section class="sec" id="sg-nacl">
+  <h2><span class="sn">2</span>Security Group x NACL</h2>
+  <p class="gancho">Stateful ou stateless: a pergunta que cai em prova.</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Security Group</th><th>NACL</th></tr>
+    <tr><td><b>Onde atua</b></td><td>na <b>instância</b></td><td>na <b>sub-rede</b></td></tr>
+    <tr><td><b>Memória</b></td><td><b>stateful</b>: se a entrada foi permitida, a resposta sai automaticamente</td><td><b>stateless</b>: entrada e saída são avaliadas <b>separadamente</b>; é preciso permitir as duas</td></tr>
+    <tr><td><b>Regras</b></td><td>só <b>Allow</b></td><td><b>Allow e Deny</b>, avaliadas em ordem numérica</td></tr>
+    <tr><td><b>Padrão</b></td><td>nega tudo que entra, até haver regra</td><td>a padrão da VPC permite tudo</td></tr>
+  </table></div>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>Um pedido chega na porta 443</b><p>O pacote passa primeiro pela <b>NACL</b> da sub-rede (regra de entrada) e depois pelo <b>Security Group</b> da instância.</p></div>
+      <div class="st"><b>A resposta volta</b><p>No <b>Security Group</b> (stateful) a resposta é liberada <b>automaticamente</b>, porque a entrada foi permitida. Na <b>NACL</b> (stateless) é preciso uma regra de <b>saída</b> que deixe a resposta passar.</p></div>
+      <div class="st"><b>Na prática</b><p>A maior parte das pessoas configura só os <b>Security Groups</b> e deixa a NACL no padrão. A NACL é uma segunda camada, útil para <b>bloquear</b> um IP ou uma faixa inteira (algo que o Security Group, que só tem Allow, não faz).</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+</section>
+
+<section class="sec" id="boas-praticas">
+  <h2><span class="sn">3</span>Boas práticas: arquitetura, custo e acesso</h2>
+  <p class="gancho">Uma lista curta que evita os erros mais caros.</p>
+  <h3>Os pilares de uma boa arquitetura (AWS Well-Architected)</h3>
+  <div class="grid3">
+    <div class="card rv"><b>Excelência operacional</b><p>Automatizar, monitorar (CloudWatch) e aprender com falhas.</p></div>
+    <div class="card rv"><b>Segurança</b><p>Privilégio mínimo, criptografia, rastreabilidade (IAM, KMS).</p></div>
+    <div class="card rv"><b>Confiabilidade</b><p>Recuperar-se de falhas: várias AZs, backups.</p></div>
+    <div class="card rv"><b>Eficiência de desempenho</b><p>Usar o tipo de recurso certo e escalar com a demanda.</p></div>
+    <div class="card rv"><b>Otimização de custos</b><p>Pagar só pelo que precisa; desligar o que sobra.</p></div>
+    <div class="card rv"><b>Sustentabilidade</b><p>Reduzir o impacto energético do que se executa.</p></div>
+  </div>
+  <h3>Acessando por código</h3>
+<pre><code><span class="c"># CLI: listar os seus buckets</span>
+aws s3 ls
+
+<span class="c"># Python com boto3: o mesmo, por código (as credenciais vêm da role ou da configuração local)</span>
+<span class="k">import</span> boto3
+s3 = boto3.<span class="f">client</span>(<span class="s">"s3"</span>)
+<span class="k">for</span> b <span class="k">in</span> s3.<span class="f">list_buckets</span>()[<span class="s">"Buckets"</span>]:
+    <span class="f">print</span>(b[<span class="s">"Name"</span>])</code></pre>
+  <h3>Antes de sair do laboratório</h3>
+  <p>Marque o que você já conferiu. O navegador lembra.</p>
+  <div class="thread rv" data-demo="checks" data-key="saida">
+    <div class="nd" data-n="1"><b>Encerrei as instâncias EC2</b> (Terminate), e liberei IPs elásticos que não uso.<br><label><input type="checkbox"> feito</label></div>
+    <div class="nd" data-n="2"><b>Excluí a instância do RDS</b> (e o snapshot final, se não precisar).<br><label><input type="checkbox"> feito</label></div>
+    <div class="nd" data-n="3"><b>Esvaziei ou removi os buckets</b> que não vou usar, e confirmei que nenhum ficou público sem querer.<br><label><input type="checkbox"> feito</label></div>
+    <div class="nd" data-n="4"><b>Fechei as regras de Security Group</b> com 0.0.0.0/0 em SSH, RDP e portas de banco.<br><label><input type="checkbox"> feito</label></div>
+    <div class="nd" data-n="5"><b>Nenhuma chave de acesso ou senha</b> ficou em arquivo de código ou repositório.<br><label><input type="checkbox"> feito</label></div>
+    <p class="muted" style="margin:6px 0 0"><b class="chk-n">0 de 5</b> itens conferidos.</p>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Custo surpresa: como evitar</span>Crie um <b>orçamento com alerta</b> (AWS Budgets) logo no começo de qualquer conta real, use <b>tags</b> para saber de que projeto é cada recurso, e lembre que <b>recurso esquecido ligado</b> é a causa mais comum de conta alta. As regras do nível gratuito mudam com o tempo: leia a página oficial antes de confiar nelas.</div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento da apostila</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>VPC</b>: sua rede virtual isolada. Sub-rede <b>pública</b> (rota para a internet) x <b>privada</b> (sem rota direta). <b>NAT</b> permite sair sem deixar entrar.</li><li><b>Security Group</b>: instância, <b>stateful</b>, só Allow. <b>NACL</b>: sub-rede, <b>stateless</b>, Allow e Deny.</li><li>Seis pilares: excelência operacional, segurança, confiabilidade, desempenho, custo e sustentabilidade.</li><li>CLI e <code>boto3</code> acessam a AWS por código; prefira <b>roles</b> a chaves.</li><li>Termine instâncias, exclua bancos, feche portas, alerte o orçamento.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Qual a diferença central entre Security Group e NACL?</p>
+    <div class="opts"><button data-k="a">Nenhuma: são o mesmo firewall.</button><button data-k="b">O Security Group é stateful e age na instância; a NACL é stateless e age na sub-rede.</button><button data-k="c">O Security Group só funciona para Windows.</button></div>
+    <div class="fb">Stateful: a resposta de uma conexão permitida volta sozinha. Stateless: cada sentido é avaliado separadamente.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Onde o ideal é colocar um banco de dados?</p>
+    <div class="opts"><button data-k="a">Numa sub-rede privada, acessível só pela aplicação.</button><button data-k="b">Numa sub-rede pública, com 0.0.0.0/0 liberado.</button><button data-k="c">No S3.</button></div>
+    <div class="fb">Quanto menos exposto, melhor. A aplicação chega ao banco por dentro da VPC.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Qual a causa mais comum de conta de nuvem inesperadamente alta?</p>
+    <div class="opts"><button data-k="a">Usar o console em vez da CLI.</button><button data-k="b">Escolher a região errada.</button><button data-k="c">Recursos esquecidos ligados.</button></div>
+    <div class="fb">Instância, banco e IP elástico ociosos continuam gerando custo. Desligue o que não usa e use alertas de orçamento.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma VPC?</b></span><span class="bk">Uma rede virtual isolada dentro da AWS, dividida em sub-redes.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Stateful x stateless?</b></span><span class="bk">Stateful lembra a conexão (resposta liberada sozinha). Stateless avalia cada pacote de entrada e de saída separadamente.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o NAT Gateway?</b></span><span class="bk">Permite que recursos privados acessem a internet sem serem acessíveis de fora.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é privilégio mínimo?</b></span><span class="bk">Conceder só as permissões estritamente necessárias.</span></button></div>
+  <div class="ponte rv"><div class="t">E agora?</div><div class="q">Você percorreu a escada: máquina, arquivos, banco e código.</div><p>O melhor exercício é refazer o laboratório do começo ao fim, <b>conferindo cada regra de acesso</b> e encerrando tudo no final. Volte à <a href="index.html">visão geral</a> para revisar, e leve a mesma lente de segurança da apostila de Cibersegurança.</p></div>
+</section>
+
+</article>
+</body>
+</html>

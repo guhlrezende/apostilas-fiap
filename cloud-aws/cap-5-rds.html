@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: RDS: banco gerenciado | Apostila de Cloud e AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="../assets/estudo-sql.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cloud.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Aula 5</div>
+  <h1>RDS: banco gerenciado</h1>
+  <p class="sub">Um banco MySQL na nuvem sem servidor para administrar, e por que abrir a porta ao mundo é um risco.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 4 o S3 resolveu os arquivos sem servidor. A startup também precisa guardar dados num <b>banco relacional</b>, com segurança. Instalar e manter o banco numa EC2 sai caro e dá trabalho. Duas perguntas: como criar um banco na nuvem <b>sem administrar servidor</b>, e como permitir o <b>acesso remoto</b>?</div>
+<section class="sec" id="rds">
+  <h2><span class="sn">1</span>RDS: o banco sem o servidor</h2>
+  <p class="gancho">Você usa o banco. A AWS cuida do resto.</p>
+  <p>O <b>RDS</b> (<i>Relational Database Service</i>) é um serviço <b>gerenciado</b> de bancos relacionais (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server). "Gerenciado" quer dizer que a AWS cuida da instalação, dos <b>patches</b>, dos <b>backups</b> e da infraestrutura. Por baixo, ele roda sobre uma instância EC2, mas você <b>não acessa essa máquina</b>: não há SSH nem sistema operacional.</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Banco dentro de uma EC2</th><th>RDS</th></tr>
+    <tr><td><b>Quem instala e atualiza</b></td><td>você</td><td>a AWS</td></tr>
+    <tr><td><b>Acesso ao sistema operacional</b></td><td>sim (SSH)</td><td>não</td></tr>
+    <tr><td><b>Backup</b></td><td>você configura</td><td>automático</td></tr>
+    <tr><td><b>Como se conecta</b></td><td>IP da instância</td><td><b>endpoint</b> fornecido pelo RDS</td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">A evolução da disciplina</span>EC2 (servidor que você administra) → S3 (arquivos sem servidor) → RDS (banco sem servidor para administrar) → Lambda (código sem servidor, Capítulo 6). A cada degrau, menos coisa para você cuidar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como é criar um e se conectar a ele de casa?</div><p>Doze passos, e uma armadilha parecida com a do S3.</p></div>
+</section>
+
+<section class="sec" id="passos">
+  <h2><span class="sn">2</span>Criar e conectar: duas camadas de novo</h2>
+  <p class="gancho">"Acesso público" não abre a porta.</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1 a 3. Criar a instância</b><p>RDS → Criar banco → mecanismo <b>MySQL</b>, modelo de <b>nível gratuito</b> (para não gerar custo), identificador (como <code>db-instancia-xx-aws</code>) e senha do administrador. <b>Guarde a senha</b>: ela não aparece de novo.</p></div>
+      <div class="st"><b>4. Acesso público: Sim</b><p>Sem isso, o banco só é alcançável de <b>dentro da VPC</b>, e o seu computador não chega nele.</p></div>
+      <div class="st"><b>5 a 7. Security Group e nome do banco</b><p>Use o Security Group padrão e, em "Configuração adicional", já crie a base inicial (no exercício, <code>dbalpha</code>).</p></div>
+      <div class="st"><b>8. Copiar o endpoint</b><p>Com a instância "Disponível", copie o <b>endpoint</b>: é o "endereço" do banco, no lugar de um IP.</p></div>
+      <div class="st"><b>9. Liberar a porta 3306</b><p>No Security Group, uma regra de <b>entrada TCP na porta 3306</b> (a do MySQL). Sem ela, o cliente fica tentando e dá <i>timeout</i>.</p></div>
+      <div class="st"><b>10 e 11. Conectar e criar a tabela</b><p>No MySQL Workbench: nova conexão com o <b>endpoint</b>, porta 3306, usuário e senha. Depois crie a tabela direto na base remota.</p></div>
+      <div class="st"><b>12. Excluir a instância</b><p>Ao terminar: RDS → selecionar → Ações → <b>Excluir</b>. Instância ligada <b>consome crédito</b> do laboratório, igual à EC2.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <p>Combine as duas camadas e veja quando a conexão funciona:</p>
+  <div class="demo" data-demo="rdsacesso"></div>
+  <div class="nota erro"><span class="lbl">Cuidado: o que o slide faz por didática</span>Liberar a 3306 para <code>0.0.0.0/0</code> expõe o banco à internet inteira, e qualquer robô pode tentar adivinhar a senha. Em produção, a origem deve ser <b>só o seu IP</b> (a opção "Meu IP" do console) ou <b>só as instâncias da aplicação</b>, e o banco nem deveria ter acesso público. É o risco de portas expostas da apostila de Cibersegurança.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E a tabela do exercício? Como ela é?</div><p>Experimente aqui mesmo.</p></div>
+</section>
+
+<section class="sec" id="exercicio">
+  <h2><span class="sn">3</span>O exercício: a tabela projetos</h2>
+  <p class="gancho">O mesmo DDL da apostila de Bancos de Dados, agora numa base de nuvem.</p>
+  <p>O exercício pede a base <code>dbalpha</code> e a tabela <code>projetos</code> com <code>idProjeto</code>, <code>sigla</code>, <code>dtInicio</code> e <code>dtTermino</code>, e alguns registros. Uma solução (em SQLite aqui; no MySQL do RDS o <code>idProjeto</code> seria <code>INT AUTO_INCREMENT PRIMARY KEY</code>):</p>
+<div class="demo" data-demo="sql" data-db="vazia" data-expect="3" data-titulo="Criar e consultar a tabela"><pre class="q">CREATE TABLE projetos (
+  idProjeto INTEGER PRIMARY KEY AUTOINCREMENT,
+  sigla     VARCHAR(10) NOT NULL UNIQUE,
+  dtInicio  DATE NOT NULL,
+  dtTermino DATE,
+  CHECK (dtTermino IS NULL OR dtTermino &gt;= dtInicio)
+);
+INSERT INTO projetos (sigla, dtInicio, dtTermino) VALUES
+  ('NEXA',  '2026-08-01', '2026-12-15'),
+  ('ALFA', '2026-09-01', NULL),
+  ('IRIS',  '2026-09-10', '2026-09-25');
+SELECT * FROM projetos;</pre></div>
+  <p>Note como as restrições do Capítulo 3 de Bancos de Dados fazem trabalho aqui: <code>UNIQUE</code> na sigla e um <code>CHECK</code> que impede um término anterior ao início.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>RDS</b>: banco relacional <b>gerenciado</b> (patches, backups, infraestrutura). Sem SSH nem SO.</li><li>Conexão pelo <b>endpoint</b>, e não por IP.</li><li>Para conectar de fora: <b>acesso público</b> <b>e</b> regra de entrada <b>TCP 3306</b> no Security Group. Duas camadas.</li><li><code>0.0.0.0/0</code> na porta do banco só em laboratório. Em produção, só seu IP ou só a aplicação.</li><li><b>Exclua</b> a instância ao terminar: ela consome crédito ligada.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Seu cliente de banco fica tentando e termina em timeout, apesar de o acesso público estar 'Sim'. Qual a causa mais provável?</p>
+    <div class="opts"><button data-k="a">O endpoint está errado.</button><button data-k="b">Falta a regra de entrada na porta 3306 no Security Group.</button><button data-k="c">O banco não existe.</button></div>
+    <div class="fb">Acesso público dá um endereço alcançável, mas quem libera a passagem é o Security Group. Sem a regra, o pacote é descartado em silêncio.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">O que o RDS faz por você que uma EC2 com MySQL instalado não faz?</p>
+    <div class="opts"><button data-k="a">Cuida de patches e backups, e esconde o sistema operacional.</button><button data-k="b">Deixa o banco mais rápido sempre.</button><button data-k="c">Dispensa Security Group.</button></div>
+    <div class="fb">Esse é o sentido de 'gerenciado': você usa o banco, e a AWS administra a infraestrutura.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Por que não se deve liberar a 3306 para 0.0.0.0/0 em produção?</p>
+    <div class="opts"><button data-k="a">Porque a porta não funciona assim.</button><button data-k="b">Porque deixa o banco mais lento.</button><button data-k="c">Porque expõe o banco à internet inteira, e qualquer robô pode tentar adivinhar a senha.</button></div>
+    <div class="fb">O correto é restringir a origem ao seu IP ou às instâncias da aplicação.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um endpoint?</b></span><span class="bk">O endereço de rede do banco no RDS, usado no lugar de um IP.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que excluir a instância?</b></span><span class="bk">Porque instância ligada consome crédito, mesmo sem uso.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>RDS x banco numa EC2?</b></span><span class="bk">No RDS a AWS administra instalação, patches e backups, e você não acessa o SO.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a porta padrão do MySQL?</b></span><span class="bk">3306.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">Tenho arquivos no S3 e um banco no RDS. Quem leva os dados de um para o outro?</div><p>Uma função Lambda, disparada pelo próprio S3.</p></div>
+</section>
+
+</article>
+</body>
+</html>

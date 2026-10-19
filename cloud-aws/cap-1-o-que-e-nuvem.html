@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: O que é nuvem | Apostila de Cloud e AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cloud.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Aula 1</div>
+  <h1>O que é nuvem</h1>
+  <p class="sub">Como funciona a computação em nuvem, quanto custa de verdade e onde ficam os servidores.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">simulador de custo</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo. Você não precisa saber nada de nuvem: basta já ter usado um serviço online, como um drive. Daqui em diante, cada capítulo abre lembrando o que ficou em aberto no anterior.</div>
+<section class="sec" id="definicao">
+  <h2><span class="sn">1</span>O que é computação em nuvem</h2>
+  <p class="gancho">A nuvem é o computador de outra pessoa. Com contrato.</p>
+  <p>Computação em nuvem é a entrega <b>sob demanda</b> de poder computacional, armazenamento, aplicativos e outros recursos de TI <b>pela internet</b>, com preço <mark class="hl">conforme o uso</mark>. Na prática, é um conjunto enorme de servidores de um provedor que disponibilizam infraestrutura (servidores, armazenamento, aplicações) para você alugar, em vez de comprar e manter os seus. Os provedores mais conhecidos: <b>AWS</b> (a pioneira), Microsoft Azure, Google Cloud, IBM Cloud e Oracle Cloud.</p>
+  <p>Por que as empresas migram? Três motivos aparecem sempre: <b>custo</b> (pagar só pelo que usa), <b>agilidade</b> (um servidor em minutos, e não em semanas) e <b>segurança</b> (a infraestrutura física fica com quem faz disso o seu negócio). Na AWS, os argumentos clássicos são disponibilidade, escalabilidade, gestão e um melhor <i>time to market</i> (chegar ao mercado mais rápido).</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">"Nuvem" cobre desde alugar uma máquina crua até usar um e-mail pronto. Qual a diferença?</div><p>Os modelos de serviço.</p></div>
+</section>
+
+<section class="sec" id="modelos">
+  <h2><span class="sn">2</span>IaaS, PaaS e SaaS</h2>
+  <p class="gancho">Quanto da pilha é seu?</p>
+  <div class="grid3">
+    <div class="card rv"><b>IaaS</b><br><small class="muted">Infraestrutura como serviço</small><p>Você aluga poder computacional, rede e armazenamento, e administra o sistema operacional para cima. Mais controle, mais responsabilidade. <i>Ex.: AWS EC2, Google Compute Engine.</i></p></div>
+    <div class="card rv"><b>PaaS</b><br><small class="muted">Plataforma como serviço</small><p>O foco é implementar e gerir a <b>aplicação</b>; a nuvem gerencia o sistema operacional. <i>Ex.: AWS Elastic Beanstalk, Google App Engine.</i></p></div>
+    <div class="card rv"><b>SaaS</b><br><small class="muted">Software como serviço</small><p>Você só <b>usa</b> o software, pela internet, sem controle sobre o servidor. <i>Ex.: Google Drive, Office 365.</i></p></div>
+  </div>
+  <div class="demo" data-demo="pilha"></div>
+  <h3>E onde fica a infraestrutura?</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Modelo</th><th>O que é</th><th>Exemplo</th></tr>
+    <tr><td><b>Local</b> (<i>on-premises</i>)</td><td>infraestrutura privada, dentro da empresa</td><td>a sala de servidores</td></tr>
+    <tr><td><b>Híbrido</b></td><td>parte na nuvem, parte na empresa</td><td>dados sensíveis locais, site na nuvem</td></tr>
+    <tr><td><b>Nuvem</b></td><td>toda a infraestrutura na nuvem</td><td>startups costumam começar assim</td></tr>
+  </table></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se eu pago só pelo que uso, como estimo o custo? E sempre é mais barato?</div><p>Com o TCO, e com uma conta honesta.</p></div>
+</section>
+
+<section class="sec" id="custo">
+  <h2><span class="sn">3</span>TCO: o custo total de verdade</h2>
+  <p class="gancho">O preço da etiqueta não é o custo.</p>
+  <p>O <b>TCO</b> (<i>Total Cost of Ownership</i>, custo total de propriedade) soma as despesas <b>diretas e indiretas</b>. No modelo local, o custo direto são os equipamentos, e os indiretos são energia, espaço, refrigeração, segurança física e a equipe que cuida de tudo. Na nuvem, você <b>paga somente pelo que usa</b>. Mexa nos controles e veja quando cada lado vence:</p>
+  <div class="demo" data-demo="custo"></div>
+  <div class="nota lembra"><span class="lbl">A lição</span>Nuvem não é "sempre mais barata". Ela vence quando o uso é <b>variável ou imprevisível</b>, ou quando você ainda não sabe quanto vai precisar (você não compra um servidor para um projeto que pode não dar certo). Para uma carga alta, constante e previsível, o servidor próprio pode compensar. Por isso a pergunta certa é "qual o TCO do <i>meu</i> caso?".</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Onde, no mundo, ficam esses servidores?</div><p>Em regiões e zonas de disponibilidade.</p></div>
+</section>
+
+<section class="sec" id="infra">
+  <h2><span class="sn">4</span>Regiões e zonas de disponibilidade</h2>
+  <p class="gancho">Um data center, uma zona, uma região.</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>Data center</b><p>O prédio com os servidores (dezenas de milhares deles, segundo o material da aula).</p></div>
+      <div class="st"><b>Zona de disponibilidade (AZ)</b><p>Contém um ou mais data centers e é <b>projetada para isolar falhas</b>: energia, rede e conectividade redundantes. São nomeadas por letra: <code>us-east-1a</code>, <code>us-east-1b</code>...</p></div>
+      <div class="st"><b>Região</b><p>Uma área geográfica <b>separada e independente</b>, com <b>duas ou mais AZs</b> segundo o slide (hoje a AWS fala em pelo menos três, confira) com redundância total. Exemplos: <code>us-east-1</code> (Norte da Virgínia) e <code>sa-east-1</code> (São Paulo, lançada em 2011).</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <p>Como escolher uma região? Três critérios:</p>
+  <div class="grid3">
+    <div class="card rv"><b>Compliance</b><p>Leis que dizem onde os dados do cliente podem ficar (inclusive fora do país).</p></div>
+    <div class="card rv"><b>Proximidade</b><p>Região mais perto dos usuários tem <b>menor latência</b>.</p></div>
+    <div class="card rv"><b>Custo</b><p>O preço varia por região, e <b>nem todo serviço existe em todas</b>.</p></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado: replicar não é automático</span>Ter várias AZs não significa que seus dados estejam em todas. A <b>replicação entre AZs é ativada pelo cliente</b>. As <i>Local Zones</i> são extensões de uma região mais perto dos usuários (latência muito baixa; o slide fala em menos de 10 ms, confira o valor atual), e também precisam ser ativadas. O slide citava 39 regiões e 124 AZs, números que <b>crescem</b>: confira no site da AWS.</div>
+  <h3>Como se cobra</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Tipo</th><th>Exemplo</th><th>Cobrança</th></tr>
+    <tr><td><b>Computação</b></td><td>EC2</td><td>uso de CPU e memória, por hora ou por segundo</td></tr>
+    <tr><td><b>Armazenamento</b></td><td>S3</td><td>por GB guardado</td></tr>
+    <tr><td><b>Tráfego de rede</b></td><td>download</td><td>por GB que <b>sai</b> da AWS; a entrada normalmente não é cobrada</td></tr>
+  </table></div>
+  <p>E três jeitos de pagar menos: <b>pagar pelo que usa</b>, <b>reservar</b> capacidade (paga menos por se comprometer) e a <b>economia de escala</b> (paga menos conforme a nuvem cresce).</p>
+  <div class="nota exemplo"><span class="lbl">Aviso do material da disciplina</span>O acesso à AWS no curso é pelo <b>AWS Academy</b>, por convite do professor. <b>Não crie conta própria</b> para as atividades, e se alguma tela pedir <b>dados de cartão</b>, você está no lugar errado. Para quem quer fazer a trilha completa, o curso dá uma <i>badge</i> resgatável.</div>
+  <h3>Três formas de acessar a AWS</h3>
+  <p><b>Console</b> (a interface web), <b>CLI</b> (linha de comando) e <b>acesso programático</b> por SDKs em várias linguagens, como a biblioteca <code>boto3</code> do Python.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Nuvem</b> = recursos de TI sob demanda, pela internet, pagos conforme o uso.</li><li><b>IaaS</b> (você administra o SO), <b>PaaS</b> (foco na aplicação), <b>SaaS</b> (só usa). Quanto mais perto do SaaS, menos controle e menos trabalho.</li><li>Infraestrutura: <b>local</b>, <b>híbrida</b> ou <b>nuvem</b>.</li><li><b>TCO</b> soma custos diretos e indiretos. Nuvem não é sempre mais barata: vence com uso variável.</li><li><b>Data center</b> → <b>AZ</b> (isolamento de falhas) → <b>região</b> (2 ou mais AZs). Escolha por compliance, proximidade e custo.</li><li>Cobrança: computação (hora/segundo), armazenamento (GB), tráfego que <b>sai</b> (GB).</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Uma empresa usa o Google Drive para guardar documentos. Que modelo de serviço é?</p>
+    <div class="opts"><button data-k="a">IaaS.</button><button data-k="b">PaaS.</button><button data-k="c">SaaS: ela só usa o software, sem controle sobre o servidor.</button></div>
+    <div class="fb">No SaaS o provedor cuida de tudo, da infraestrutura à aplicação. IaaS seria alugar uma máquina virtual, e PaaS, uma plataforma para rodar o seu código.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 2</span><p class="qq">Por que ter várias zonas de disponibilidade melhora a resiliência?</p>
+    <div class="opts"><button data-k="a">Porque elas ficam no mesmo prédio.</button><button data-k="b">Porque cada uma é isolada, com energia e rede próprias, então uma falha não derruba as outras.</button><button data-k="c">Porque os dados são replicados sozinhos entre elas.</button></div>
+    <div class="fb">O isolamento é o ponto. Mas a replicação dos dados entre AZs é uma configuração do cliente, não é automática.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual o critério de escolha de região ligado a 'onde a lei permite guardar os dados'?</p>
+    <div class="opts"><button data-k="a">Compliance.</button><button data-k="b">Proximidade.</button><button data-k="c">Custo.</button></div>
+    <div class="fb">Compliance é o cumprimento de regras legais e regulatórias, como as de residência de dados.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>IaaS, PaaS e SaaS em uma linha cada?</b></span><span class="bk">IaaS: você aluga a infraestrutura e cuida do SO. PaaS: você cuida só da aplicação. SaaS: você só usa o software.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é TCO?</b></span><span class="bk">Custo total de propriedade: soma os custos diretos e os indiretos de uma solução.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma AZ?</b></span><span class="bk">Uma zona de disponibilidade: um ou mais data centers isolados de falhas dentro de uma região.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais tráfegos de rede são cobrados?</b></span><span class="bk">Normalmente o que sai da AWS (download). A entrada geralmente não é cobrada.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Colocar coisas na nuvem é fácil. Como saber quem pode mexer, e de quem é a responsabilidade de proteger?</div><p>Com o modelo de responsabilidade compartilhada e o serviço IAM.</p></div>
+</section>
+
+</article>
+</body>
+</html>
