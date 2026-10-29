@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 2: n8n: automação que você hospeda | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="2" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 2 · Fase 2</div>
+  <h1>n8n: automação que você hospeda</h1>
+  <p class="sub">A ferramenta de automação que você pode rodar no seu próprio computador, com nós de IA.</p>
+  <div class="meta"><span class="chip"><b>~60 min</b></span><span class="chip">1 demo · 4 testes · 5 flashcards</span></div>
+  <span class="num">2</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 1 você viu que sistemas conversam por HTTP e JSON, que webhooks avisam eventos e que chaves moram fora do código. Ficou a pergunta: dá para ligar vários sistemas sem programar tudo?</div>
+<section class="sec" id="o-que-e">
+  <h2><span class="sn">1</span>O que é o n8n</h2>
+  <p class="gancho">Uma automação é uma receita: "quando X acontecer, faça Y e Z". Como o n8n representa isso?</p>
+  <p>O n8n é uma ferramenta de automação visual. Você monta um <b>workflow</b> (fluxo) ligando <b>nós</b> numa tela. O primeiro nó é o <b>gatilho</b> (<i>trigger</i>): um webhook, um horário, um formulário, um e-mail novo. Os seguintes fazem ações: ler planilha, chamar API, filtrar, mandar mensagem, chamar um modelo de IA.</p>
+  <p>O conceito que mais confunde iniciante é o <b>item</b>. Cada nó recebe uma <mark class="hl">lista de itens</mark> (cada item é um JSON) e, em regra, roda uma vez para cada um. Se a planilha devolve 30 linhas, o nó seguinte recebe 30 itens e manda 30 mensagens. Isso é ótimo quando você quer, e um desastre quando não percebe.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: quantas mensagens saem?</span>
+    <div class="l"><div>Gatilho: todo dia às 8h. Nó 1: lê a planilha de prazos e devolve 12 linhas.</div></div>
+    <div class="l"><div>Nó 2 (filtro): passa só as linhas com prazo para hoje. Sobram 3 itens.</div></div>
+    <div class="l"><div>Nó 3 (Telegram): roda uma vez por item. Saem <b>3 mensagens</b>. Sem o filtro, sairiam 12.</div></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Antes de montar fluxos, onde o n8n roda?</div><p>Na nuvem deles ou no seu computador.</p></div>
+</section>
+
+<section class="sec" id="onde">
+  <h2><span class="sn">2</span>Onde rodar: nuvem ou o seu PC</h2>
+  <p class="gancho">O n8n tem duas formas de uso. Qual faz sentido para estudar?</p>
+  <div class="grid2">
+    <div class="card rv"><b>n8n Cloud</b><p>Você cria a conta e usa no navegador. A página de preços (29/10/2026) mostra um teste gratuito com limites (1.000 execuções, sem cartão) e planos pagos depois. Bom para começar hoje.</p></div>
+    <div class="card rv"><b>Self-hosted (Community Edition)</b><p>A versão padrão do n8n é publicada no GitHub e você roda no seu computador ou servidor, sem pagar licença. O jeito recomendado é com Docker, que é o capítulo 4.</p></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Sugestão da trilha</span>Comece no Cloud nas semanas 2 e 3 para não travar na instalação. Na semana 4, depois do Docker, leve o mesmo fluxo para o seu PC.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O dado de um nó precisa chegar no seguinte. Como eu digo 'use o nome do cliente aqui'?</div><p>Com expressões.</p></div>
+</section>
+
+<section class="sec" id="expressoes">
+  <h2><span class="sn">3</span>Expressões: puxar dados de um nó para outro</h2>
+  <p class="gancho">Como escrever "Olá, Ana" quando o nome muda a cada item?</p>
+  <p>Em qualquer campo de um nó você pode escrever uma <b>expressão</b> entre chaves duplas. Dentro delas vale um JavaScript simplificado, e <code>$json</code> é o item atual que chegou do nó anterior. A documentação oficial usa o exemplo <code>{{$json.body.city}}</code>: o campo <code>city</code> dentro de <code>body</code>. É o caminho de JSON do capítulo 1, com <code>$json</code> na frente.</p>
+  <div class="demo" data-demo="expr"></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>O nome do campo mudou na origem (alguém renomeou a coluna da planilha) e a expressão continua apontando para o nome antigo. Resultado: campo vazio sem erro nenhum, ou erro ao ler algo de um objeto que não existe. Sempre abra a aba de entrada do nó e confira os nomes.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Expressões resolvem o dado. E as senhas dos serviços que o fluxo usa?</div><p>Ficam no cofre: credenciais.</p></div>
+</section>
+
+<section class="sec" id="credenciais">
+  <h2><span class="sn">4</span>Credenciais</h2>
+  <p class="gancho">Onde colocar a chave do Google, do Telegram ou do modelo de IA?</p>
+  <p>O n8n tem um lugar próprio para <b>credenciais</b>. Você cadastra uma vez (por chave de API ou por login OAuth, quando o serviço oferece) e escolhe a credencial no nó. Ela fica guardada separada do fluxo; quando você exporta o workflow em JSON para compartilhar, a chave não vai junto. É a aplicação da regra do capítulo 1: segredo fora da receita.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Com gatilho, nós, expressões e credenciais, falta a parte que dá nome à vaga: a IA.</div><p>O nó de agente.</p></div>
+</section>
+
+<section class="sec" id="ia">
+  <h2><span class="sn">5</span>IA dentro do fluxo: o nó AI Agent</h2>
+  <p class="gancho">Como colocar um modelo de linguagem no meio de uma automação, e não só no fim?</p>
+  <p>O n8n tem nós de IA. O mais usado é o <b>AI Agent</b>, que junta três peças: um <b>modelo de chat</b> (Claude, GPT, Gemini, conectados pela credencial), <b>ferramentas</b> que o agente pode decidir usar (consultar planilha, chamar uma API, buscar na web) e uma <b>memória</b> da conversa. Para tarefas sem decisão, como resumir ou classificar um texto, um nó de chamada direta ao modelo basta e é mais previsível.</p>
+  <h3>Projeto guiado da semana: triagem de pedidos com IA</h3>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Gatilho</b><p>Nó <b>Form Trigger</b> (ou Webhook) com os campos nome, e-mail e mensagem.</p></div>
+      <div class="st"><b>2. Classificar</b><p>Nó de modelo de chat com o prompt: "Classifique a mensagem em uma destas categorias: orçamento, suporte, reclamação. Responda só com a categoria." e a mensagem via <code>{{ $json.mensagem }}</code>.</p></div>
+      <div class="st"><b>3. Decidir</b><p>Nó <b>Switch</b>: cada categoria segue um caminho. Trate também o caso "outra resposta", porque o modelo pode fugir do combinado.</p></div>
+      <div class="st"><b>4. Agir</b><p>Orçamento vira linha na planilha; reclamação manda alerta no Telegram; suporte gera resposta automática por e-mail.</p></div>
+      <div class="st"><b>5. Medir</b><p>Anote quanto tempo a triagem manual levava e quantos pedidos chegam por semana. É o número do seu portfólio (capítulo 9).</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">IA não é determinística</span>O mesmo texto pode receber categorias diferentes em execuções diferentes. Peça saída curta e fechada, trate a resposta inesperada e teste com mensagens de verdade antes de ligar o fluxo em produção.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E quando um nó falha às 3 da manhã?</div><p>Tratamento de erro.</p></div>
+</section>
+
+<section class="sec" id="erros">
+  <h2><span class="sn">6</span>Quando dá errado</h2>
+  <p class="gancho">Fluxo que falha em silêncio é pior que fluxo nenhum. Como ficar sabendo?</p>
+  <p>Três hábitos: (1) a aba <b>Executions</b> guarda cada execução com o dado que passou em cada nó, então reproduza o erro olhando a entrada do nó que quebrou; (2) monte um workflow separado começando pelo nó <b>Error Trigger</b>, que dispara quando outro fluxo falha, e mande um aviso para você; (3) em nós que chamam APIs instáveis, ative novas tentativas com espera.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O n8n resolve quase tudo, mas não é a única ferramenta do mercado.</div><p>Make e Zapier no próximo capítulo.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">7</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Workflow = gatilho + nós. Cada nó recebe uma lista de itens e roda uma vez por item.</li><li>Cloud para começar rápido; Community Edition self-hosted (com Docker) para rodar no seu PC.</li><li>Expressão: <code>{{ $json.campo }}</code> lê o item atual. Confira os nomes na aba de entrada.</li><li>Credenciais ficam no cofre do n8n, fora do workflow exportado.</li><li>AI Agent = modelo + ferramentas + memória. Para classificar ou resumir, a chamada direta basta.</li><li>Executions para investigar; Error Trigger para ser avisado.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Um nó de planilha devolve 50 linhas e o próximo nó envia e-mail. Sem nada no meio, quantos e-mails saem?</p>
+    <div class="opts"><button data-k="a">1</button><button data-k="b">50</button><button data-k="c">Depende do gatilho</button><button data-k="d">Nenhum, falta um laço</button></div>
+    <div class="fb">O n8n roda o nó uma vez por item. 50 itens, 50 e-mails. Se não era isso, filtre ou agregue antes.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">A expressão <code>{{ $json.cliente.telefone }}</code> volta vazia. O primeiro passo é:</p>
+    <div class="opts"><button data-k="a">Abrir a entrada do nó e conferir se o campo existe com esse nome</button><button data-k="b">Trocar o modelo de IA</button><button data-k="c">Reinstalar o n8n</button><button data-k="d">Apagar a credencial</button></div>
+    <div class="fb">Campo vazio quase sempre é nome diferente ou dado ausente no item. A aba de entrada mostra exatamente o JSON que chegou.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 3</span><p class="qq">Para classificar uma mensagem em três categorias fixas, o mais previsível é:</p>
+    <div class="opts"><button data-k="a">Um AI Agent com dez ferramentas</button><button data-k="b">Pedir uma resposta livre e longa</button><button data-k="c">Não usar IA</button><button data-k="d">Uma chamada direta ao modelo pedindo só a categoria, e um Switch tratando a resposta inesperada</button></div>
+    <div class="fb">Sem decisão sobre ferramentas, o agente só acrescenta variação. Saída fechada mais tratamento do inesperado deixa o fluxo confiável.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 4</span><p class="qq">Você quer ser avisado quando qualquer fluxo falhar. Use:</p>
+    <div class="opts"><button data-k="a">Um nó Wait</button><button data-k="b">Um webhook público</button><button data-k="c">Um workflow com Error Trigger que manda alerta</button><button data-k="d">A aba Executions toda manhã</button></div>
+    <div class="fb">O Error Trigger dispara sozinho na falha. Olhar Executions é investigar depois, não ser avisado.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Item no n8n</b></span><span class="bk">Cada JSON da lista que passa entre os nós. Em regra, o nó roda uma vez por item.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é $json?</b></span><span class="bk">O item atual que chegou do nó anterior, usado dentro de {{ }}.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Community Edition</b></span><span class="bk">A versão padrão do n8n, publicada no GitHub, que você mesmo hospeda.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Três peças do AI Agent</b></span><span class="bk">Modelo de chat, ferramentas e memória.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Error Trigger</b></span><span class="bk">Nó que inicia um workflow quando outro workflow falha.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 3</div><div class="q">O n8n não é a única opção. Quando Make ou Zapier resolvem melhor?</div><p>Os dois concorrentes mais conhecidos, e como cada um cobra.</p></div>
+</section>
+
+</article>
+</body>
+</html>

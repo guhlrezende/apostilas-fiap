@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: Vibe coding com Cursor | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Fase 4</div>
+  <h1>Vibe coding com Cursor</h1>
+  <p class="sub">Deixar a IA escrever o código sem perder o controle do que ela mudou.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 4 você colocou o n8n para rodar no seu PC com Docker. A partir daqui, a trilha muda de usar ferramentas para construir as suas, com IA escrevendo boa parte do código.</div>
+<section class="sec" id="vibe">
+  <h2><span class="sn">1</span>O que é vibe coding, e o que não é</h2>
+  <p class="gancho">Se a IA escreve o código, o que sobra para mim?</p>
+  <p>"Vibe coding" é o nome que pegou, a partir de 2025, para programar descrevendo o que você quer em linguagem natural e deixando a IA escrever o código. O termo nasceu meio de brincadeira, para protótipos descartáveis em que você aceita o que vier.</p>
+  <p>Para trabalho de verdade, o seu papel muda de <b>digitar</b> para <b>especificar e verificar</b>: dizer exatamente o que quer, ler o que mudou, rodar os testes e decidir. A vaga de AI Builder descreve isso: não precisa saber como o modelo funciona por dentro, precisa saber o que pedir e transformar em algo que funciona.</p>
+  <div class="nota cuidado"><span class="lbl">O limite</span>Código que você não entende e não testou não vai para algo que outras pessoas usam. Protótipo pode ser no impulso; ferramenta interna, não.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Qual o ambiente para esse trabalho?</div><p>Um editor com IA dentro.</p></div>
+</section>
+
+<section class="sec" id="cursor">
+  <h2><span class="sn">2</span>O Cursor</h2>
+  <p class="gancho">Por que um editor próprio, e não só o chat no navegador?</p>
+  <p>O <b>Cursor</b> é um editor de código baseado no VS Code com IA integrada. Ele enxerga o projeto inteiro, então a IA trabalha em cima dos seus arquivos, e não de trechos colados. As peças principais:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Peça</th><th>Para que serve</th></tr>
+    <tr><td><b>Tab</b></td><td>autocompletar enquanto você digita</td></tr>
+    <tr><td><b>Chat e agente</b></td><td>pedir mudanças em vários arquivos; o agente lê, edita e roda comandos</td></tr>
+    <tr><td><b>@ (menções)</b></td><td>apontar arquivos, pastas ou documentação como contexto</td></tr>
+    <tr><td><b>Rules</b></td><td>instruções permanentes do projeto</td></tr>
+  </table></div>
+  <p><b>Rules, conferido na documentação:</b> as regras do projeto ficam em <code>.cursor/rules</code>, em arquivos <code>.mdc</code>. Há quatro tipos: <b>Always</b> (sempre no contexto), <b>Auto Attached</b> (quando arquivos que batem com um padrão aparecem), <b>Agent Requested</b> (a IA decide pela descrição) e <b>Manual</b> (só quando você chama com <code>@nome</code>). Um <code>AGENTS.md</code> simples na raiz também é aceito. O antigo <code>.cursorrules</code> ainda funciona, mas está depreciado.</p>
+  <div class="nota lembra"><span class="lbl">E o Claude Code?</span>A extensão do Claude Code instala também no Cursor. Os dois convivem: a apostila do Claude cobre o Claude Code em detalhe.</div>
+  <div class="nota cuidado"><span class="lbl">Planos</span>O Cursor tem uma entrada gratuita com uso de IA limitado e planos pagos. Os nomes e limites dos planos mudaram mais de uma vez em 2026: confira a página de preços antes de assinar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Com o editor aberto, como trabalhar sem perder o controle do que a IA mudou?</div><p>Um laço curto e repetível.</p></div>
+</section>
+
+<section class="sec" id="laco">
+  <h2><span class="sn">3</span>O laço seguro</h2>
+  <p class="gancho">Como evitar a pilha de mudanças que ninguém entende?</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Commit limpo</b><p>Antes de pedir, <code>git status</code> sem pendências. Se a IA estragar, <code>git restore .</code> volta tudo.</p></div>
+      <div class="st"><b>2. Peça um plano</b><p>"Antes de editar, liste os arquivos que vai mudar e por quê." Corrija o plano, não o código.</p></div>
+      <div class="st"><b>3. Um passo pequeno</b><p>Uma funcionalidade por vez. Diff grande é diff que você não lê.</p></div>
+      <div class="st"><b>4. Leia o diff</b><p>Procure segredo no código, arquivo que não devia mudar e teste apagado para "passar".</p></div>
+      <div class="st"><b>5. Rode a verificação</b><p>Testes, o app abrindo, o fluxo rodando. Peça para a IA mostrar a saída do teste, não dizer que passou.</p></div>
+      <div class="st"><b>6. Commit</b><p>Mensagem curta do que mudou. Volte ao passo 2.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="a:Aceitar|r:Revisar antes">
+    <div class="item" data-ans="r"><p>A IA "resolveu" o teste que falhava apagando o teste.</p><span class="why">Clássico: o objetivo virou fazer o teste passar, não fazer o código funcionar. Rejeite.</span></div>
+    <div class="item" data-ans="a"><p>Renomear uma variável em um arquivo, com os testes passando.</p><span class="why">Mudança pequena, verificável e reversível.</span></div>
+    <div class="item" data-ans="r"><p>O diff tem uma linha <code>API_KEY = "sk-..."</code>.</p><span class="why">Segredo no código. Volte para variável de ambiente antes de qualquer commit.</span></div>
+    <div class="item" data-ans="r"><p>Você pediu uma tela e o agente também mexeu em 14 arquivos de configuração.</p><span class="why">Escopo maior do que o pedido: entenda cada mudança ou desfaça.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O Cursor brilha num projeto que já existe. E para sair do zero até uma tela publicada?</div><p>Os geradores de app.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Vibe coding: programar descrevendo. O seu trabalho vira especificar e verificar.</li><li>Cursor: Tab, chat/agente, @ para contexto e rules do projeto.</li><li>Rules em <code>.cursor/rules/*.mdc</code> (Always, Auto Attached, Agent Requested, Manual); <code>AGENTS.md</code> também vale; <code>.cursorrules</code> está depreciado.</li><li>Laço: commit limpo, plano, passo pequeno, ler o diff, verificar, commit.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Onde ficam as regras de projeto do Cursor, pela documentação atual?</p>
+    <div class="opts"><button data-k="a">Em <code>.cursorrules</code>, o formato recomendado</button><button data-k="b">Nas configurações da conta</button><button data-k="c">Em <code>.cursor/rules</code>, em arquivos <code>.mdc</code></button><button data-k="d">No README</button></div>
+    <div class="fb"><code>.cursorrules</code> ainda funciona, mas está depreciado. O formato atual são arquivos .mdc em .cursor/rules.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Qual tipo de regra entra só quando você escreve <code>@nome</code>?</p>
+    <div class="opts"><button data-k="a">Manual</button><button data-k="b">Always</button><button data-k="c">Auto Attached</button><button data-k="d">Agent Requested</button></div>
+    <div class="fb">Manual depende de você chamar. Always entra sempre; Auto Attached por padrão de arquivo; Agent Requested pela decisão da IA.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O agente disse “todos os testes passam”. O que fazer?</p>
+    <div class="opts"><button data-k="a">Commitar</button><button data-k="b">Pedir a saída do comando de teste, ou rodar você mesmo</button><button data-k="c">Pedir para ele confirmar de novo</button><button data-k="d">Apagar os testes antigos</button></div>
+    <div class="fb">Evidência vale mais que afirmação. A saída do teste mostra o que rodou e o que passou.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Vibe coding</b></span><span class="bk">Programar descrevendo em linguagem natural; a IA escreve o código e você especifica e verifica.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o @ no Cursor?</b></span><span class="bk">Apontar arquivos, pastas ou documentação como contexto do pedido.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que commit antes de pedir?</b></span><span class="bk">Para poder voltar tudo com um comando se a IA estragar.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Sinal de alerta no diff</b></span><span class="bk">Teste apagado, segredo no código, arquivo fora do escopo mudado.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">E quando eu quero um protótipo inteiro, com tela e deploy, em uma tarde?</div><p>v0, Bolt e Replit.</p></div>
+</section>
+
+</article>
+</body>
+</html>

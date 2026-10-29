@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: Make e Zapier | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Fase 2</div>
+  <h1>Make e Zapier</h1>
+  <p class="sub">Os dois concorrentes do n8n, como cada um cobra e qual escolher em cada caso.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 2 você montou fluxos no n8n: gatilho, itens, expressões, credenciais e o nó de agente. Ficou a pergunta: quando as alternativas resolvem melhor?</div>
+<section class="sec" id="make">
+  <h2><span class="sn">1</span>Make: cenários visuais</h2>
+  <p class="gancho">O Make faz o mesmo que o n8n? Quase. O que muda?</p>
+  <p>No Make o fluxo se chama <b>cenário</b> e cada passo é um <b>módulo</b>. Os dados viajam em <b>bundles</b> (o equivalente ao item do n8n). Ferramentas próprias do Make: o <b>router</b> divide o fluxo em caminhos, o <b>iterator</b> quebra uma lista em vários bundles e o <b>aggregator</b> junta vários de volta em um. Filtros ficam nas ligações entre módulos.</p>
+  <p><b>Como cobra.</b> Segundo a página de preços (29/10/2026), a unidade de cobrança do Make são <b>créditos</b>, e o plano gratuito dá <b>1.000 créditos por mês</b>. Cada módulo executado consome créditos; a regra exata de consumo está na página oficial e muda, então estime com um cenário real antes de assinar.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O Zapier também liga serviços. Por que tanta gente começa por ele?</div><p>Simplicidade, e uma cobrança diferente.</p></div>
+</section>
+
+<section class="sec" id="zapier">
+  <h2><span class="sn">2</span>Zapier: Zaps e tasks</h2>
+  <p class="gancho">Qual a ferramenta mais simples para quem nunca automatizou nada?</p>
+  <p>No Zapier o fluxo é um <b>Zap</b>: um <b>trigger</b> e uma ou mais <b>actions</b>. A interface é linear e cheia de integrações prontas. A cobrança é por <b>task</b>: segundo a página de preços (29/10/2026), uma task é gasta quando uma ação conclui com sucesso. Triggers, ações que falham e ferramentas internas como Filter, Formatter e Paths <b>não</b> contam. O plano gratuito dá <b>100 tasks por mês</b> e só permite Zaps de <b>dois passos</b> (um trigger e uma ação); Zaps com vários passos começam no plano pago.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: cabe no gratuito?</span>
+    <div class="l"><div>Zap pensado: formulário (trigger) → criar linha na planilha → mandar e-mail → mandar mensagem no Slack. São 3 ações.</div></div>
+    <div class="l"><div>Primeiro problema: são 4 passos. O gratuito só aceita 2. Já não cabe.</div></div>
+    <div class="l"><div>Mesmo pago, 40 envios por mês × 3 ações = <b>120 tasks</b>. Isso passaria das 100 do plano gratuito.</div></div>
+    <div class="l"><div>No gratuito, o que cabe é 1 Zap de 2 passos rodando até 100 vezes por mês.</div></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Três ferramentas parecidas. Como escolher sem achismo?</div><p>Pelo que cada uma cobra e pede de você.</p></div>
+</section>
+
+<section class="sec" id="comparar">
+  <h2><span class="sn">3</span>Qual escolher</h2>
+  <p class="gancho">Não existe a melhor. Existe a melhor para o caso. Quais critérios decidem?</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>n8n</th><th>Make</th><th>Zapier</th></tr>
+    <tr><td>Onde roda</td><td>nuvem deles ou seu servidor</td><td>nuvem deles</td><td>nuvem deles</td></tr>
+    <tr><td>Cobra por</td><td>execução de workflow (Cloud); self-hosted sem licença</td><td>créditos</td><td>tasks (ações concluídas)</td></tr>
+    <tr><td>Curva</td><td>a mais técnica (expressões, código)</td><td>intermediária</td><td>a mais simples</td></tr>
+    <tr><td>Brilha em</td><td>fluxos longos, dados sensíveis no seu servidor, IA com agentes</td><td>transformação de dados visual com routers e iterators</td><td>ligar dois apps rápido, por quem não é técnico</td></tr>
+  </table></div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="n:n8n|m:Make|z:Zapier">
+    <div class="item" data-ans="n"><p>O escritório não aceita que os dados dos clientes passem por servidor de terceiros.</p><span class="why">Só o n8n pode rodar no servidor da própria empresa.</span></div>
+    <div class="item" data-ans="z"><p>A dona de uma loja pequena quer que todo pedido novo vire linha numa planilha, e ela mesma vai manter.</p><span class="why">Dois passos, pessoa não técnica: o caso clássico do Zapier, e cabe no gratuito se forem até 100 pedidos por mês.</span></div>
+    <div class="item" data-ans="m"><p>Um JSON de pedido traz uma lista de produtos; cada produto precisa ir para um sistema diferente conforme a categoria.</p><span class="why">Quebrar a lista (iterator) e dividir por caminhos (router) é o ponto forte do Make.</span></div>
+    <div class="item" data-ans="n"><p>Um fluxo de 1.500 passos por dia, com chamadas de IA, que ficaria caro cobrado por ação.</p><span class="why">Self-hosted, o n8n não cobra por execução: o custo é o servidor.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Para o portfólio</span>Monte o projeto do capítulo 2 também no Make ou no Zapier. Comparar a mesma automação em duas ferramentas, com o custo de cada uma, é uma entrega que mostra critério, não só mão na massa.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O n8n self-hosted pede Docker. É hora de entender essa peça.</div><p>No próximo capítulo.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Make: cenário, módulos, bundles, router, iterator e aggregator. Cobra em créditos (1.000/mês no gratuito, em 29/10/2026).</li><li>Zapier: Zap = trigger + actions. Cobra por task concluída; trigger, falha e Filter/Formatter/Paths não contam.</li><li>Zapier gratuito: 100 tasks/mês e Zaps de 2 passos.</li><li>n8n: o único dos três que você pode hospedar; o mais técnico.</li><li>Escolha pelo onde roda, como cobra e quem vai manter.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">No Zapier, um Zap com trigger + 2 ações rodou 30 vezes, e todas as ações deram certo. Quantas tasks?</p>
+    <div class="opts"><button data-k="a">30</button><button data-k="b">60</button><button data-k="c">90</button><button data-k="d">0, triggers não contam</button></div>
+    <div class="fb">Só as ações concluídas contam: 2 por execução × 30 = 60. O trigger não conta.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">No Make, qual peça transforma uma lista de 5 produtos em 5 bundles?</p>
+    <div class="opts"><button data-k="a">Router</button><button data-k="b">Aggregator</button><button data-k="c">Iterator</button><button data-k="d">Filtro</button></div>
+    <div class="fb">O iterator quebra a lista. O aggregator faz o caminho inverso; o router divide por caminhos.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Dados sensíveis não podem sair da empresa. Qual ferramenta atende?</p>
+    <div class="opts"><button data-k="a">n8n self-hosted</button><button data-k="b">Zapier</button><button data-k="c">Make</button><button data-k="d">Qualquer uma, com senha forte</button></div>
+    <div class="fb">Make e Zapier rodam na nuvem deles: o dado passa por lá. Só o n8n roda no servidor da empresa.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Bundle</b></span><span class="bk">O pacote de dados que passa entre módulos no Make (o item do n8n).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que gasta task no Zapier?</b></span><span class="bk">Cada ação concluída com sucesso. Trigger, falha e ferramentas internas não.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Limite do Zapier gratuito</b></span><span class="bk">100 tasks por mês e Zaps de dois passos (conferido em 29/10/2026).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Router x iterator</b></span><span class="bk">Router divide o fluxo em caminhos. Iterator quebra uma lista em vários bundles.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">Para rodar o n8n no meu PC, a documentação manda usar Docker. O que é isso?</div><p>A ferramenta que empacota um programa com tudo o que ele precisa.</p></div>
+</section>
+
+</article>
+</body>
+</html>

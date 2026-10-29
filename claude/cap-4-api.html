@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: A API: primeira chamada e custo | Apostila de Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cl.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Parte 2</div>
+  <h1>A API: primeira chamada e custo</h1>
+  <p class="sub">Colocar o Claude dentro de um programa seu, e saber quanto isso custa antes de ligar.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 4 testes · 5 flashcards</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 3 você aprendeu a montar um bom prompt. Na API, esse mesmo prompt vai dentro de um programa, e cada palavra passa a ter preço.</div>
+<section class="sec" id="chave">
+  <h2><span class="sn">1</span>Chave e ambiente</h2>
+  <p class="gancho">O que preciso antes da primeira linha de código?</p>
+  <p>Uma conta na <b>Claude Console</b> (platform.claude.com), créditos e uma <b>chave de API</b>. A chave vai na variável de ambiente <code>ANTHROPIC_API_KEY</code>; o SDK de Python lê ela sozinho. Instalação: <code>pip install anthropic</code>. A regra do capítulo 1 da apostila de AI Builder vale aqui: a chave nunca entra no código nem no Git.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Com a chave no ambiente, como é a chamada?</div><p>Três parâmetros obrigatórios.</p></div>
+</section>
+
+<section class="sec" id="chamada">
+  <h2><span class="sn">2</span>A primeira chamada</h2>
+  <p class="gancho">Qual o mínimo para o Claude responder de dentro de um programa?</p>
+<pre><code>"""Primeira chamada à API do Claude (apostila do Claude, cap. 4).
+
+Precisa de uma chave da Claude Console na variável de ambiente ANTHROPIC_API_KEY.
+Rodar:  pip install anthropic   e depois   python primeira_chamada.py
+"""
+import anthropic
+
+cliente = anthropic.Anthropic()  # lê ANTHROPIC_API_KEY do ambiente
+
+resposta = cliente.messages.create(
+    model="claude-sonnet-5-5",   # ID do modelo, conferido na página de modelos em 29/10/2026
+    max_tokens=500,              # teto da resposta, em tokens
+    system="Você é um tutor de programação. Responda em português, em no máximo 3 frases.",
+    messages=[
+        {"role": "user", "content": "O que é uma API, explicado para quem vem do Direito?"},
+    ],
+)
+
+print(resposta.content[0].text)   # o texto da resposta
+print(resposta.stop_reason)       # por que parou: end_turn, max_tokens, tool_use...
+print(resposta.usage.input_tokens, resposta.usage.output_tokens)  # o que você paga
+</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Parâmetro</th><th>Obrigatório?</th><th>O que é</th></tr>
+    <tr><td><code>model</code></td><td>sim</td><td>o ID do modelo (tabela do capítulo 1)</td></tr>
+    <tr><td><code>max_tokens</code></td><td>sim</td><td>o teto da resposta; o modelo pode parar antes</td></tr>
+    <tr><td><code>messages</code></td><td>sim</td><td>a conversa: lista de <code>{"role": "user" ou "assistant", "content": ...}</code></td></tr>
+    <tr><td><code>system</code></td><td>não</td><td>o system prompt, como parâmetro separado (não como mensagem)</td></tr>
+  </table></div>
+  <p><b>A resposta</b> traz <code>content</code> (uma lista de blocos; o de texto tem <code>.text</code>), <code>stop_reason</code> e <code>usage</code> com os tokens. Os valores de <code>stop_reason</code> que você vai ver: <code>end_turn</code> (terminou), <code>max_tokens</code> (bateu o teto e cortou), <code>stop_sequence</code> e <code>tool_use</code> (quer usar uma ferramenta, capítulo 5).</p>
+  <p class="muted">Este código precisa de chave para rodar e não foi executado aqui. O exemplo do capítulo 5 tem um teste que roda sem chave.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Resposta cortada no meio e <code>stop_reason</code> igual a <code>max_tokens</code>. Não é bug: o teto foi baixo. Aumente <code>max_tokens</code> ou peça uma resposta mais curta.</div>
+  <div class="nota lembra"><span class="lbl">Sem memória entre chamadas</span>A API não lembra a conversa anterior. Para continuar, você reenvia o histórico inteiro em <code>messages</code>. E todo o histórico é cobrado como entrada a cada chamada.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se tudo é cobrado em token, quanto custa?</div><p>A conta, com os preços oficiais.</p></div>
+</section>
+
+<section class="sec" id="custo">
+  <h2><span class="sn">3</span>Tokens e custo</h2>
+  <p class="gancho">Quanto custa usar a API num projeto de verdade?</p>
+  <p>Token é um pedaço de texto (em média, menos que uma palavra). Você paga a <b>entrada</b> (system, histórico, documentos, definição de ferramentas) e a <b>saída</b> (o que o modelo escreve), com preço por milhão de tokens.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: 1.000 chamadas no Sonnet 5.5</span>
+    <div class="l"><div>Cada chamada: 3.000 tokens de entrada e 500 de saída. Preço: US$ 2 e US$ 10 por milhão.</div></div>
+    <div class="l"><div>Entrada: 3.000 ÷ 1.000.000 × 2 = US$ 0,006. Saída: 500 ÷ 1.000.000 × 10 = US$ 0,005.</div></div>
+    <div class="l"><div>Uma chamada: US$ 0,011. Mil chamadas: <b>US$ 11</b>. Confira na demo abaixo, que abre com estes valores.</div></div>
+  </div>
+  <div class="demo" data-demo="custoApi"></div>
+  <p><b>Como pagar menos</b>, pela documentação: a <b>Batch API</b> (pedidos processados de forma assíncrona) custa 50% menos; o <b>prompt caching</b> cobra a leitura de um trecho repetido a uma fração do preço de entrada (10% do preço base em geral, 5% no Opus 5.5 e no Sonnet 5.5); e escolher o modelo menor que resolve. Fora isso: limite o tamanho da resposta e não reenvie histórico que não importa.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">A API responde texto. Como faço o Claude consultar meus sistemas?</div><p>Ferramentas.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Conta na Claude Console, chave em <code>ANTHROPIC_API_KEY</code>, <code>pip install anthropic</code>.</li><li>Obrigatórios: <code>model</code>, <code>max_tokens</code>, <code>messages</code>. <code>system</code> é parâmetro separado.</li><li>Resposta: blocos em <code>content</code>, <code>stop_reason</code> e <code>usage</code>.</li><li>A API não guarda a conversa: você reenvia o histórico, e ele é cobrado.</li><li>Custo = entrada × preço + saída × preço. Batch 50% off; cache lê a uma fração do preço.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Qual destes NÃO é obrigatório em <code>messages.create</code>?</p>
+    <div class="opts"><button data-k="a">model</button><button data-k="b">system</button><button data-k="c">max_tokens</button><button data-k="d">messages</button></div>
+    <div class="fb">O system prompt é opcional. Os outros três são obrigatórios.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">A resposta veio cortada e o <code>stop_reason</code> é <code>max_tokens</code>. O que houve?</p>
+    <div class="opts"><button data-k="a">Erro de autenticação</button><button data-k="b">O modelo recusou</button><button data-k="c">O teto de tokens da resposta foi atingido</button><button data-k="d">A ferramenta falhou</button></div>
+    <div class="fb"><code>max_tokens</code> como motivo de parada significa que o teto definido por você foi alcançado.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">1.000 chamadas no Opus 5.5 com 2.000 tokens de entrada e 1.000 de saída custam:</p>
+    <div class="opts"><button data-k="a">US$ 28</button><button data-k="b">US$ 24</button><button data-k="c">US$ 12</button><button data-k="d">US$ 2,80</button></div>
+    <div class="fb">Entrada: 2.000 ÷ 1M × 4 = 0,008. Saída: 1.000 ÷ 1M × 20 = 0,020. Total 0,028 por chamada × 1.000 = US$ 28.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 4</span><p class="qq">O seu chatbot reenviou um histórico enorme em cada chamada. O que acontece?</p>
+    <div class="opts"><button data-k="a">Nada, histórico é grátis</button><button data-k="b">A API recusa</button><button data-k="c">Só a última mensagem é cobrada</button><button data-k="d">Todo o histórico é cobrado como entrada, a cada chamada</button></div>
+    <div class="fb">Tudo o que vai em <code>messages</code> é entrada. Histórico longo encarece cada nova chamada.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Variável de ambiente da chave</b></span><span class="bk">ANTHROPIC_API_KEY.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Três parâmetros obrigatórios</b></span><span class="bk">model, max_tokens e messages.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>stop_reason = tool_use</b></span><span class="bk">O modelo quer que o seu código execute uma ferramenta.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Batch API</b></span><span class="bk">Processamento assíncrono com 50% de desconto.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Prompt caching</b></span><span class="bk">Trecho repetido do prompt lido a uma fração do preço de entrada.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">A API responde texto. Como faço o Claude consultar meus sistemas?</div><p>Tool use e o laço do agente.</p></div>
+</section>
+
+</article>
+</body>
+</html>

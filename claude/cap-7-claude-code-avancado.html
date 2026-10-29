@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: Claude Code: skills, subagentes, hooks e MCP | Apostila de Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cl.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Parte 4</div>
+  <h1>Claude Code: skills, subagentes, hooks e MCP</h1>
+  <p class="sub">Estender o Claude Code com fluxos, revisores, travas e acesso a outros sistemas.</p>
+  <div class="meta"><span class="chip"><b>~55 min</b></span><span class="chip">1 demo · 4 testes · 5 flashcards</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 6 você instalou o Claude Code, escreveu o CLAUDE.md e aprendeu a cuidar do contexto. Agora você vai estender a ferramenta. Os arquivos deste capítulo estão em <code>exemplos/projeto-exemplo/</code>.</div>
+<section class="sec" id="mapa">
+  <h2><span class="sn">1</span>O mapa das extensões</h2>
+  <p class="gancho">Skill, subagente, hook, MCP, plugin. Qual resolve o quê?</p>
+  <div class="tablewrap"><table>
+    <tr><th>Extensão</th><th>Resolve</th><th>Onde mora</th></tr>
+    <tr><td><b>Skill</b></td><td>um fluxo ou conhecimento que se repete; carrega só quando usado</td><td><code>.claude/skills/NOME/SKILL.md</code></td></tr>
+    <tr><td><b>Subagente</b></td><td>tarefa que polui o contexto (busca, revisão); roda numa janela própria</td><td><code>.claude/agents/NOME.md</code></td></tr>
+    <tr><td><b>Hook</b></td><td>algo que tem de acontecer sempre, sem depender do modelo</td><td><code>.claude/settings.json</code></td></tr>
+    <tr><td><b>MCP</b></td><td>acesso a sistemas externos (Notion, banco, Figma)</td><td><code>claude mcp add</code> / <code>.mcp.json</code></td></tr>
+    <tr><td><b>Plugin</b></td><td>empacotar e compartilhar tudo isso junto</td><td><code>/plugin</code></td></tr>
+  </table></div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="s:Skill|a:Subagente|h:Hook|m:MCP">
+    <div class="item" data-ans="h"><p>Rodar o formatador depois de toda edição de arquivo, sem exceção.</p><span class="why">"Sempre, sem exceção" é hook: não depende do modelo lembrar.</span></div>
+    <div class="item" data-ans="s"><p>O passo a passo que você repete toda semana para publicar uma apostila nova.</p><span class="why">Fluxo repetível que você chama com /nome: skill.</span></div>
+    <div class="item" data-ans="a"><p>Revisar o diff com olhos de quem não escreveu o código.</p><span class="why">Contexto separado e sem viés do autor: subagente revisor.</span></div>
+    <div class="item" data-ans="m"><p>Ler as tarefas do Notion para implementar a próxima.</p><span class="why">Sistema externo: servidor MCP do Notion.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Começando pela mais usada.</div><p>Skills.</p></div>
+</section>
+
+<section class="sec" id="skills">
+  <h2><span class="sn">2</span>Skills</h2>
+  <p class="gancho">Como ensinar um fluxo uma vez e chamar com uma palavra?</p>
+  <p>Uma skill é uma pasta com um <code>SKILL.md</code>. A <code>description</code> fica sempre visível para o Claude, e é por ela que ele decide carregar a skill sozinho; o corpo só entra no contexto quando a skill é usada. Você também chama direto com <code>/nome</code>. Pastas: <code>~/.claude/skills/</code> (suas, em todos os projetos) ou <code>.claude/skills/</code> (do projeto, no Git).</p>
+<pre><code>---
+description: Resume as mudanças ainda não commitadas e aponta riscos. Use quando eu perguntar o que mudou ou pedir mensagem de commit.
+---
+
+## Mudanças atuais
+
+!`git diff HEAD`
+
+## Instruções
+
+Resuma as mudanças acima em dois ou três tópicos e depois liste riscos, como tratamento de erro faltando ou valor fixo no código. Se o diff estiver vazio, diga que não há mudanças pendentes.
+</code></pre>
+  <p>A linha <code>!`git diff HEAD`</code> roda o comando e injeta a saída no texto da skill antes de o Claude ler. Outros campos úteis do frontmatter: <code>disable-model-invocation: true</code> (só você chama; bom para fluxos com efeito colateral, como deploy) e <code>$ARGUMENTS</code> no corpo, que recebe o que vier depois de <code>/nome</code>. Os antigos comandos em <code>.claude/commands/</code> continuam funcionando, mas a documentação recomenda skills para coisas novas.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Algumas tarefas leem tanto arquivo que estragam o contexto da sessão principal.</div><p>Para isso, subagentes.</p></div>
+</section>
+
+<section class="sec" id="subagentes">
+  <h2><span class="sn">3</span>Subagentes</h2>
+  <p class="gancho">Como fazer uma investigação enorme sem encher a sua sessão?</p>
+  <p>Um subagente roda numa <b>janela de contexto própria</b>, com system prompt, ferramentas e permissões próprios. Ele trabalha e devolve só o resultado. Serve para preservar contexto, restringir ferramentas (um revisor que só lê) e usar um modelo mais barato em tarefa simples.</p>
+<pre><code>---
+name: revisor
+description: Revisa código recém-alterado procurando bugs, segredos expostos e falta de teste. Use depois de implementar algo.
+tools: Read, Glob, Grep
+model: sonnet
+---
+
+Você é um revisor de código. Leia só o que mudou e aponte, com arquivo e linha:
+1. bugs prováveis;
+2. chaves, senhas ou dados pessoais no código;
+3. comportamento novo sem teste.
+Não reescreva o código. Não comente estilo, só o que afeta correção ou segurança.
+</code></pre>
+  <p>Campos obrigatórios: <code>name</code> e <code>description</code>. <code>tools</code> limita o que ele pode fazer (aqui, só ler e buscar); sem esse campo, ele herda tudo. Use pedindo: "use o subagente revisor nas mudanças de hoje".</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">CLAUDE.md e skills orientam. E o que não pode depender de o modelo lembrar?</div><p>Hooks.</p></div>
+</section>
+
+<section class="sec" id="hooks">
+  <h2><span class="sn">4</span>Hooks</h2>
+  <p class="gancho">Como garantir que algo aconteça sempre, ou nunca?</p>
+  <p>Hooks são comandos de shell que o Claude Code roda em pontos fixos do ciclo: <code>SessionStart</code>, <code>UserPromptSubmit</code>, <code>PreToolUse</code> (antes de uma ferramenta; pode bloquear), <code>PostToolUse</code> (depois de dar certo), <code>Notification</code>, <code>Stop</code>, entre outros. O evento chega como JSON no stdin do seu script. <b>Sair com código 2 bloqueia</b> a ação, e o que você escreve no stderr vira o motivo que o Claude lê.</p>
+<pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protege-arquivos.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+</code></pre><pre><code>#!/bin/bash
+# Hook PreToolUse: bloqueia edição de arquivos sensíveis (adaptado da documentação oficial).
+# O Claude Code manda um JSON no stdin; sair com código 2 bloqueia a ação,
+# e o que for escrito no stderr vira o motivo que o Claude lê.
+
+ENTRADA=$(cat)
+ARQUIVO=$(echo "$ENTRADA" | jq -r '.tool_input.file_path // empty')
+ARQUIVO="${ARQUIVO//\\//}"   # normaliza barras do Windows
+
+PROTEGIDOS=(".env" "package-lock.json" ".git/")
+
+for padrao in "${PROTEGIDOS[@]}"; do
+  if [[ "$ARQUIVO" == *"$padrao"* ]]; then
+    echo "Bloqueado: $ARQUIVO bate com o padrão protegido '$padrao'" &gt;&amp;2
+    exit 2
+  fi
+done
+
+exit 0
+</code></pre>
+  <div class="ex rv"><span class="t">Exemplo resolvido: o hook rodado de verdade</span>
+    <div class="l"><div>Entrada <code>{"tool_input":{"file_path":"/p/.env"}}</code>: saiu com código <b>2</b> e a mensagem "Bloqueado: /p/.env bate com o padrão protegido '.env'".</div></div>
+    <div class="l"><div>Entrada <code>{"tool_input":{"file_path":"/p/app.py"}}</code>: saiu com código <b>0</b>, então a edição segue o fluxo normal de permissão.</div></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Dica</span>O script precisa de permissão de execução (<code>chmod +x</code>) e usa <code>jq</code> para ler o JSON. <code>/hooks</code> mostra os hooks configurados.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Falta ligar o Claude Code a sistemas de fora.</div><p>MCP e plugins.</p></div>
+</section>
+
+<section class="sec" id="mcp">
+  <h2><span class="sn">5</span>MCP, plugins e o modo não interativo</h2>
+  <p class="gancho">Como dar ao Claude Code acesso ao Notion, e como rodá-lo de dentro de um script?</p>
+<pre><code># servidor remoto (HTTP, o recomendado)
+claude mcp add --transport http notion https://mcp.notion.com/mcp
+
+# servidor local (stdio): tudo depois de -- é o comando do servidor
+claude mcp add --env AIRTABLE_API_KEY=SUA_CHAVE --transport stdio airtable -- npx -y airtable-mcp-server
+
+# compartilhar com o time: grava em .mcp.json na raiz do projeto
+claude mcp add --transport http meu-servidor --scope project https://exemplo.com/mcp
+
+claude mcp list      # lista e mostra a saúde dos servidores</code></pre>
+  <p>Escopos: <code>local</code> (padrão, só você, neste projeto), <code>project</code> (no <code>.mcp.json</code>, versionado) e <code>user</code> (você, em todos os projetos). No <code>.mcp.json</code>, use <code>${VARIAVEL}</code> para a chave não ir para o Git. Dentro da sessão, <code>/mcp</code> mostra o status e faz o login OAuth.</p>
+  <p><b>Plugins</b> empacotam skills, subagentes, hooks e servidores MCP numa instalação só; <code>/plugin</code> abre o catálogo. <b>Modo não interativo</b>: <code>claude -p "explique o que este projeto faz"</code> roda uma vez e imprime a resposta; com <code>--output-format json</code>, a saída vem em JSON para outro programa ler. É assim que se usa o Claude Code em scripts e CI.</p>
+  <div class="nota cuidado"><span class="lbl">Segurança</span>Servidor MCP, plugin e hook rodam com o seu acesso. Instale só de fontes confiáveis e leia o que um hook faz antes de ativar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Fim da trilha do Claude.</div><p>O próximo passo é aplicar: escolha um projeto seu, escreva o CLAUDE.md e uma skill para o fluxo que você mais repete.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Skill: <code>SKILL.md</code> numa pasta; a description decide o carregamento; chame com <code>/nome</code>.</li><li>Subagente: contexto próprio; <code>name</code> e <code>description</code> obrigatórios; <code>tools</code> limita.</li><li>Hook: comando em eventos fixos; <code>PreToolUse</code> com saída 2 bloqueia.</li><li>MCP: <code>claude mcp add --transport http NOME URL</code>; escopos local, project e user.</li><li>Plugin empacota tudo; <code>claude -p</code> roda sem interação.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O que o Claude lê o tempo todo para decidir se usa uma skill?</p>
+    <div class="opts"><button data-k="a">O corpo inteiro do SKILL.md</button><button data-k="b">A description do frontmatter</button><button data-k="c">O nome da pasta</button><button data-k="d">O README do projeto</button></div>
+    <div class="fb">A description fica sempre no contexto; o corpo só carrega quando a skill é usada.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Um hook PreToolUse termina com <code>exit 2</code>. O que acontece?</p>
+    <div class="opts"><button data-k="a">Nada, 2 é sucesso</button><button data-k="b">O Claude Code fecha</button><button data-k="c">A ação é bloqueada e o stderr vira o motivo para o Claude</button><button data-k="d">A ação roda duas vezes</button></div>
+    <div class="fb">Saída 2 em PreToolUse nega a chamada da ferramenta. Saída 0 não decide nada e segue o fluxo normal.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Você quer que o time inteiro tenha o mesmo servidor MCP ao clonar o repositório. Use:</p>
+    <div class="opts"><button data-k="a">--scope project, que grava em .mcp.json</button><button data-k="b">--scope user</button><button data-k="c">O escopo padrão</button><button data-k="d">Copiar o ~/.claude.json para cada um</button></div>
+    <div class="fb">O escopo project grava no .mcp.json da raiz, que vai para o Git.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 4</span><p class="qq">Por que dar <code>tools: Read, Glob, Grep</code> ao subagente revisor?</p>
+    <div class="opts"><button data-k="a">Para ele ficar mais rápido</button><button data-k="b">Porque é obrigatório</button><button data-k="c">Para ele usar outro modelo</button><button data-k="d">Para ele só ler e buscar, sem editar nem rodar comandos</button></div>
+    <div class="fb">Restringir ferramentas é uma das razões para usar subagentes: um revisor não precisa alterar nada.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Onde ficam skills do projeto?</b></span><span class="bk">.claude/skills/NOME/SKILL.md</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve !`comando` numa skill?</b></span><span class="bk">Roda o comando e injeta a saída no texto antes de o Claude ler.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>disable-model-invocation: true</b></span><span class="bk">Só você chama a skill; o Claude não carrega sozinho.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Eventos de hook mais usados</b></span><span class="bk">PreToolUse (pode bloquear), PostToolUse, SessionStart, Notification, Stop.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>claude -p</b></span><span class="bk">Modo não interativo: roda um pedido e imprime a resposta (com --output-format json para scripts).</span></button></div>
+</section>
+
+</article>
+</body>
+</html>

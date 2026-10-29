@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: O ecossistema Claude | Apostila de Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cl.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Parte 1</div>
+  <h1>O ecossistema Claude</h1>
+  <p class="sub">Os modelos, o que muda entre eles e por onde cada um é usado.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo. Você já deve ter conversado com o Claude no navegador; aqui você vê tudo o que existe além daquela caixa de texto.</div>
+<section class="sec" id="modelos">
+  <h2><span class="sn">1</span>Os modelos</h2>
+  <p class="gancho">"Claude" é um nome só, mas são vários modelos. O que muda de um para outro?</p>
+  <p>O Claude é uma família de modelos de linguagem da Anthropic. Em 29/10/2026, a página oficial de modelos lista quatro atuais:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Modelo</th><th>Para quê</th><th>Velocidade</th><th>US$ por milhão de tokens (entrada / saída)</th><th>ID na API</th></tr>
+    <tr><td><b>Claude Fable 5.1</b></td><td>raciocínio exigente e trabalho agêntico longo</td><td>mais lento</td><td>10 / 50</td><td><code>claude-fable-5-1</code></td></tr>
+    <tr><td><b>Claude Opus 5.5</b></td><td>código e trabalho de conhecimento longos; o ponto de partida recomendado</td><td>moderado</td><td>4 / 20</td><td><code>claude-opus-5-5</code></td></tr>
+    <tr><td><b>Claude Sonnet 5.5</b></td><td>melhor equilíbrio entre velocidade e inteligência</td><td>rápido</td><td>2 / 10</td><td><code>claude-sonnet-5-5</code></td></tr>
+    <tr><td><b>Claude Haiku 5.5</b></td><td>alto volume e baixa latência: classificar, extrair, rotear</td><td>o mais rápido</td><td>a partir de 0,10 / 0,50</td><td><code>claude-haiku-5-5</code></td></tr>
+  </table></div>
+  <p>Todos aceitam texto e imagem, usam ferramentas, têm janela de contexto de <b>1 milhão de tokens</b> e saída de até 128 mil tokens. A documentação recomenda começar pelo Opus 5.5 e subir para o Fable 5.1 só quando os seus testes mostrarem que precisa. Acima do Opus existe ainda a camada Mythos: o Claude Mythos 5.1 é o mesmo modelo do Fable 5.1, mas sem as salvaguardas extras que o Fable tem para biologia, cibersegurança e pesquisa em IA, e não está aberto ao público.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: qual modelo para a triagem de 10 mil mensagens por dia?</span>
+    <div class="l"><div>A tarefa é classificar em poucas categorias: volume alto, resposta curta, pouca dificuldade.</div></div>
+    <div class="l"><div>É a descrição exata do Haiku na tabela. Teste com 100 mensagens reais e meça os erros.</div></div>
+    <div class="l"><div>Se errar demais, suba um degrau (Sonnet). Trocar de modelo é mudar uma string no código.</div></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Escolhido o modelo, por onde você o usa?</div><p>Pelas superfícies.</p></div>
+</section>
+
+<section class="sec" id="superficies">
+  <h2><span class="sn">2</span>As superfícies</h2>
+  <p class="gancho">O mesmo modelo aparece em vários lugares. Qual serve para quê?</p>
+  <div class="tablewrap"><table>
+    <tr><th>Superfície</th><th>O que é</th><th>Para quem</th></tr>
+    <tr><td><b>App Claude</b> (web, desktop e celular)</td><td>o chat, com projetos, arquivos, artifacts, conectores e tarefas mais longas</td><td>todo mundo</td></tr>
+    <tr><td><b>Claude Code</b></td><td>agente que lê o seu código, edita arquivos e roda comandos; no terminal, na IDE, no app desktop e na web</td><td>quem programa</td></tr>
+    <tr><td><b>API e Claude Console</b></td><td>chamar o modelo de dentro do seu programa, pagando por token</td><td>quem constrói produtos</td></tr>
+    <tr><td><b>Integrações</b></td><td>Claude in Chrome, Claude para Microsoft 365 e Google Workspace, Claude Tag (no Slack)</td><td>quem quer o Claude onde já trabalha</td></tr>
+  </table></div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="a:App|c:Claude Code|p:API">
+    <div class="item" data-ans="a"><p>Resumir um PDF de 80 páginas e transformar em um documento para compartilhar.</p><span class="why">Tarefa pontual, com arquivo e saída para guardar: o app resolve.</span></div>
+    <div class="item" data-ans="c"><p>Corrigir um bug que aparece em três arquivos do seu repositório e rodar os testes.</p><span class="why">Trabalho dentro do código, com edição e comandos: Claude Code.</span></div>
+    <div class="item" data-ans="p"><p>Um site seu precisa classificar cada mensagem que chega, sem ninguém abrir o chat.</p><span class="why">Programa chamando o modelo automaticamente: API.</span></div>
+    <div class="item" data-ans="c"><p>Montar as apostilas de estudo em HTML, criando dezenas de arquivos num repositório.</p><span class="why">Muitos arquivos, Git e verificação: o lugar do Claude Code.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">São muitas portas de entrada. Como tirar o máximo da mais usada, o app?</div><p>No próximo capítulo.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">3</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Quatro modelos atuais: Fable 5.1, Opus 5.5 (ponto de partida), Sonnet 5.5 e Haiku 5.5.</li><li>Mais capaz = mais lento e mais caro. Teste e suba de degrau só se precisar.</li><li>Todos: texto e imagem, ferramentas, 1M de contexto, até 128 mil de saída.</li><li>Superfícies: app, Claude Code, API/Console e integrações.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Qual modelo a documentação recomenda como ponto de partida?</p>
+    <div class="opts"><button data-k="a">Claude Haiku 5.5</button><button data-k="b">Claude Opus 5.5</button><button data-k="c">Claude Fable 5.1</button><button data-k="d">Claude Mythos 5.1</button></div>
+    <div class="fb">A página de modelos manda começar pelo Opus 5.5 e usar o Fable 5.1 para raciocínio mais exigente. O Mythos 5.1 não está aberto ao público.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 2</span><p class="qq">Um token de saída do Sonnet 5.5 custa quanto, comparado a um de entrada?</p>
+    <div class="opts"><button data-k="a">O mesmo</button><button data-k="b">Metade</button><button data-k="c">O dobro</button><button data-k="d">Cinco vezes</button></div>
+    <div class="fb">US$ 10 contra US$ 2 por milhão: cinco vezes. A proporção é a mesma nos quatro modelos.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual superfície faz sentido para um sistema que classifica mensagens sozinho, sem ninguém abrir o chat?</p>
+    <div class="opts"><button data-k="a">API</button><button data-k="b">App no celular</button><button data-k="c">Claude in Chrome</button><button data-k="d">Claude Code no terminal</button></div>
+    <div class="fb">Automação dentro de um programa seu é o caso da API.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Os quatro modelos atuais</b></span><span class="bk">Fable 5.1, Opus 5.5, Sonnet 5.5 e Haiku 5.5 (em 29/10/2026).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o Haiku?</b></span><span class="bk">Alto volume e baixa latência: classificar, extrair, rotear.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Janela de contexto dos modelos atuais</b></span><span class="bk">1 milhão de tokens.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Claude Code</b></span><span class="bk">Agente que lê o código, edita arquivos e roda comandos, no terminal, IDE, desktop e web.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">São muitas portas de entrada. Como tirar o máximo da mais usada, o app?</div><p>Projetos, artifacts, conectores e memória.</p></div>
+</section>
+
+</article>
+</body>
+</html>

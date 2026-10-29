@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Claude Code: a base | Apostila de Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cl.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Parte 4</div>
+  <h1>Claude Code: a base</h1>
+  <p class="sub">O agente de programação pronto: instalar, dar as regras do projeto e manter o controle.</p>
+  <div class="meta"><span class="chip"><b>~50 min</b></span><span class="chip">0 demos · 4 testes · 5 flashcards</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 5 você escreveu à mão o laço de um agente: pedir ferramenta, executar, devolver. O Claude Code é esse laço pronto, com ferramentas para ler, editar e rodar comandos no seu projeto.</div>
+<section class="sec" id="instalar">
+  <h2><span class="sn">1</span>Instalar e começar</h2>
+  <p class="gancho">Como chegar ao primeiro "claude" funcionando?</p>
+  <p>Pela documentação oficial, a instalação nativa (recomendada) é um comando:</p>
+<pre><code># macOS, Linux e WSL
+curl -fsSL https://claude.ai/install.sh | bash
+
+# Windows PowerShell
+irm https://claude.ai/install.ps1 | iex
+
+# depois, em qualquer projeto
+cd seu-projeto
+claude</code></pre>
+  <p>Confira com <code>claude --version</code>. No primeiro uso ele pede login (assinatura do Claude ou conta da Console). No Windows nativo, a documentação recomenda o Git for Windows para o Claude Code usar o Bash. A instalação nativa se atualiza sozinha; Homebrew e WinGet não.</p>
+  <p>O mesmo Claude Code roda no <b>terminal</b>, em extensões para <b>VS Code</b> (e Cursor) e <b>JetBrains</b>, no <b>app desktop</b> (aba Code) e na <b>web</b> (claude.ai/code). As configurações do repositório valem em todos.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Toda sessão começa sem memória. Como ele já sabe as regras do projeto?</div><p>CLAUDE.md.</p></div>
+</section>
+
+<section class="sec" id="claudemd">
+  <h2><span class="sn">2</span>CLAUDE.md: as instruções permanentes</h2>
+  <p class="gancho">Onde escrever "rode o checar antes de commitar" uma vez só?</p>
+  <p>O <code>CLAUDE.md</code> é um arquivo Markdown que o Claude Code lê no começo de cada sessão. Há camadas, e todas são somadas (não se substituem):</p>
+  <div class="tablewrap"><table>
+    <tr><th>Camada</th><th>Onde</th><th>Para</th></tr>
+    <tr><td>Política da organização</td><td>pasta do sistema gerenciada pela TI</td><td>regras da empresa</td></tr>
+    <tr><td>Usuário</td><td><code>~/.claude/CLAUDE.md</code></td><td>suas preferências em todos os projetos</td></tr>
+    <tr><td>Projeto</td><td><code>./CLAUDE.md</code> ou <code>./.claude/CLAUDE.md</code></td><td>regras do time, no Git</td></tr>
+    <tr><td>Local</td><td><code>./CLAUDE.local.md</code> (no .gitignore)</td><td>suas notas daquele projeto</td></tr>
+  </table></div>
+  <p><code>/init</code> gera um primeiro CLAUDE.md analisando o projeto. Dá para importar outros arquivos com <code>@caminho/arquivo</code> e separar regras por assunto em <code>.claude/rules/</code>, inclusive valendo só para certos caminhos. Além disso, o Claude Code mantém uma <b>memória automática</b> com o que aprende das suas correções.</p>
+<pre><code># Projeto: apostilas de estudo
+
+## Comandos
+- Servir local: `python scripts/serve.py` (porta 4323)
+- Checar antes de commit: `python scripts/checar.py`
+
+## Regras
+- Português do Brasil, sem travessão.
+- Repositório público: nunca colocar nome completo, matrícula ou e-mail.
+- Todo número citado no texto precisa bater com a demo. Rode e confira.
+
+## Fluxo
+- Mudança em mais de um arquivo: planeje antes (plan mode) e rode o checar no fim.
+</code></pre>
+  <div class="nota erro"><span class="lbl">Erro comum</span>CLAUDE.md gigante. A documentação sugere menos de 200 linhas e um teste por linha: "se eu apagar isto, o Claude erra?". Se não, apague. Regra que não pode falhar nunca vira hook (capítulo 7), porque CLAUDE.md é orientação, não trava.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O Claude sabe as regras. Como evitar que ele saia editando antes de entender?</div><p>Plan mode e permissões.</p></div>
+</section>
+
+<section class="sec" id="plan">
+  <h2><span class="sn">3</span>Explorar, planejar, implementar</h2>
+  <p class="gancho">Por que não deixar ele codar direto?</p>
+  <p>Porque ele pode resolver o problema errado. O fluxo recomendado tem quatro fases: <b>explorar</b>, <b>planejar</b>, <b>implementar</b> e <b>commitar</b>. Para as duas primeiras existe o <b>plan mode</b>: aperte <code>Shift+Tab</code> até aparecer "plan mode on" (ou inicie com <code>claude --permission-mode plan</code>). Nele o Claude lê e responde, mas não altera nada. <code>Ctrl+G</code> abre o plano no seu editor para você corrigir antes de aprovar.</p>
+  <p>Se a mudança cabe numa frase ("corrija o erro de digitação no título"), pule o plano: ele tem custo.</p>
+  <p><b>Permissões.</b> No modo manual, o Claude Code pede aprovação antes de editar arquivo ou rodar comando. No <b>auto mode</b> (padrão nas versões recentes), um classificador revisa cada ação e bloqueia só o que parece arriscado. <code>/permissions</code> libera de vez comandos em que você confia, como <code>npm run lint</code>.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Sessões longas pioram. Por quê, e o que fazer?</div><p>Contexto, o recurso escasso.</p></div>
+</section>
+
+<section class="sec" id="contexto">
+  <h2><span class="sn">4</span>Contexto: o recurso que acaba</h2>
+  <p class="gancho">Por que o Claude parece "esquecer" instruções depois de uma hora de sessão?</p>
+  <p>Tudo entra na janela de contexto: mensagens, arquivos lidos, saídas de comandos. A documentação é direta: o desempenho cai conforme ela enche. Os controles:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Comando</th><th>O que faz</th></tr>
+    <tr><td><code>Esc</code></td><td>interrompe o Claude no meio, mantendo o contexto</td></tr>
+    <tr><td><code>Esc</code> duas vezes ou <code>/rewind</code></td><td>volta a conversa e/ou o código a um ponto anterior</td></tr>
+    <tr><td><code>/clear</code></td><td>zera o contexto entre tarefas sem relação</td></tr>
+    <tr><td><code>/compact foco</code></td><td>resume o histórico, guardando o que você pedir</td></tr>
+    <tr><td><code>/context</code></td><td>mostra o que está ocupando o contexto</td></tr>
+    <tr><td><code>claude --continue</code> / <code>--resume</code></td><td>retoma a última sessão / escolhe uma da lista</td></tr>
+  </table></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: duas correções e nada</span>
+    <div class="l"><div>Você corrigiu o Claude duas vezes no mesmo ponto e ele continua errando.</div></div>
+    <div class="l"><div>O contexto está cheio de tentativas fracassadas, que puxam a resposta para o mesmo erro.</div></div>
+    <div class="l"><div>A recomendação oficial: <code>/clear</code> e um prompt novo, mais específico, já com o que você aprendeu. Uma sessão limpa com prompt melhor quase sempre vence.</div></div>
+  </div>
+  <div class="nota lembra"><span class="lbl">Dê uma forma de verificar</span>O conselho que abre o guia de boas práticas: dê ao Claude algo que ele possa rodar (testes, build, screenshot) e peça a evidência, não a afirmação.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O básico funciona. Como ensino ao Claude Code os meus fluxos e regras de forma permanente?</div><p>Skills, subagentes e hooks.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Instalação nativa: <code>curl -fsSL https://claude.ai/install.sh | bash</code> ou <code>irm https://claude.ai/install.ps1 | iex</code>.</li><li>CLAUDE.md em camadas somadas: usuário, projeto, local (e organização). <code>/init</code> cria o primeiro.</li><li>Menos de 200 linhas; regra que não pode falhar vira hook.</li><li>Plan mode: <code>Shift+Tab</code>. Explorar, planejar, implementar, commitar.</li><li>Contexto: <code>Esc</code>, <code>/rewind</code>, <code>/clear</code>, <code>/compact</code>, <code>/context</code>.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Onde ficam as suas preferências pessoais que valem em todos os projetos?</p>
+    <div class="opts"><button data-k="a">./CLAUDE.md</button><button data-k="b">./CLAUDE.local.md</button><button data-k="c">~/.claude/CLAUDE.md</button><button data-k="d">.claude/rules/</button></div>
+    <div class="fb">~/.claude/CLAUDE.md é a camada do usuário. ./CLAUDE.md é do projeto; CLAUDE.local.md, suas notas de um projeto só.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Como entrar no plan mode durante a sessão?</p>
+    <div class="opts"><button data-k="a">Shift+Tab até aparecer plan mode on</button><button data-k="b">Ctrl+C</button><button data-k="c">/clear</button><button data-k="d">Esc duas vezes</button></div>
+    <div class="fb">Shift+Tab alterna os modos. Esc duas vezes abre o rewind; /clear zera o contexto.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Você quer que o Claude NUNCA edite o arquivo .env. Onde colocar isso?</p>
+    <div class="opts"><button data-k="a">Em maiúsculas no CLAUDE.md</button><button data-k="b">Num hook PreToolUse que bloqueia a edição</button><button data-k="c">No README</button><button data-k="d">Repetir em todo prompt</button></div>
+    <div class="fb">CLAUDE.md orienta, mas não garante. Hook é determinístico.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 4</span><p class="qq">A sessão está longa e o Claude ignora regras que seguia no começo. Primeiro passo:</p>
+    <div class="opts"><button data-k="a">Escrever as regras de novo em maiúsculas</button><button data-k="b">Trocar de modelo</button><button data-k="c">Reinstalar</button><button data-k="d">/clear (ou /compact) e recomeçar com um prompt mais específico</button></div>
+    <div class="fb">Contexto cheio degrada o desempenho. Limpar e reformular é o caminho recomendado.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o CLAUDE.md?</b></span><span class="bk">Instruções que o Claude Code lê no começo de toda sessão.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>/init</b></span><span class="bk">Gera um CLAUDE.md inicial analisando o projeto.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Plan mode</b></span><span class="bk">O Claude lê e planeja sem alterar nada. Shift+Tab ou --permission-mode plan.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>/rewind</b></span><span class="bk">Volta conversa e/ou código a um ponto anterior (também Esc duas vezes).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Recurso mais escasso</b></span><span class="bk">A janela de contexto: o desempenho cai conforme ela enche.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">O básico funciona. Como ensino ao Claude Code os meus fluxos e regras de forma permanente?</div><p>Skills, subagentes, hooks, MCP e plugins.</p></div>
+</section>
+
+</article>
+</body>
+</html>

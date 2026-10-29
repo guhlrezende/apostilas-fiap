@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: Sua API sem backend profundo | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Fase 4</div>
+  <h1>Sua API sem backend profundo</h1>
+  <p class="sub">Uma API pequena, testada e empacotada, que suas automações e protótipos podem chamar.</p>
+  <div class="meta"><span class="chip"><b>~50 min</b></span><span class="chip">0 demos · 4 testes · 4 flashcards</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 6 você viu que a chave do modelo não pode ficar na página e que o protótipo precisa de dados de verdade. As duas coisas pedem um servidor seu: uma API.</div>
+<section class="sec" id="fastapi">
+  <h2><span class="sn">1</span>Uma API em 30 linhas</h2>
+  <p class="gancho">Quanto código é preciso para receber um JSON e devolver outro?</p>
+  <p>Com o <b>FastAPI</b> (biblioteca de Python), pouco. Você declara o formato dos dados numa classe, escreve uma função por rota e ele cuida de converter JSON, validar campos e devolver os códigos de erro certos. O exemplo recebe um pedido e decide a fila:</p>
+<pre><code>"""API mínima de triagem de pedidos (exemplo da apostila de AI Builder, cap. 6).
+
+Rodar:  pip install fastapi uvicorn
+        uvicorn api:app --reload
+Abrir:  http://127.0.0.1:8000/docs  (a documentação interativa vem pronta)
+"""
+import os
+
+from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI(title="Triagem de pedidos")
+
+# A chave vem do ambiente, nunca do código. Sem a variável, usa um valor de teste.
+CHAVE = os.environ.get("API_KEY", "chave-de-teste")
+
+
+class Pedido(BaseModel):
+    cliente: str
+    valor: float
+    urgente: bool = False
+
+
+@app.get("/saude")
+def saude():
+    """Rota que o monitoramento chama para saber se a API está de pé."""
+    return {"status": "ok"}
+
+
+@app.post("/triagem")
+def triagem(pedido: Pedido, x_api_key: str = Header(default="")):
+    """Recebe um pedido em JSON e devolve a fila para onde ele vai."""
+    if x_api_key != CHAVE:
+        raise HTTPException(status_code=401, detail="chave inválida")
+    if pedido.urgente or pedido.valor &gt;= 1000:
+        fila = "prioridade"
+    else:
+        fila = "normal"
+    return {"cliente": pedido.cliente, "fila": fila}
+</code></pre>
+  <p>Três coisas do capítulo 1 aparecem aqui: a <b>rota</b> com método (<code>@app.post("/triagem")</code>), a <b>validação</b> do corpo (a classe <code>Pedido</code>; faltou campo, o FastAPI responde 422 sozinho) e a <b>chave</b> lida do ambiente.</p>
+  <p>Rodando com <code>uvicorn api:app --reload</code>, o endereço <code>/docs</code> abre uma documentação interativa gerada automaticamente, onde você testa cada rota sem escrever nada.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como provar que a API faz o que diz?</div><p>Testes automáticos, que também servem de contrato.</p></div>
+</section>
+
+<section class="sec" id="testes">
+  <h2><span class="sn">2</span>Testes: a prova de que funciona</h2>
+  <p class="gancho">A IA escreveu a API. Como você sabe que está certa sem testar na mão toda vez?</p>
+<pre><code>"""Testes da API de triagem. Rodar:  pip install pytest httpx  e depois  pytest -q"""
+from fastapi.testclient import TestClient
+
+from api import app
+
+cliente = TestClient(app)
+CAB = {"x-api-key": "chave-de-teste"}
+
+
+def test_saude():
+    r = cliente.get("/saude")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+
+
+def test_pedido_grande_vai_para_prioridade():
+    r = cliente.post("/triagem", json={"cliente": "Ana", "valor": 1500}, headers=CAB)
+    assert r.json()["fila"] == "prioridade"
+
+
+def test_pedido_pequeno_vai_para_normal():
+    r = cliente.post("/triagem", json={"cliente": "Bia", "valor": 80}, headers=CAB)
+    assert r.json()["fila"] == "normal"
+
+
+def test_sem_chave_da_401():
+    r = cliente.post("/triagem", json={"cliente": "Caio", "valor": 80})
+    assert r.status_code == 401
+
+
+def test_json_sem_campo_obrigatorio_da_422():
+    r = cliente.post("/triagem", json={"cliente": "Davi"}, headers=CAB)
+    assert r.status_code == 422
+</code></pre>
+  <p>Resultado rodado na criação desta apostila: <code>5 passed</code>. Cada teste fixa um comportamento: valor de 1.500 vai para prioridade, 80 vai para normal, sem chave dá 401, campo faltando dá 422. Se alguém (você ou a IA) mudar a regra sem querer, um teste quebra na hora. É a "verificação" do laço do capítulo 5.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: a regra do limite</span>
+    <div class="l"><div>A regra diz <code>valor &gt;= 1000</code> vai para prioridade. E exatamente 1000?</div></div>
+    <div class="l"><div>Com <code>&gt;=</code>, 1000 é prioridade. Se a IA "otimizar" para <code>&gt;</code>, 1000 vira normal.</div></div>
+    <div class="l"><div>Os testes atuais usam 1500 e 80, então não pegariam essa mudança. Um bom teste a mais: <code>valor: 1000</code> esperando prioridade. Limite é onde os bugs moram.</div></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">A API funciona no seu PC. Como ela vai para outro lugar e é chamada por uma automação?</div><p>Docker e o nó HTTP do n8n.</p></div>
+</section>
+
+<section class="sec" id="ligar">
+  <h2><span class="sn">3</span>Empacotar e ligar no n8n</h2>
+  <p class="gancho">Como juntar as peças da trilha?</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Empacotar</b><p>O Dockerfile do capítulo 4 já é desta API: <code>docker build -t triagem .</code></p></div>
+      <div class="st"><b>2. Rodar com a chave</b><p><code>docker run --rm -p 8000:8000 -e API_KEY=minha-chave triagem</code>. A chave entra por variável, nunca na imagem.</p></div>
+      <div class="st"><b>3. Chamar do n8n</b><p>Nó <b>HTTP Request</b>: método POST, URL <code>http://SEU_HOST:8000/triagem</code>, cabeçalho <code>x-api-key</code> vindo de uma credencial, corpo JSON com <code>{{ $json.cliente }}</code> e <code>{{ $json.valor }}</code>.</p></div>
+      <div class="st"><b>4. Decidir</b><p>Um Switch lê <code>{{ $json.fila }}</code> da resposta e segue o caminho certo.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">localhost dentro de container</span>Se o n8n também roda em Docker, <code>localhost</code> dentro dele é o próprio container do n8n, não o seu PC. Coloque os dois serviços no mesmo <code>compose.yaml</code> e chame a API pelo nome do serviço (ex.: <code>http://triagem:8000</code>).</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Dados chegando de verdade. Como usar IA para analisá-los sem publicar número errado?</div><p>O próximo capítulo.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>FastAPI: classe define o formato, função define a rota; validação e 422 vêm prontos.</li><li><code>/docs</code> gera documentação interativa automaticamente.</li><li>Testes fixam o comportamento; teste os limites (exatamente 1000).</li><li>Chave por variável de ambiente; <code>-e API_KEY=...</code> no docker run.</li><li>No n8n, nó HTTP Request; entre containers, chame pelo nome do serviço.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O cliente manda <code>{&quot;cliente&quot;:&quot;Davi&quot;}</code> com a chave certa. O que a API responde?</p>
+    <div class="opts"><button data-k="a">200 com fila normal</button><button data-k="b">422, porque falta o campo obrigatório valor</button><button data-k="c">401</button><button data-k="d">500</button></div>
+    <div class="fb">O campo <code>valor</code> não tem padrão na classe Pedido, então é obrigatório. O FastAPI recusa com 422 antes da função rodar.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 2</span><p class="qq">Com a regra <code>valor &gt;= 1000</code>, para onde vai um pedido de exatamente 1000?</p>
+    <div class="opts"><button data-k="a">Normal</button><button data-k="b">Depende de urgente</button><button data-k="c">Erro</button><button data-k="d">Prioridade</button></div>
+    <div class="fb">Maior ou igual inclui o próprio 1000.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">O n8n roda em Docker e chama <code>http://localhost:8000</code>, mas a API roda em outro container. O que acontece?</p>
+    <div class="opts"><button data-k="a">Falha: localhost aponta para o próprio container do n8n</button><button data-k="b">Funciona sempre</button><button data-k="c">Funciona se a porta for 5678</button><button data-k="d">Dá 401</button></div>
+    <div class="fb">Cada container tem a sua rede. Use um compose com os dois serviços e chame pelo nome.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 4</span><p class="qq">Onde a chave da API deve entrar no container?</p>
+    <div class="opts"><button data-k="a">Escrita no Dockerfile</button><button data-k="b">Num arquivo copiado para a imagem</button><button data-k="c">Por variável de ambiente na hora de rodar</button><button data-k="d">No nome da imagem</button></div>
+    <div class="fb">Imagem pode ser compartilhada; o que está nela vaza junto. A chave entra só na execução.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o FastAPI faz sozinho?</b></span><span class="bk">Converte JSON, valida campos pela classe e responde 422 quando falta ou sobra algo errado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve /docs?</b></span><span class="bk">Documentação interativa gerada automaticamente, para testar as rotas.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que testar limites?</b></span><span class="bk">É onde a troca de >= por > passa despercebida.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Nó do n8n para chamar sua API</b></span><span class="bk">HTTP Request, com a chave vinda de uma credencial.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 8</div><div class="q">Com dados chegando, como uso IA para analisar sem publicar número errado?</div><p>O fluxo com conferência.</p></div>
+</section>
+
+</article>
+</body>
+</html>

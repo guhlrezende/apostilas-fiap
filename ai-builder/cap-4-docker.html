@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 4: Docker: imagem, container, volume e compose | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="4" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 4 · Fase 3</div>
+  <h1>Docker: imagem, container, volume e compose</h1>
+  <p class="sub">Empacotar programas para rodarem igual em qualquer máquina, começando pelo n8n no seu PC.</p>
+  <div class="meta"><span class="chip"><b>~55 min</b></span><span class="chip">2 demos · 4 testes · 5 flashcards</span></div>
+  <span class="num">4</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Nos capítulos 2 e 3 você usou ferramentas na nuvem. O n8n também roda no seu PC, e a documentação dele recomenda Docker. Por que um programa precisa de outro programa para rodar?</div>
+<section class="sec" id="porque">
+  <h2><span class="sn">1</span>O problema que o Docker resolve</h2>
+  <p class="gancho">"Na minha máquina funciona." Por que essa frase existe?</p>
+  <p>Um programa depende de muita coisa além dele: a versão do Python ou do Node, bibliotecas, variáveis, pastas. Na máquina de outra pessoa, qualquer diferença quebra. O Docker empacota o programa <b>junto com tudo de que ele precisa</b> num formato que roda igual em qualquer computador com Docker. E isola: o que roda lá dentro não bagunça o seu sistema.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Esse pacote tem nome, e o programa rodando tem outro.</div><p>Imagem e container.</p></div>
+</section>
+
+<section class="sec" id="imagem">
+  <h2><span class="sn">2</span>Imagem, container e volume</h2>
+  <p class="gancho">Qual a diferença entre o pacote e o programa rodando?</p>
+  <div class="grid3">
+    <div class="card rv"><b>Imagem</b><p>A receita congelada: sistema mínimo, dependências e o programa. Só leitura. Ex.: <code>n8nio/n8n</code>, <code>python:3.12-slim</code>.</p></div>
+    <div class="card rv"><b>Container</b><p>Uma imagem rodando. Dá para ter vários containers da mesma imagem. Apagar o container apaga o que foi escrito dentro dele.</p></div>
+    <div class="card rv"><b>Volume</b><p>Uma pasta guardada fora do container, montada dentro dele. Sobrevive quando o container é apagado. É onde ficam dados que importam.</p></div>
+  </div>
+  <div class="card sorter rv" data-demo="sorter" data-opts="i:Imagem|c:Container|v:Volume">
+    <div class="item" data-ans="i"><p>O que você baixa com <code>docker pull n8nio/n8n</code>.</p><span class="why">Pull baixa a imagem; nada roda ainda.</span></div>
+    <div class="item" data-ans="v"><p>Onde os seus workflows e credenciais do n8n precisam ficar para não sumirem.</p><span class="why">Só o volume sobrevive ao container ser recriado.</span></div>
+    <div class="item" data-ans="c"><p>O que aparece em <code>docker ps</code>.</p><span class="why"><code>docker ps</code> lista containers em execução.</span></div>
+    <div class="item" data-ans="i"><p>O resultado de <code>docker build</code> em cima de um Dockerfile.</p><span class="why">Build produz uma imagem nova a partir da receita.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O n8n já tem imagem pronta. E para empacotar um programa seu?</div><p>Escreve-se a receita: o Dockerfile.</p></div>
+</section>
+
+<section class="sec" id="dockerfile">
+  <h2><span class="sn">3</span>Dockerfile e o cache de camadas</h2>
+  <p class="gancho">Como transformar a API do capítulo 7 numa imagem?</p>
+  <p>O Dockerfile é a receita, lida de cima para baixo. Cada instrução gera uma <b>camada</b>, e o Docker reaproveita as camadas que não mudaram. Por isso a ordem importa: dependências (mudam pouco) antes do código (muda sempre).</p>
+<pre><code># Imagem da API de triagem (apostila de AI Builder, cap. 4).
+# Construir:  docker build -t triagem .
+# Rodar:      docker run --rm -p 8000:8000 -e API_KEY=minha-chave triagem
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Primeiro só as dependências: se o código mudar e elas não, o Docker reaproveita esta camada.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Depois o código.
+COPY api.py .
+
+EXPOSE 8000
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+</code></pre>
+  <p class="muted">Este Dockerfile está em <code>exemplos/</code>. Ele <b>não foi construído aqui</b> (a máquina onde a apostila foi feita não tinha o serviço do Docker rodando); a API que ele empacota foi testada com pytest.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Colocar <code>COPY . .</code> antes do <code>pip install</code>. Qualquer vírgula mudada no código invalida a camada e o Docker reinstala todas as dependências a cada build.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O container está rodando. Por que o navegador não abre?</div><p>Porque o container tem a rede dele: é preciso abrir uma porta.</p></div>
+</section>
+
+<section class="sec" id="portas">
+  <h2><span class="sn">4</span>Portas e volumes na prática</h2>
+  <p class="gancho">O n8n escuta na 5678 dentro do container. Como isso vira <code>localhost:5678</code> no seu PC?</p>
+  <p>A opção <code>-p PC:CONTAINER</code> cria um túnel de uma porta do seu computador para uma porta do container. A opção <code>-v VOLUME:PASTA</code> monta um volume numa pasta de dentro. Mexa e veja o que abre:</p>
+  <div class="demo" data-demo="porta"></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Digitar um docker run enorme toda vez é pedir para errar.</div><p>O Compose guarda a configuração num arquivo.</p></div>
+</section>
+
+<section class="sec" id="compose">
+  <h2><span class="sn">5</span>Docker Compose: o n8n no seu PC</h2>
+  <p class="gancho">Como descrever o container uma vez e subir com um comando?</p>
+  <p>O <b>Docker Compose</b> lê um arquivo YAML com os serviços, portas, variáveis e volumes. A documentação do n8n marca o <code>docker run</code> como forma antiga e recomenda o Compose. O arquivo abaixo é a tradução do comando oficial; ele foi validado com <code>docker compose config</code>:</p>
+<pre><code># n8n local com Docker Compose (apostila de AI Builder, cap. 4).
+# É a tradução para Compose do comando "docker run" da documentação oficial do n8n.
+# Subir:   docker compose up -d      Abrir: http://localhost:5678
+# Parar:   docker compose down       (os fluxos ficam guardados no volume n8n_data)
+services:
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
+</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Comando</th><th>O que faz</th></tr>
+    <tr><td><code>docker compose up -d</code></td><td>sobe os serviços em segundo plano</td></tr>
+    <tr><td><code>docker compose logs -f</code></td><td>acompanha o log (Ctrl+C sai sem parar o serviço)</td></tr>
+    <tr><td><code>docker compose down</code></td><td>para e apaga os containers; os volumes ficam</td></tr>
+    <tr><td><code>docker ps</code></td><td>lista containers rodando</td></tr>
+    <tr><td><code>docker exec -it NOME sh</code></td><td>abre um terminal dentro do container</td></tr>
+    <tr><td><code>docker images</code></td><td>lista as imagens baixadas</td></tr>
+  </table></div>
+  <div class="nota lembra"><span class="lbl">Licença do Docker Desktop</span>Segundo a documentação oficial, o Docker Desktop é gratuito para uso pessoal, educação, projetos open source não comerciais e empresas com menos de 250 funcionários <b>e</b> menos de US$ 10 milhões de receita anual. Numa empresa maior, ele exige assinatura.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Infra resolvida. Agora a parte central da vaga: construir com IA.</div><p>Começando pelo editor.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Imagem é a receita congelada; container é a imagem rodando; volume guarda dados fora do container.</li><li>Dockerfile: dependências antes do código, para aproveitar o cache de camadas.</li><li><code>-p 5678:5678</code>: porta do PC, dois-pontos, porta do container.</li><li>Sem volume, <code>docker compose down</code> leva os dados junto.</li><li>Compose: um YAML, <code>up -d</code> para subir, <code>down</code> para parar.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 1</span><p class="qq">Com <code>-p 8080:5678</code>, qual endereço abre o n8n?</p>
+    <div class="opts"><button data-k="a">localhost:5678</button><button data-k="b">localhost:80</button><button data-k="c">localhost:8080, mas só se o n8n escutar na 8080</button><button data-k="d">localhost:8080</button></div>
+    <div class="fb">A primeira porta é a do seu PC (8080); a segunda, a do container (5678), onde o n8n já escuta.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Você roda <code>docker compose down</code> e depois <code>up</code>. Os workflows continuam lá se:</p>
+    <div class="opts"><button data-k="a">Houver um volume montado em /home/node/.n8n</button><button data-k="b">Você usar -d</button><button data-k="c">A imagem for a mais recente</button><button data-k="d">Sempre continuam</button></div>
+    <div class="fb">Down apaga os containers. Só o que estava no volume sobrevive.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Por que o Dockerfile copia o <code>requirements.txt</code> antes do código?</p>
+    <div class="opts"><button data-k="a">Porque é obrigatório</button><button data-k="b">Para o Docker reaproveitar a camada das dependências quando só o código mudar</button><button data-k="c">Para a imagem ficar menor</button><button data-k="d">Para o código rodar mais rápido</button></div>
+    <div class="fb">Camadas que não mudam vêm do cache. Separar as dependências evita reinstalar tudo a cada mudança no código.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 4</span><p class="qq">Uma empresa com 3.000 funcionários quer usar o Docker Desktop. Pela licença:</p>
+    <div class="opts"><button data-k="a">É gratuito para qualquer empresa</button><button data-k="b">É gratuito se for só para teste</button><button data-k="c">Precisa de assinatura paga</button><button data-k="d">É proibido</button></div>
+    <div class="fb">O uso gratuito vale para empresas com menos de 250 funcionários e menos de US$ 10 milhões de receita, além de uso pessoal e educação.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Imagem x container</b></span><span class="bk">Imagem: a receita, só leitura. Container: a imagem rodando.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve um volume?</b></span><span class="bk">Guardar dados fora do container, para sobreviverem quando ele for apagado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>-p 5678:5678</b></span><span class="bk">Porta do seu PC : porta do container.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que o Compose resolve?</b></span><span class="bk">Descreve serviços, portas, variáveis e volumes num arquivo e sobe tudo com um comando.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Camada no Dockerfile</b></span><span class="bk">Cada instrução gera uma; as que não mudaram vêm do cache.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 5</div><div class="q">Já sei rodar ferramentas. Como faço a IA escrever o código das minhas?</div><p>Vibe coding, com responsabilidade.</p></div>
+</section>
+
+</article>
+</body>
+</html>

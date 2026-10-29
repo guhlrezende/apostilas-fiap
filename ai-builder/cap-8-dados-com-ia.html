@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 8: Análise de dados com IA | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="8" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 8 · Fase 4</div>
+  <h1>Análise de dados com IA</h1>
+  <p class="sub">Usar IA para analisar sem publicar número errado, e sem expor dado pessoal.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span></div>
+  <span class="num">8</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 7 você criou uma API que recebe dados de verdade. Agora vem a pergunta que todo gestor faz: o que esses dados dizem? E a IA pode responder, desde que você confira.</div>
+<section class="sec" id="fluxo">
+  <h2><span class="sn">1</span>O fluxo de análise com IA</h2>
+  <p class="gancho">Por que não colar a planilha no chat e pedir "me dá os insights"?</p>
+  <p>Porque um modelo de linguagem pode <b>inventar um número com toda a confiança</b>. Ele é ótimo para escrever o código da análise e para explicar o resultado; a conta em si tem de ser feita por código que você roda. O fluxo:</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Pergunta de negócio</b><p>Específica: "qual canal resolve mais rápido e com mais sucesso?", e não "analise os dados".</p></div>
+      <div class="st"><b>2. Dados limpos e sem dado pessoal</b><p>Só as colunas que a pergunta precisa. Sem nome, CPF ou e-mail.</p></div>
+      <div class="st"><b>3. IA escreve o código</b><p>Peça código em pandas que responda à pergunta, e não a resposta direta.</p></div>
+      <div class="st"><b>4. Você roda e confere</b><p>Refaça uma das contas por outro caminho. Se as duas não batem, nada vai para o relatório.</p></div>
+      <div class="st"><b>5. IA ajuda a contar a história</b><p>Com os números conferidos na mão, peça o texto. Revise se o texto não exagerou o que os números dizem.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Como fica isso em código?</div><p>Um exemplo com a conferência embutida.</p></div>
+</section>
+
+<section class="sec" id="exemplo">
+  <h2><span class="sn">2</span>O exemplo, rodado</h2>
+  <p class="gancho">Como a conferência vira parte do programa, e não um passo que você esquece?</p>
+<pre><code>"""Análise de dados com conferência (apostila de AI Builder, cap. 7).
+
+A IA escreve a primeira versão do código; você confere os números com uma segunda conta
+independente antes de colocar qualquer valor em um relatório.
+Rodar:  pip install pandas  e depois  python analise.py
+"""
+import pandas as pd
+
+# Dados fictícios de atendimentos de uma loja (mesmos números do capítulo).
+dados = pd.DataFrame({
+    "canal":   ["WhatsApp", "WhatsApp", "E-mail", "WhatsApp", "E-mail", "Telefone", "E-mail", "Telefone"],
+    "minutos": [4, 6, 18, 5, 22, 9, 15, 11],
+    "resolvido": [True, True, False, True, True, True, False, True],
+})
+
+# 1) A pergunta de negócio: qual canal resolve mais rápido e com mais sucesso?
+resumo = dados.groupby("canal").agg(
+    atendimentos=("minutos", "size"),
+    minutos_medio=("minutos", "mean"),
+    taxa_resolucao=("resolvido", "mean"),
+).round(2)
+print(resumo)
+
+# 2) A conferência: refazer uma das contas por outro caminho.
+email = dados[dados["canal"] == "E-mail"]["minutos"]
+media_manual = sum(email) / len(email)
+assert round(media_manual, 2) == resumo.loc["E-mail", "minutos_medio"], "as duas contas não batem"
+print(f"Conferido: média do e-mail = {media_manual:.2f} min")
+</code></pre>
+  <p>Saída da execução (feita na criação desta apostila):</p>
+<pre><code>          atendimentos  minutos_medio  taxa_resolucao
+canal
+E-mail               3          18.33            0.33
+Telefone             2          10.00            1.00
+WhatsApp             3           5.00            1.00
+Conferido: média do e-mail = 18.33 min</code></pre>
+  <div class="ex rv"><span class="t">Exemplo resolvido: ler sem exagerar</span>
+    <div class="l"><div>WhatsApp: média de 5 minutos e 100% resolvido. E-mail: 18,33 minutos e só 33% resolvido (1 de 3).</div></div>
+    <div class="l"><div>Conferência do e-mail na mão: (18 + 22 + 15) / 3 = 55 / 3 = 18,33. Bate com a tabela.</div></div>
+    <div class="l"><div>O que <b>não</b> dá para dizer: "o WhatsApp é 3,7 vezes melhor". São 8 atendimentos no total; com tão pouco dado, a conclusão honesta é "vale coletar mais antes de mudar o processo".</div></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Aceitar a frase bonita que a IA escreveu sobre os dados sem checar se ela bate com a tabela. O texto costuma generalizar mais do que os números permitem.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E o que nunca deve ir para dentro de um chat de IA?</div><p>A parte da LGPD.</p></div>
+</section>
+
+<section class="sec" id="lgpd">
+  <h2><span class="sn">3</span>Dados pessoais e LGPD</h2>
+  <p class="gancho">A planilha tem nome, CPF e telefone de clientes. Posso colar no chat?</p>
+  <p>A Lei Geral de Proteção de Dados (Lei 13.709/2018) exige base legal e finalidade para tratar dado pessoal, e mandar a planilha para um serviço externo é tratamento. Em empresa, a regra prática: <b>só use ferramentas aprovadas pela empresa e só com os dados necessários</b>. Para análise, quase sempre dá para remover ou pseudonimizar as colunas pessoais antes.</p>
+  <div class="card sorter rv" data-demo="sorter" data-opts="s:Pode ir|n:Não vai">
+    <div class="item" data-ans="s"><p>Tabela com canal, minutos e se foi resolvido, sem identificar ninguém.</p><span class="why">Sem dado pessoal, o risco é baixo.</span></div>
+    <div class="item" data-ans="n"><p>A planilha completa de clientes, com CPF, para "a IA achar padrões".</p><span class="why">Dado pessoal sem necessidade. Remova as colunas que a pergunta não usa.</span></div>
+    <div class="item" data-ans="n"><p>Um processo sob segredo de justiça, para resumir, numa conta pessoal de IA.</p><span class="why">Sigilo e ferramenta não aprovada. Só no ambiente que a empresa autorizou, se autorizar.</span></div>
+    <div class="item" data-ans="s"><p>O código da análise, sem os dados, para a IA revisar.</p><span class="why">O código não carrega dado pessoal.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Tudo pronto para virar portfólio.</div><p>O último capítulo.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>IA escreve o código e a narrativa; a conta é do código que você roda.</li><li>Pergunta específica, dados mínimos, código, conferência, texto.</li><li>Conferência embutida: refazer uma conta por outro caminho com <code>assert</code>.</li><li>Pouco dado, conclusão modesta.</li><li>LGPD: ferramenta aprovada, dados necessários, colunas pessoais fora.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">No exemplo, qual a taxa de resolução do e-mail?</p>
+    <div class="opts"><button data-k="a">100%</button><button data-k="b">18,33%</button><button data-k="c">33%</button><button data-k="d">66%</button></div>
+    <div class="fb">Dos 3 atendimentos por e-mail, 1 foi resolvido: 1/3 ≈ 0,33.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Para que serve o <code>assert</code> no fim do script?</p>
+    <div class="opts"><button data-k="a">Interromper o programa se as duas contas não baterem</button><button data-k="b">Deixar o código mais rápido</button><button data-k="c">Mandar o resultado por e-mail</button><button data-k="d">Esconder erros</button></div>
+    <div class="fb">Se a média calculada à mão diferir da tabela, o programa para com a mensagem de erro em vez de seguir com número errado.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">A melhor forma de pedir ajuda da IA com uma planilha de clientes é:</p>
+    <div class="opts"><button data-k="a">Colar tudo e pedir insights</button><button data-k="b">Tirar as colunas pessoais e pedir o código que responde a uma pergunta específica</button><button data-k="c">Pedir para a IA guardar a planilha</button><button data-k="d">Mandar só o CPF</button></div>
+    <div class="fb">Dados mínimos e pergunta específica reduzem risco e aumentam a qualidade.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que não pedir o número direto ao chat?</b></span><span class="bk">O modelo pode inventar um valor com confiança. A conta tem de ser código rodado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Conferência</b></span><span class="bk">Refazer uma conta por outro caminho e comparar antes de publicar.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>LGPD em uma frase</b></span><span class="bk">Dado pessoal só com base legal, finalidade e o mínimo necessário.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Sinal de exagero</b></span><span class="bk">Conclusão forte tirada de poucos registros.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 9</div><div class="q">Tenho as ferramentas e os projetos. Como mostro isso a quem vai me contratar?</div><p>Portfólio com números.</p></div>
+</section>
+
+</article>
+</body>
+</html>

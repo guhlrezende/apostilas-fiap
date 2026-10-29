@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 6: Protótipos com v0, Bolt e Replit | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="6" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 6 · Fase 4</div>
+  <h1>Protótipos com v0, Bolt e Replit</h1>
+  <p class="sub">Do texto ao app publicado em uma tarde, e o que conferir antes de mostrar.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">2 demos · 2 testes · 4 flashcards</span></div>
+  <span class="num">6</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 5 você trabalhou num projeto que já existe, com o Cursor e um laço de verificação. Falta o caminho oposto: sair do zero até um app publicado.</div>
+<section class="sec" id="tres">
+  <h2><span class="sn">1</span>Três geradores de app</h2>
+  <p class="gancho">Você descreve o app e recebe o app. Onde está a diferença entre eles?</p>
+  <div class="grid3">
+    <div class="card rv"><b>v0 (Vercel)</b><p>Gera interfaces web a partir de texto ou imagem e publica na Vercel. Forte em tela: páginas, painéis, formulários. Plano gratuito (29/10/2026): <b>7 mensagens por dia</b>, com deploy na Vercel incluído.</p></div>
+    <div class="card rv"><b>Bolt (StackBlitz)</b><p>Gera apps completos que rodam <b>dentro do seu navegador</b>: usa WebContainers, um sistema baseado em WebAssembly que executa Node.js no lado do cliente. Por isso consegue rodar o que gerou e corrigir erros na hora. Gratuito: <b>1 milhão de tokens por mês</b>, com teto de 300 mil por dia.</p></div>
+    <div class="card rv"><b>Replit</b><p>Um ambiente de programação na nuvem com um agente que cria o projeto, roda e publica. Bom quando o app precisa de servidor e banco. Tem entrada gratuita; o plano Core (US$ 20/mês ou 18 no anual) dá mais uso.</p></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Tokens somem rápido</span>No Bolt, segundo a própria página de preços, a maior parte do consumo vem de sincronizar os arquivos do projeto com a IA. Projeto grande gasta mais por mensagem. Comece pequeno.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Com três opções, qual uso para cada protótipo?</div><p>Depende do que o protótipo precisa ter.</p></div>
+</section>
+
+<section class="sec" id="escolher">
+  <h2><span class="sn">2</span>Qual usar</h2>
+  <p class="gancho">Tela bonita, app que roda ou app com servidor?</p>
+  <div class="card sorter rv" data-demo="sorter" data-opts="v:v0|b:Bolt|r:Replit">
+    <div class="item" data-ans="v"><p>Uma landing page do seu portfólio, só front-end, publicada hoje.</p><span class="why">Interface pura com deploy embutido: o forte do v0.</span></div>
+    <div class="item" data-ans="b"><p>Um protótipo de calculadora de prazos que precisa rodar e ser testado ali mesmo, no navegador, sem instalar nada.</p><span class="why">O Bolt executa o app no próprio navegador, então você testa enquanto gera.</span></div>
+    <div class="item" data-ans="r"><p>Um app com login, banco de dados e uma rotina que roda no servidor toda noite.</p><span class="why">Servidor sempre ligado e banco: o ambiente de nuvem do Replit é feito para isso.</span></div>
+    <div class="item" data-ans="v"><p>Transformar o print de uma tela que você desenhou num componente React.</p><span class="why">O v0 aceita imagem como ponto de partida para interface.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O protótipo ficou pronto em uma tarde. O que conferir antes de mostrar para alguém?</div><p>A lista do protótipo honesto.</p></div>
+</section>
+
+<section class="sec" id="conferir">
+  <h2><span class="sn">3</span>Antes de publicar</h2>
+  <p class="gancho">Protótipo publicado é uma URL que qualquer um pode abrir. O que pode dar errado?</p>
+  <div class="demo" data-demo="checks" data-key="publicar">
+    <h4>Checklist antes de publicar um protótipo</h4>
+    <label style="display:block"><input type="checkbox"> Nenhuma chave de API no código do front-end (o navegador mostra tudo para quem abrir).</label>
+    <label style="display:block"><input type="checkbox"> Dados de teste são fictícios: nada de cliente, processo ou CPF reais.</label>
+    <label style="display:block"><input type="checkbox"> Abri o app no celular e cliquei em todos os botões.</label>
+    <label style="display:block"><input type="checkbox"> O código foi exportado para o GitHub (você não fica preso à ferramenta).</label>
+    <label style="display:block"><input type="checkbox"> O README diz o que é protótipo e o que ainda não funciona.</label>
+    <p class="muted"><b class="chk-n"></b> marcados</p>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Colocar a chave do modelo de IA direto no código da tela para "funcionar rápido". Qualquer visitante abre as ferramentas do navegador e copia. A chamada ao modelo tem de passar por um servidor seu, que é o assunto do próximo capítulo.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O protótipo precisa de dados de verdade e de esconder a chave. Como faço uma API?</div><p>Com poucas linhas de Python.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>v0: interface web e deploy na Vercel (gratuito: 7 mensagens/dia).</li><li>Bolt: app completo rodando no navegador com WebContainers (gratuito: 1M tokens/mês, 300 mil/dia).</li><li>Replit: ambiente na nuvem com agente, servidor e banco (Core: US$ 20/mês).</li><li>Antes de publicar: sem chave no front, dados fictícios, testado no celular, código no GitHub.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Por que o Bolt consegue rodar o app que gerou sem servidor?</p>
+    <div class="opts"><button data-k="a">Porque usa WebContainers, que executam Node.js dentro do navegador</button><button data-k="b">Porque o app é só HTML</button><button data-k="c">Porque usa o Docker do seu PC</button><button data-k="d">Porque publica antes de rodar</button></div>
+    <div class="fb">WebContainers são um sistema baseado em WebAssembly que roda Node.js no próprio navegador.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Onde a chave do modelo de IA NÃO pode ficar?</p>
+    <div class="opts"><button data-k="a">Numa variável de ambiente do servidor</button><button data-k="b">No cofre de credenciais do n8n</button><button data-k="c">No código JavaScript da página</button><button data-k="d">No arquivo .env fora do Git</button></div>
+    <div class="fb">O código da página vai inteiro para o navegador de quem abre. Lá, qualquer um lê.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>v0</b></span><span class="bk">Gerador de interface web da Vercel, com deploy embutido.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>WebContainers</b></span><span class="bk">Tecnologia da StackBlitz que roda Node.js dentro do navegador; base do Bolt.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Replit</b></span><span class="bk">Ambiente de programação na nuvem com agente, servidor e deploy.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Regra da chave no front</b></span><span class="bk">Nunca. Chamada a serviço pago passa por um servidor seu.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">O protótipo precisa de dados de verdade. Como crio a minha própria API, sem virar engenheiro de backend?</div><p>FastAPI, em poucas linhas e com testes.</p></div>
+</section>
+
+</article>
+</body>
+</html>

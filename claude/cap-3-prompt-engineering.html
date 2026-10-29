@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 3: Prompt engineering | Apostila de Claude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cl.js"></script>
+</head>
+<body data-cap="3" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 3 · Parte 2</div>
+  <h1>Prompt engineering</h1>
+  <p class="sub">As técnicas que a própria documentação do Claude recomenda, com exemplos em português.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 3 testes · 5 flashcards</span></div>
+  <span class="num">3</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 2 você organizou o trabalho em projetos e conectores. Mas o que sai de cada conversa depende do pedido. A documentação oficial tem um guia de boas práticas de prompt, e este capítulo é ele em português, com exemplos.</div>
+<section class="sec" id="claro">
+  <h2><span class="sn">1</span>Seja claro e dê o porquê</h2>
+  <p class="gancho">Por que o mesmo pedido dá resultado bom para uma pessoa e ruim para outra?</p>
+  <p>A documentação usa uma imagem: trate o Claude como um <b>funcionário brilhante e recém-chegado</b>, que não conhece as suas normas. O teste proposto: mostre o prompt a um colega sem contexto. Se ele ficaria confuso, o Claude também fica.</p>
+  <p>E dê o <b>motivo</b> da regra. O exemplo oficial: em vez de "NUNCA use reticências", diga "a resposta será lida por um sintetizador de voz, então não use reticências, porque ele não sabe pronunciá-las". Com o porquê, o modelo generaliza para casos que você não listou.</p>
+  <div class="demo" data-demo="prompt"></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Explicar ajuda. Mostrar ajuda mais?</div><p>Exemplos.</p></div>
+</section>
+
+<section class="sec" id="exemplos">
+  <h2><span class="sn">2</span>Exemplos e tags XML</h2>
+  <p class="gancho">Como fazer o Claude acertar o formato sem descrever cada detalhe?</p>
+  <p><b>Exemplos</b> são, segundo a documentação, um dos jeitos mais confiáveis de controlar formato, tom e estrutura. Use de 3 a 5, <b>relevantes</b> (parecidos com o caso real), <b>diversos</b> (cobrindo os casos difíceis) e <b>marcados</b> com <code>&lt;example&gt;</code> (vários dentro de <code>&lt;examples&gt;</code>), para não serem confundidos com instruções.</p>
+  <p><b>Tags XML</b> separam os tipos de conteúdo: <code>&lt;instructions&gt;</code>, <code>&lt;context&gt;</code>, <code>&lt;input&gt;</code>. Não há nomes mágicos: use nomes descritivos e consistentes, e aninhe quando houver hierarquia.</p>
+<pre><code>&lt;examples&gt;
+  &lt;example&gt;
+    &lt;mensagem&gt;Quero saber o preço do plano anual&lt;/mensagem&gt;
+    &lt;categoria&gt;orçamento&lt;/categoria&gt;
+  &lt;/example&gt;
+  &lt;example&gt;
+    &lt;mensagem&gt;O sistema não abre desde ontem&lt;/mensagem&gt;
+    &lt;categoria&gt;suporte&lt;/categoria&gt;
+  &lt;/example&gt;
+  &lt;example&gt;
+    &lt;mensagem&gt;Fui cobrado duas vezes e ninguém responde&lt;/mensagem&gt;
+    &lt;categoria&gt;reclamação&lt;/categoria&gt;
+  &lt;/example&gt;
+&lt;/examples&gt;
+
+Classifique a mensagem abaixo do mesmo jeito.
+&lt;mensagem&gt;{{MENSAGEM}}&lt;/mensagem&gt;</code></pre>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Três exemplos quase iguais. O modelo aprende o padrão errado (por exemplo, que toda mensagem curta é suporte). Varie tamanho, tom e categoria.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E quando o material de entrada é enorme, como um processo inteiro?</div><p>A ordem passa a importar.</p></div>
+</section>
+
+<section class="sec" id="longo">
+  <h2><span class="sn">3</span>Papel, documentos longos e formato</h2>
+  <p class="gancho">Onde vai o documento: antes ou depois da pergunta?</p>
+  <p><b>Papel.</b> Uma frase no system prompt ("Você é revisor de contratos de um escritório") já foca tom e comportamento.</p>
+  <p><b>Documentos longos</b> (20 mil tokens ou mais): coloque o material <b>no topo</b> e a pergunta <b>no fim</b>. A documentação registra que perguntas no fim melhoraram a qualidade em até 30% nos testes, principalmente com vários documentos. Cada documento em <code>&lt;document&gt;</code>, com <code>&lt;source&gt;</code> e <code>&lt;document_content&gt;</code>.</p>
+  <p><b>Formato.</b> Diga o que fazer, e não o que evitar: em vez de "não use markdown", "responda em parágrafos corridos". O estilo do seu prompt também puxa o da resposta: prompt cheio de tópicos tende a gerar resposta cheia de tópicos.</p>
+  <div class="nota cuidado"><span class="lbl">Mudou nos modelos novos</span>"Prefill" (começar a resposta pelo modelo) não é mais aceito a partir dos modelos 4.6: a API devolve erro 400. Para forçar JSON, use <b>structured outputs</b> ou uma ferramenta com o formato definido; para cortar introduções, peça no system prompt para responder direto.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Escrever bons prompts no chat é uma coisa. Como coloco o Claude dentro de um programa meu?</div><p>A API.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Funcionário brilhante e novo: seja específico. Teste: um colega sem contexto entenderia?</li><li>Dê o porquê das regras; o modelo generaliza a partir dele.</li><li>3 a 5 exemplos relevantes, diversos e dentro de <code>&lt;example&gt;</code>.</li><li>Tags XML descritivas para separar instruções, contexto e entrada.</li><li>Documento longo no topo, pergunta no fim (até 30% melhor nos testes oficiais).</li><li>Diga o que fazer, não o que evitar. Prefill não existe mais: use structured outputs.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Qual versão é melhor, segundo a documentação?</p>
+    <div class="opts"><button data-k="a">&quot;Responda em até 3 frases, porque o texto vai para uma notificação de celular&quot;</button><button data-k="b">&quot;SEJA CURTO!!!&quot;</button><button data-k="c">&quot;Não seja prolixo&quot;</button><button data-k="d">As três são iguais</button></div>
+    <div class="fb">A primeira é específica e dá o motivo. As outras são vagas ou dizem só o que evitar.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 2</span><p class="qq">Você tem um contrato de 60 páginas e uma pergunta sobre ele. Como montar o prompt?</p>
+    <div class="opts"><button data-k="a">Pergunta primeiro, contrato depois</button><button data-k="b">Contrato quebrado em 60 mensagens</button><button data-k="c">Só um resumo do contrato</button><button data-k="d">Contrato no topo, dentro de tags, e a pergunta no fim</button></div>
+    <div class="fb">Material longo no topo e pergunta no fim é a recomendação para contexto longo.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Você quer que a resposta seja sempre um JSON válido. Nos modelos atuais, o caminho indicado é:</p>
+    <div class="opts"><button data-k="a">Prefill com <code>{</code></button><button data-k="b">Pedir com letras maiúsculas</button><button data-k="c">Structured outputs, ou uma ferramenta com o formato definido</button><button data-k="d">Rodar várias vezes até sair certo</button></div>
+    <div class="fb">Prefill não é aceito a partir dos modelos 4.6. Structured outputs foi feito para restringir a saída a um formato.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Teste do colega</b></span><span class="bk">Se um colega sem contexto ficaria confuso com o prompt, o Claude também fica.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quantos exemplos?</b></span><span class="bk">De 3 a 5, relevantes, diversos e dentro de tags &lt;example&gt;.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Ordem em contexto longo</b></span><span class="bk">Documentos no topo, pergunta no fim.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que explicar o motivo da regra?</b></span><span class="bk">O modelo generaliza a partir do porquê para casos não listados.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Substituto do prefill</b></span><span class="bk">Structured outputs, ferramenta com formato definido ou instrução direta no system prompt.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">Escrever bons prompts no chat é uma coisa. Como coloco o Claude dentro de um programa meu?</div><p>A API, e quanto ela custa.</p></div>
+</section>
+
+</article>
+</body>
+</html>

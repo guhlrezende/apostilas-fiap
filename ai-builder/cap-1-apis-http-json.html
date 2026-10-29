@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 1: APIs, HTTP, JSON e webhooks | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="1" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 1 · Fase 1</div>
+  <h1>APIs, HTTP, JSON e webhooks</h1>
+  <p class="sub">A língua comum de todas as ferramentas da trilha. Sem isso, cada erro vira mistério.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 4 testes · 5 flashcards</span></div>
+  <span class="num">1</span>
+</header>
+
+<div class="recap rv"><b>Ponto de partida</b>Este é o primeiro capítulo da trilha. Não precisa saber programar: basta já ter usado um aplicativo que puxa dados de outro (o banco que mostra o Pix, o mapa que mostra o trânsito).</div>
+<section class="sec" id="api">
+  <h2><span class="sn">1</span>O que é uma API</h2>
+  <p class="gancho">Todo sistema que você vai ligar nesta trilha conversa por API. Então, o que é isso?</p>
+  <p><b>Intuição.</b> Pense no balcão de um cartório. Você não entra no arquivo e procura a certidão: você preenche um pedido no formato que o cartório aceita, entrega no balcão e recebe a certidão (ou um "faltou documento"). A API é esse balcão: um conjunto de pedidos que um sistema aceita, com regras sobre o formato.</p>
+  <p><b>Definição.</b> <abbr class="gl" data-def="Application Programming Interface: o conjunto de operações que um sistema expõe para outros programas usarem.">API</abbr> é a interface que um programa oferece para outros programas. Quase todas as APIs web usam <b>HTTP</b> (o mesmo protocolo do navegador) e trocam dados em <b>JSON</b>. Quando o n8n "busca as linhas da planilha" ou o Claude "chama uma ferramenta", por baixo está um pedido HTTP.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se o pedido tem formato, qual é o formato de um pedido HTTP?</div><p>As cinco peças de uma requisição.</p></div>
+</section>
+
+<section class="sec" id="http">
+  <h2><span class="sn">2</span>A requisição e a resposta</h2>
+  <p class="gancho">Um pedido HTTP tem sempre as mesmas peças. Quais são, e o que cada uma diz?</p>
+  <div class="tablewrap"><table>
+    <tr><th>Peça</th><th>O que diz</th><th>Exemplo</th></tr>
+    <tr><td><b>Método</b></td><td>a intenção</td><td><code>GET</code> ler, <code>POST</code> enviar dados, <code>PUT</code>/<code>PATCH</code> alterar, <code>DELETE</code> apagar</td></tr>
+    <tr><td><b>URL</b> (rota)</td><td>onde</td><td><code>https://api.loja.com/pedidos/42</code></td></tr>
+    <tr><td><b>Cabeçalhos</b></td><td>informações sobre o pedido</td><td><code>content-type: application/json</code>, a chave de acesso</td></tr>
+    <tr><td><b>Corpo</b></td><td>os dados enviados (em POST/PUT)</td><td><code>{"cliente":"Ana","valor":1500}</code></td></tr>
+    <tr><td><b>Status</b> (na resposta)</td><td>como foi</td><td>2xx deu certo, 4xx erro seu, 5xx erro do servidor</td></tr>
+  </table></div>
+  <p>Os códigos que você mais vai ver: <b>200</b> ok, <b>201</b> criado, <b>400</b> pedido mal formado, <b>401</b> sem autorização (chave errada ou ausente), <b>403</b> proibido, <b>404</b> não existe, <b>405</b> método não permitido, <b>422</b> dados inválidos, <b>429</b> excesso de pedidos, <b>500</b> o servidor quebrou.</p>
+  <p>A demo abaixo usa a API de triagem do capítulo 7. As respostas são as mesmas que os testes automáticos de <code>exemplos/test_api.py</code> conferiram rodando a API de verdade:</p>
+  <div class="demo" data-demo="http"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: ler um erro</span>
+    <div class="l"><div>O n8n mostra <code>401 Unauthorized</code>. O 4 diz que o problema é <b>do seu lado</b>, não do servidor.</div></div>
+    <div class="l"><div>401 especificamente é autorização: a credencial do nó está vazia, vencida ou no cabeçalho errado.</div></div>
+    <div class="l"><div>Se fosse 422, a chave estaria certa e o problema seria um campo do JSON. Se fosse 500, insistir mais tarde poderia resolver.</div></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Tentar de novo sem ler o código. 4xx quase nunca se resolve repetindo; 429 e 5xx às vezes sim (com espera entre as tentativas).</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O corpo e a resposta vêm em JSON. Como ler JSON sem se perder?</div><p>Três estruturas e você lê qualquer um.</p></div>
+</section>
+
+<section class="sec" id="json">
+  <h2><span class="sn">3</span>JSON em dez minutos</h2>
+  <p class="gancho">Todo dado que passa entre as ferramentas é JSON. O que preciso saber para ler e montar um?</p>
+  <p>JSON tem só três ideias: <b>objeto</b> (chaves e valores entre <code>{ }</code>), <b>lista</b> (valores em ordem entre <code>[ ]</code>) e <b>valores simples</b> (texto entre aspas, número, <code>true</code>/<code>false</code>, <code>null</code>). Elas se encaixam umas nas outras:</p>
+<pre><code>{
+  "cliente": { "nome": "Ana Souza", "email": "ana@exemplo.com" },
+  "pedido":  { "valor": 1500, "itens": ["teclado", "mouse"] },
+  "urgente": false
+}</code></pre>
+  <p>Para chegar a um valor, você segue o caminho: <code>cliente.nome</code> dá <code>"Ana Souza"</code>; <code>pedido.itens[0]</code> dá <code>"teclado"</code> (listas contam a partir de zero). É exatamente o que você vai escrever nas expressões do n8n no próximo capítulo.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Vírgula sobrando no último item, aspas simples no lugar de duplas ou comentário dentro do JSON. Qualquer um desses torna o JSON inválido, e a API devolve 400 ou 422.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Até aqui, quem pergunta é você. E quando o outro sistema precisa avisar que algo aconteceu?</div><p>Webhook: o sistema liga para você.</p></div>
+</section>
+
+<section class="sec" id="webhook">
+  <h2><span class="sn">4</span>Webhook x polling</h2>
+  <p class="gancho">Como uma automação fica sabendo que chegou um pedido novo?</p>
+  <p>Há dois jeitos. No <b>polling</b>, a sua automação pergunta de tempos em tempos: "tem pedido novo?". Funciona, mas gasta execuções à toa e tem atraso. No <b>webhook</b>, você entrega uma URL ao outro sistema e ele faz um <code>POST</code> nela quando o evento acontece. É imediato e só roda quando há o que fazer. Por isso os gatilhos das ferramentas de automação preferem webhook quando o serviço oferece.</p>
+  <div class="card sorter rv" data-demo="sorter" data-opts="w:Webhook|p:Polling">
+    <div class="item" data-ans="w"><p>O formulário do site precisa disparar o fluxo no segundo em que o cliente clica em enviar.</p><span class="why">Evento pontual e urgente: o formulário avisa por webhook.</span></div>
+    <div class="item" data-ans="p"><p>Um site do governo publica uma tabela, sem nenhuma forma de aviso, e você quer saber se mudou.</p><span class="why">Quem não oferece webhook só pode ser consultado de tempos em tempos.</span></div>
+    <div class="item" data-ans="w"><p>O gateway de pagamento informa quando um Pix foi confirmado.</p><span class="why">Pagamentos são o caso clássico de webhook: o gateway chama a sua URL a cada confirmação.</span></div>
+    <div class="item" data-ans="p"><p>Uma planilha antiga, num serviço que só tem leitura pela API, recebe linhas durante o dia.</p><span class="why">Sem evento disponível, o jeito é ler periodicamente e comparar.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Tanto o pedido quanto o webhook exigem uma chave. Onde ela mora?</div><p>Segredos: a regra que não tem exceção.</p></div>
+</section>
+
+<section class="sec" id="chaves">
+  <h2><span class="sn">5</span>Chaves de API e segredos</h2>
+  <p class="gancho">A chave de API é a sua senha para aquele serviço. Quem a vê pode gastar no seu nome.</p>
+  <p>A regra: <mark class="hl p">chave nunca fica no código nem no repositório</mark>. Ela vai em uma <b>variável de ambiente</b> (no seu PC, num arquivo <code>.env</code> listado no <code>.gitignore</code>) ou no cofre de credenciais da ferramenta (o n8n, o Make e o Zapier têm um). O código só lê o nome da variável, como em <code>os.environ.get("API_KEY")</code> no exemplo do capítulo 7.</p>
+  <div class="nota cuidado"><span class="lbl">Se vazou</span>Apagar o commit não basta, porque o histórico do Git guarda a chave. O certo é <b>revogar</b> a chave no painel do serviço e gerar outra.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Com HTTP, JSON, webhook e chaves, você já entende o que uma ferramenta de automação faz por baixo.</div><p>Hora de usar a primeira delas.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>API: o balcão de pedidos de um sistema. Quase sempre HTTP com JSON.</li><li>Requisição: método, URL, cabeçalhos e corpo. Resposta: status e corpo.</li><li>2xx ok, 4xx erro de quem pediu (401 chave, 404 não existe, 422 dados inválidos), 5xx erro do servidor.</li><li>JSON: objeto <code>{}</code>, lista <code>[]</code> e valores simples. Caminho: <code>pedido.itens[0]</code>.</li><li>Webhook: o sistema avisa você. Polling: você pergunta de tempos em tempos.</li><li>Chave em variável de ambiente ou no cofre da ferramenta. Vazou, revoga.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">A API respondeu 422 a um POST. O que é mais provável?</p>
+    <div class="opts"><button data-k="a">O servidor caiu</button><button data-k="b">A rota não existe</button><button data-k="c">Algum campo do JSON está faltando ou com tipo errado</button><button data-k="d">Excesso de pedidos</button></div>
+    <div class="fb">422 quer dizer que o pedido chegou e foi entendido, mas os dados não passaram na validação. Rota inexistente seria 404; servidor caído, 5xx; excesso, 429.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">No JSON do capítulo, qual caminho leva a <code>&quot;mouse&quot;</code>?</p>
+    <div class="opts"><button data-k="a">pedido.itens[1]</button><button data-k="b">pedido.itens[2]</button><button data-k="c">itens.mouse</button><button data-k="d">pedido[1]</button></div>
+    <div class="fb">A lista começa no índice 0: <code>itens[0]</code> é teclado e <code>itens[1]</code> é mouse.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">Por que webhook costuma ser melhor que polling?</p>
+    <div class="opts"><button data-k="a">Porque dispensa autenticação</button><button data-k="b">Porque só roda quando há evento e chega na hora</button><button data-k="c">Porque funciona com qualquer site</button><button data-k="d">Porque usa GET</button></div>
+    <div class="fb">O webhook é disparado pelo próprio evento, sem consultas à toa. Ele ainda exige cuidado com autenticação e só existe se o serviço oferecer.</div></div>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 4</span><p class="qq">Você subiu uma chave no GitHub por engano e apagou o commit. E agora?</p>
+    <div class="opts"><button data-k="a">Pronto, resolvido</button><button data-k="b">Tornar o repositório privado resolve</button><button data-k="c">Trocar o nome da variável</button><button data-k="d">Revogar a chave no serviço e gerar outra</button></div>
+    <div class="fb">O histórico e as cópias já podem ter a chave. Só a revogação a torna inútil.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que diz o método HTTP?</b></span><span class="bk">A intenção: GET lê, POST envia, PUT/PATCH alteram, DELETE apaga.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>401 x 403</b></span><span class="bk">401: não sei quem você é (chave ausente ou errada). 403: sei quem é, mas você não pode.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Webhook</b></span><span class="bk">URL sua que outro sistema chama com POST quando um evento acontece.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Objeto x lista em JSON</b></span><span class="bk">Objeto: chaves e valores em {}. Lista: valores em ordem em [], contando do zero.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Onde guardar uma chave de API?</b></span><span class="bk">Variável de ambiente ou cofre de credenciais da ferramenta. Nunca no código.</span></button></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 2</div><div class="q">Sei como os sistemas conversam. Dá para ligar vários deles sem escrever um programa inteiro?</div><p>Sim: com uma ferramenta de automação. A primeira é a que você pode hospedar.</p></div>
+</section>
+
+</article>
+</body>
+</html>

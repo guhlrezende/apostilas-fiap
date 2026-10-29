@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 9: Portfólio de AI Builder | Apostila de Ferramentas de AI Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/ab.js"></script>
+</head>
+<body data-cap="9" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 9 · Fase 5</div>
+  <h1>Portfólio de AI Builder</h1>
+  <p class="sub">Transformar o que a trilha produziu em prova de que você constrói com IA.</p>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span></div>
+  <span class="num">9</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Nos capítulos 1 a 8 você aprendeu as ferramentas e montou um fluxo com IA, uma API, um protótipo e uma análise. Falta a parte que transforma estudo em contratação: mostrar.</div>
+<section class="sec" id="o-que-querem">
+  <h2><span class="sn">1</span>O que um recrutador de AI Builder quer ver</h2>
+  <p class="gancho">Certificado ou coisa funcionando?</p>
+  <p>Vagas de AI Builder costumam deixar claro: o que conta é o que você construiu. Os itens que aparecem nas descrições são automações que economizaram horas de verdade, ferramentas internas publicadas, dashboards funcionando, agentes resolvendo um problema de negócio e demos construídas do zero em poucos dias. Repare no padrão: <mark class="hl">cada item tem um resultado</mark>, não só uma tecnologia.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Resultado precisa de número. Como medir horas economizadas sem inventar?</div><p>Uma conta simples, com a origem de cada número.</p></div>
+</section>
+
+<section class="sec" id="medir">
+  <h2><span class="sn">2</span>Medir horas economizadas</h2>
+  <p class="gancho">"Economizou tempo" não convence. Quanto, e como você sabe?</p>
+  <div class="formula">horas por mês = (minutos antes − minutos depois) × vezes por mês ÷ 60<small>Meça "antes" cronometrando algumas vezes; "vezes por mês" vem do histórico, não da memória.</small></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido (números hipotéticos)</span>
+    <div class="l"><div>Montar um documento padrão levava 30 minutos; com a automação, 3. Economia: 27 minutos por documento.</div></div>
+    <div class="l"><div>O histórico mostra 40 documentos por mês.</div></div>
+    <div class="l"><div>27 × 40 = 1.080 minutos; ÷ 60 = <b>18 horas por mês</b>.</div></div>
+    <div class="l"><div>No currículo: "reduzi de 30 para 3 minutos por documento, cerca de 18 h/mês com o volume atual". Com o volume real, a conta é a mesma.</div></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Arredondar para cima ou somar ganhos que não aconteceram ("vai economizar 100 horas quando todo mundo usar"). Na entrevista, a primeira pergunta é "como você mediu?".</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O número está certo. Onde ele mora?</div><p>No README de cada projeto.</p></div>
+</section>
+
+<section class="sec" id="readme">
+  <h2><span class="sn">3</span>O README que convence</h2>
+  <p class="gancho">O recrutador abre o seu repositório por 30 segundos. O que ele precisa ver?</p>
+<pre><code># Triagem de pedidos com IA
+
+**Problema:** pedidos chegavam por formulário e eram separados à mão.
+**Solução:** n8n recebe o formulário, um modelo classifica, uma API própria
+decide a fila e o fluxo avisa o responsável.
+**Resultado:** triagem de ~4 min para segundos; ~6 h/mês com o volume de teste.
+
+![demo](docs/demo.gif)
+
+## Como rodar
+docker compose up -d   # n8n + API
+# importe workflow.json no n8n e cadastre as credenciais
+
+## Como foi medido
+Cronometrei 10 triagens manuais (média 4 min) e usei 90 pedidos/mês do histórico.
+
+## Limitações
+- Classificação erra em mensagens com dois assuntos (3 de 50 nos testes).
+- Dados de exemplo são fictícios.</code></pre>
+  <p>A ordem importa: problema, solução, resultado e uma demo visual no topo; como rodar no meio; como mediu e limitações no fim. Admitir limitação conta a seu favor: mostra que você testou.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quais projetos colocar?</div><p>Os que a própria trilha já produziu.</p></div>
+</section>
+
+<section class="sec" id="projetos">
+  <h2><span class="sn">4</span>Os projetos da trilha</h2>
+  <p class="gancho">O que sai de cada fase, pronto para o portfólio?</p>
+  <div class="demo" data-demo="checks" data-key="portfolio">
+    <h4>Portfólio de AI Builder</h4>
+    <label style="display:block"><input type="checkbox"> Fluxo de triagem com IA no n8n, com tratamento de erro (cap. 2).</label>
+    <label style="display:block"><input type="checkbox"> O mesmo fluxo no Make ou Zapier, com a comparação de custo (cap. 3).</label>
+    <label style="display:block"><input type="checkbox"> compose.yaml que sobe n8n e API juntos (caps. 4 e 7).</label>
+    <label style="display:block"><input type="checkbox"> Protótipo publicado com link e GIF (cap. 6).</label>
+    <label style="display:block"><input type="checkbox"> API com testes passando no README (cap. 7).</label>
+    <label style="display:block"><input type="checkbox"> Análise com conferência e conclusão honesta (cap. 8).</label>
+    <label style="display:block"><input type="checkbox"> Cada README com problema, resultado, como mediu e limitações.</label>
+    <p class="muted"><b class="chk-n"></b> prontos</p>
+  </div>
+  <div class="nota lembra"><span class="lbl">Repositório público</span>Nada de dado de cliente, de empresa ou de processo real nos exemplos. Use dados fictícios e diga no README que são fictícios.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">A trilha termina aqui. A próxima volta é repetir com problemas maiores.</div><p>Escolha um processo real e chato, e automatize.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento da trilha</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Portfólio de AI Builder mostra resultado, não só tecnologia.</li><li>Horas/mês = (antes − depois) × vezes por mês ÷ 60, com a origem de cada número.</li><li>README: problema, solução, resultado e demo no topo; como rodar; como mediu; limitações.</li><li>Dados fictícios em repositório público.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="d"><span class="qt">Pergunta 1</span><p class="qq">Uma tarefa caiu de 20 para 5 minutos e acontece 60 vezes por mês. Quantas horas por mês?</p>
+    <div class="opts"><button data-k="a">5</button><button data-k="b">10</button><button data-k="c">20</button><button data-k="d">15</button></div>
+    <div class="fb">(20 − 5) × 60 = 900 minutos; 900 ÷ 60 = 15 horas.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 2</span><p class="qq">Qual frase de currículo resiste à pergunta “como você mediu?”</p>
+    <div class="opts"><button data-k="a">Reduzi de 30 para 3 min por documento, cerca de 18 h/mês com 40 documentos/mês</button><button data-k="b">Economizei muito tempo da equipe</button><button data-k="c">Vai economizar 100 h quando todos usarem</button><button data-k="d">Automação revolucionária com IA</button></div>
+    <div class="fb">Só a primeira traz antes, depois e volume, cada um verificável.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 3</span><p class="qq">Por que listar limitações no README?</p>
+    <div class="opts"><button data-k="a">Porque é obrigatório no GitHub</button><button data-k="b">Para diminuir o projeto</button><button data-k="c">Mostra que você testou e conhece onde a solução falha</button><button data-k="d">Não se deve listar</button></div>
+    <div class="fb">Quem testou de verdade sabe onde quebra. Isso passa mais confiança que um projeto sem defeito declarado.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Fórmula de horas economizadas</b></span><span class="bk">(minutos antes − minutos depois) × vezes por mês ÷ 60.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Topo do README</b></span><span class="bk">Problema, solução, resultado e uma demo visual.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Dado em repositório público</b></span><span class="bk">Sempre fictício, e dito no README.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que vagas de AI Builder pedem</b></span><span class="bk">Automações com horas economizadas, ferramentas publicadas, dashboards, agentes e demos feitas do zero.</span></button></div>
+</section>
+
+</article>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# n8n local com Docker Compose (apostila de AI Builder, cap. 4).
+# É a tradução para Compose do comando "docker run" da documentação oficial do n8n.
+# Subir:   docker compose up -d      Abrir: http://localhost:5678
+# Parar:   docker compose down       (os fluxos ficam guardados no volume n8n_data)
+services:
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
