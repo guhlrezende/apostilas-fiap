@@ -31,12 +31,15 @@ CAPS = [
       pergunta="Todas essas redes aprendem por gradiente. Existe um jeito de otimizar sem ele?"),
  dict(n=8, file="cap-8-algoritmos-geneticos.html", titulo="Algoritmos Genéticos (complemento)", aula="Complemento", tempo=40,
       resumo="Seleção, cruzamento e mutação para otimizar sem gradiente, e onde isso é usado.",
+      pergunta="De volta à rede da Aula 7: e se a resposta não for um número, e sim um sim ou não?"),
+ dict(n=9, file="cap-9-mlp-classificacao.html", titulo="MLP de classificação: prever a compra", aula="Aula 9", tempo=45,
+      resumo="Mesma receita da MLP de energia, agora com resposta sim ou não: saída sigmoide, probabilidade de compra, acurácia e stratify.",
       pergunta=""),
 ]
 manifest(PASTA, "redes-neurais", TITULO, CAPS)
 hub(PASTA, TITULO, "Redes Neurais Artificiais, Deep Learning e Algoritmos Genéticos", "Apostila de Redes Neurais e Deep Learning",
     "Do neurônio artificial até a rede que aprende o XOR, passando por overfitting, convolução e algoritmos genéticos. Com redes treinando de verdade na sua tela.",
-    ["<b>8</b> capítulos", "<b>~5h30</b> de estudo ativo", "redes treinando no navegador"],
+    ["<b>9</b> capítulos", "<b>~6h20</b> de estudo ativo", "redes treinando no navegador"],
     '<p>A história é a de um problema que <mark class="hl">uma reta não resolve</mark>. Começamos com um neurônio, vemos o que ele consegue (e o que não consegue: o XOR), e então empilhamos camadas até a rede desenhar a curva que faltava. Cada capítulo responde à limitação do anterior. Os capítulos 6 a 8 são complemento: o que acontece por dentro do treino, as arquiteturas modernas e uma família de algoritmos que otimiza sem gradiente.</p>',
     'Os números de erro (RMSE) da rede de energia vêm do <b>scikit-learn</b>, rodados sobre o mesmo arquivo da aula. As redes pequenas das demos são treinadas <b>de verdade no navegador</b>, mas não são a mesma implementação, então os números delas não são comparáveis aos do notebook.')
 

@@ -321,7 +321,7 @@ body8 = recap("Tudo até aqui ajustava pesos descendo um gradiente. Mas há prob
     ("O que é cruzamento?", "Combinar partes de dois pais para gerar filhos."),
     ("O que é elitismo?", "Copiar os melhores indivíduos intactos para a próxima geração."),
     ("O algoritmo genético garante o ótimo?", "Não: costuma achar boas soluções, sem garantia.")]) + '''
-  <div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Do neurônio à evolução.</div><p>Se algum ponto ficou solto, volte ao capítulo correspondente e refaça a demo. A repetição ativa é o que fixa.</p></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 9</div><div class="q">De volta à rede da Aula 7: e se a resposta não for um número, e sim um sim ou não?</div><p>Os capítulos 6 a 8 foram complementos. O próximo volta à sala de aula: a mesma MLP, agora prevendo se o visitante de uma loja vai comprar.</p></div>
 </section>'''
 chapter(PASTA, 8, "algoritmos-geneticos", T, "Algoritmos Genéticos (complemento)", "Capítulo 8 · Complemento",
         "Seleção, cruzamento e mutação: otimizar sem gradiente.",

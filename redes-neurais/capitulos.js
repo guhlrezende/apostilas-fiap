@@ -73,6 +73,15 @@ window.APOSTILA = {
       "aula": "Complemento",
       "tempo": 40,
       "resumo": "Seleção, cruzamento e mutação para otimizar sem gradiente, e onde isso é usado.",
+      "pergunta": "De volta à rede da Aula 7: e se a resposta não for um número, e sim um sim ou não?"
+    },
+    {
+      "n": 9,
+      "file": "cap-9-mlp-classificacao.html",
+      "titulo": "MLP de classificação: prever a compra",
+      "aula": "Aula 9",
+      "tempo": 45,
+      "resumo": "Mesma receita da MLP de energia, agora com resposta sim ou não: saída sigmoide, probabilidade de compra, acurácia e stratify.",
       "pergunta": ""
     }
   ]
