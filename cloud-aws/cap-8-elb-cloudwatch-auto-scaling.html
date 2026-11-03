@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 8: ELB, CloudWatch e Auto Scaling | Apostila de Cloud e AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-8.js"></script>
+</head>
+<body data-cap="8" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 8 · Aula 8</div>
+  <h1>ELB, CloudWatch e Auto Scaling</h1>
+  <p class="sub">Como a aplicação aguenta o pico de acesso: repartir o tráfego, medir a carga e criar máquinas sozinho.</p>
+  <div class="meta"><span class="chip"><b>~50 min</b></span><span class="chip">3 demos · 4 testes · 4 flashcards</span><span class="chip">roteiro do Lab 6 (não executado)</span></div>
+  <span class="num">8</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>Até o Capítulo 7 você montou o que uma aplicação precisa: máquina (EC2), arquivos (S3), banco (RDS), código (Lambda) e a rede por baixo (VPC, com sub-redes públicas e privadas). Mas tudo isso com <b>uma máquina só</b> na frente. A startup do exemplo faz soluções de e-commerce e os clientes reclamam que, em datas como a <b>Black Friday</b>, o sistema <b>trava</b>. Duas perguntas: como <b>monitorar</b> os recursos, e como <b>balancear o tráfego</b> e <b>criar máquinas novas</b> quando as requisições sobem de repente?</div>
+
+<section class="sec" id="problema">
+  <h2><span class="sn">1</span>O problema: uma máquina só tem um limite</h2>
+  <p class="gancho">Quem aguenta o dia comum nem sempre aguenta o dia de promoção.</p>
+  <p><b>Intuição.</b> Pense numa loja com um caixa só. Num dia normal a fila anda. Na Black Friday a fila vira a rua, o caixa não dá conta e a loja perde venda. As saídas são três: <b>abrir mais caixas</b>, <b>distribuir os clientes</b> entre eles e <b>alguém olhando a fila</b> para decidir quando abrir ou fechar caixa.</p>
+  <p><b>Definição.</b> A aula resolve isso com três serviços, cada um respondendo a uma das perguntas:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Serviço</th><th>Papel</th><th>Na analogia</th></tr>
+    <tr><td><b>Elastic Load Balancing (ELB)</b></td><td>distribui o tráfego de entrada entre várias instâncias</td><td>quem manda cada cliente para um caixa</td></tr>
+    <tr><td><b>Amazon CloudWatch</b></td><td>mede os recursos, guarda logs e dispara alarmes</td><td>quem olha o tamanho da fila</td></tr>
+    <tr><td><b>EC2 Auto Scaling</b></td><td>adiciona e remove instâncias sozinho, e troca as danificadas</td><td>quem abre e fecha caixas</td></tr>
+  </table></div>
+  <p>Resumindo a frase do slide: o ELB distribui o tráfego entre as instâncias; o Auto Scaling mantém a disponibilidade e aumenta ou reduz a capacidade de forma automática, conforme condições que você define. O CloudWatch é quem fornece a medida que alimenta essas condições.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Tratar os três como se fossem um só. Eles são <b>independentes</b> e se encaixam: dá para ter balanceador sem Auto Scaling (as máquinas são fixas) e dá para ter CloudWatch sem nenhum dos dois (só monitorando). A graça é combinar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se há várias máquinas, quem decide para qual delas vai cada visitante?</div><p>O balanceador de carga.</p></div>
+</section>
+
+<section class="sec" id="elb">
+  <h2><span class="sn">2</span>ELB: o balanceador de carga</h2>
+  <p class="gancho">O visitante digita um endereço só. As máquinas atrás dele são várias.</p>
+  <p><b>Intuição.</b> O balanceador é a recepção: todo mundo chega no mesmo balcão e a recepção encaminha cada pessoa para um atendente livre. Se um atendente sai de cena, a recepção simplesmente deixa de mandar gente para ele.</p>
+  <p><b>Definição.</b> O <b>Elastic Load Balancing</b> distribui o tráfego de entrada entre <b>vários destinos</b> (as instâncias EC2) e deixa a aplicação <b>tolerante a falhas</b>: se uma instância cai, as outras seguem atendendo. O <b>grupo de destino</b> (<i>target group</i>) é a lista de para onde o tráfego que entra no balanceador vai, e um mesmo balanceador pode mandar para vários grupos.</p>
+  <p>Mexa na demo: envie pedidos, derrube a instância A e depois desligue o balanceador para ver a diferença.</p>
+  <div class="demo" data-demo="balanceador"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: 12 pedidos</span>
+    <div class="l"><div>Três instâncias saudáveis e o balanceador ligado: cada uma recebe <b>4</b> pedidos (12 ÷ 3).</div></div>
+    <div class="l"><div>A instância B cai e a rodada é repetida: sobram duas, e cada uma recebe <b>6</b> (12 ÷ 2). Nenhum pedido falha.</div></div>
+    <div class="l"><div>Sem balanceador, com tudo apontando para a instância A: se ela está de pé, ela recebe os <b>12</b>; se caiu, os <b>12 falham</b>, mesmo com B e C saudáveis.</div></div>
+  </div>
+  <p><b>Código (complemento, não foi dado em aula).</b> Para ver o balanceador funcionando no lab, repita o pedido para o DNS dele e olhe o código de resposta. O DNS é o que o slide manda copiar do balanceador depois que as instâncias sobem.</p>
+<pre><code><span class="c"># troque pelo DNS do SEU balanceador (copiado do console)</span>
+DNS=<span class="s">"meu-balanceador-123.region.elb.amazonaws.com"</span>
+<span class="k">for</span> i <span class="k">in</span> $(<span class="f">seq</span> <span class="n">1</span> <span class="n">20</span>); <span class="k">do</span>
+  <span class="f">curl</span> -s -o /dev/null -w <span class="s">"%{http_code}\n"</span> <span class="s">"http://$DNS/"</span>   <span class="c"># imprime só o código (200 = ok)</span>
+<span class="k">done</span></code></pre>
+  <details class="cola"><summary>Complemento (não foi dado em aula): health check, rodízio e tipos de balanceador</summary><div class="in-body">
+    <p>Como o balanceador sabe que uma instância caiu? Pelo <b>health check</b>: o grupo de destino pergunta periodicamente a cada instância se ela responde (por exemplo, pedindo uma página). Quem falha vários testes seguidos sai da rotação até voltar. Por isso, no mundo real, entre a queda e a retirada da rotação existem alguns segundos; a demo acima faz isso instantaneamente para simplificar.</p>
+    <p>A demo reparte os pedidos em <b>rodízio</b> (um para cada, em ordem). É uma forma comum, e no balanceador para HTTP é o comportamento padrão pela documentação, mas o slide não diz qual regra foi usada. A AWS tem mais de um tipo de balanceador (um para tráfego HTTP/HTTPS, outro para TCP e outro para equipamentos de rede). O slide só fala "balanceador de carga", então qual tipo o lab usa fica como ponto a conferir no console.</p>
+  </div></details>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Achar que o ELB <b>cria</b> máquinas. Ele só reparte o tráfego entre as que já existem. Quem cria e remove instâncias é o Auto Scaling (seção 4).</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quem percebe que a carga subiu, e como isso vira uma ação?</div><p>Alguém precisa medir. É o papel do CloudWatch.</p></div>
+</section>
+
+<section class="sec" id="cloudwatch">
+  <h2><span class="sn">3</span>CloudWatch: medir e avisar</h2>
+  <p class="gancho">Sem medida, ninguém sabe se a fila está crescendo.</p>
+  <p><b>Intuição.</b> É o painel do carro: velocímetro, temperatura e uma luz que acende quando algo passa do limite. O painel não dirige o carro, só informa. Quem reage é o motorista, ou, na nuvem, uma ação automática ligada ao alarme.</p>
+  <p><b>Definição.</b> O <b>Amazon CloudWatch</b> monitora os recursos da AWS: performance, disponibilidade da aplicação e <b>quanto da infraestrutura está sendo usada</b>. Cria <b>alarmes</b>, e o alarme pode <b>notificar pelo SNS</b> (<i>Simple Notification Service</i>) ou <b>executar ações do EC2 Auto Scaling</b>. Também faz roteamento de eventos. Você já o viu no Capítulo 6: o que a Lambda imprime vira log no CloudWatch.</p>
+  <p>Na demo, a série é o uso de CPU de um grupo ao longo de 12 pontos. Mude o limite e quantos pontos seguidos precisam passar dele:</p>
+  <div class="demo" data-demo="alarme"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: limite de 70% da CPU</span>
+    <div class="l"><div>A série tem <b>5</b> pontos acima de 70% (72, 81, 88, 91 e 86). O ponto 70 não conta: não é maior que 70.</div></div>
+    <div class="l"><div>Exigindo <b>3 pontos seguidos</b>, o alarme entra em ALARM no ponto <b>7</b> (os pontos 5, 6 e 7 passaram) e volta a OK no ponto 10.</div></div>
+    <div class="l"><div>Exigindo só <b>1 ponto</b>, ele dispara já no ponto <b>5</b>; exigindo <b>5 seguidos</b>, só no ponto <b>9</b>. Menos pontos reage antes, mais pontos ignora picos curtos.</div></div>
+  </div>
+  <p><b>Código (complemento, não foi dado em aula).</b> O mesmo alarme pela linha de comando da AWS. Os valores são de exemplo meus, o slide não traz limites.</p>
+<pre><code><span class="c"># alarme: média de CPU do grupo acima de 70% por 3 períodos seguidos</span>
+aws cloudwatch <span class="f">put-metric-alarm</span> \
+  --alarm-name <span class="s">cpu-alta</span> \
+  --namespace AWS/EC2 --metric-name CPUUtilization \
+  --dimensions Name=AutoScalingGroupName,Value=<span class="s">"Lab Auto Scaling Group"</span> \
+  --statistic Average --period <span class="n">300</span> --evaluation-periods <span class="n">3</span> \
+  --threshold <span class="n">70</span> --comparison-operator GreaterThanThreshold \
+  --alarm-actions <span class="s">arn:aws:sns:REGIAO:CONTA:TOPICO</span>   <span class="c"># aqui entra a ação: SNS (ou uma política de Auto Scaling)</span></code></pre>
+  <details class="cola"><summary>Complemento (não foi dado em aula): três estados e métricas que faltam</summary><div class="in-body">
+    <p>Um alarme tem três estados: <b>OK</b>, <b>ALARM</b> e <b>INSUFFICIENT_DATA</b> (ainda não há dados suficientes para decidir). Para instâncias EC2, as métricas padrão chegam em intervalos de 5 minutos, e existe um monitoramento detalhado, mais frequente, que é opcional. Atenção: o uso de <b>memória não é métrica padrão</b> de uma EC2; para tê-la é preciso instalar o agente do CloudWatch na máquina.</p>
+  </div></details>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Esperar que o CloudWatch, sozinho, resolva o pico. Ele <b>avisa</b> ou <b>aciona</b>; a criação das máquinas é feita pelo Auto Scaling. Outro deslize é criar alarme para uma métrica que a EC2 nem publica (como memória) e ficar com o alarme eternamente em INSUFFICIENT_DATA.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O alarme tocou. Quem de fato cria a máquina nova?</div><p>O grupo de Auto Scaling, a partir de um molde.</p></div>
+</section>
+
+<section class="sec" id="autoscaling">
+  <h2><span class="sn">4</span>Auto Scaling e o Launch Template</h2>
+  <p class="gancho">Abrir e fechar caixas sem ninguém apertar botão.</p>
+  <p><b>Intuição.</b> É o gerente que abre mais caixas quando a fila cresce, fecha quando esvazia e troca na hora o caixa que passou mal. Para abrir caixa nova rápido, ele precisa de um <b>molde</b> do que é um caixa pronto.</p>
+  <p><b>Definição.</b> O <b>EC2 Auto Scaling</b> <b>adiciona e remove</b> instâncias automaticamente e <b>detecta instâncias danificadas e as substitui</b> sem intervenção. O <b>grupo de Auto Scaling</b> é o conjunto de instâncias tratadas como uma unidade. O <b>Launch Template</b> (modelo de execução) é o molde que o grupo usa: define a <b>AMI</b>, o <b>tipo de instância</b>, o <b>par de chaves</b> e o <b>Security Group</b> (tudo do Capítulo 3). Como toda instância nova nasce da mesma AMI, elas saem idênticas.</p>
+  <p>O slide não informa a métrica, o valor-alvo nem o mínimo e o máximo do grupo do lab (a maior parte do passo a passo é print do console). Por isso a demo abaixo é um <b>modelo simplificado meu</b> (complemento, não foi dado em aula): a carga de 20 minutos de uma promoção, cada instância atendendo 100 pedidos por minuto, e o grupo escolhendo quantas instâncias manter para a utilização ficar na meta.</p>
+  <div class="demo" data-demo="escalaAsg"></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: quantas instâncias?</span>
+    <div class="l"><div>Carga de <b>600</b> pedidos por minuto, 100 por instância e meta de 60% de uso: cada instância deve trabalhar a 60, então <b>600 ÷ 60 = 10</b> instâncias.</div></div>
+    <div class="l"><div>No pico, <b>900</b> pedidos pediriam 900 ÷ 60 = <b>15</b> instâncias. Com máximo de 10 o grupo para em 10: a capacidade é 1000, ainda cobre os 900, mas a 90% de uso.</div></div>
+    <div class="l"><div>Resultado dos 20 minutos com as configurações iniciais da demo (mínimo 2, máximo 10, meta de 60%, atraso de 2 minutos): <b>7750</b> pedidos no total. Frota fixa de 2 instâncias perde <b>4280</b> (55,2%). Frota fixa para o pico (9 instâncias) perde <b>0</b>, mas gasta <b>180</b> minutos de instância. O Auto Scaling perde <b>500</b> (6,5%) e gasta <b>115</b>, cerca de <b>36%</b> menos que a frota do pico.</div></div>
+    <div class="l"><div>Com atraso <b>0</b> a perda cai a <b>0</b>; com atraso de <b>4</b> minutos sobe a <b>1800</b> (23,2%). O atraso para a máquina ficar pronta é o que o Auto Scaling não elimina.</div></div>
+  </div>
+  <p><b>Código (complemento, não foi dado em aula).</b> Criar o grupo e uma política que mantém a CPU média na meta. Os nomes vêm do chat da aula; os números (mínimo, máximo, meta) e os identificadores são exemplos meus.</p>
+<pre><code><span class="c"># o grupo: usa o modelo, fica nas sub-redes privadas e entrega ao grupo de destino</span>
+aws autoscaling <span class="f">create-auto-scaling-group</span> \
+  --auto-scaling-group-name <span class="s">"Lab Auto Scaling Group"</span> \
+  --launch-template LaunchTemplateName=<span class="s">LabConfig</span>,Version=<span class="s">'$Latest'</span> \
+  --min-size <span class="n">2</span> --max-size <span class="n">4</span> --desired-capacity <span class="n">2</span> \
+  --vpc-zone-identifier <span class="s">"subnet-PRIVADA-1,subnet-PRIVADA-2"</span> \
+  --target-group-arns <span class="s">arn:aws:elasticloadbalancing:...:targetgroup/LabGroup/...</span>
+
+<span class="c"># a política: "mantenha a CPU média em 50%" (config.json guarda a meta)</span>
+aws autoscaling <span class="f">put-scaling-policy</span> --auto-scaling-group-name <span class="s">"Lab Auto Scaling Group"</span> \
+  --policy-name <span class="s">LabScalingPolicy</span> --policy-type TargetTrackingScaling \
+  --target-tracking-configuration file://config.json
+<span class="c"># config.json: {"PredefinedMetricSpecification":{"PredefinedMetricType":"ASGAverageCPUUtilization"},"TargetValue":50.0}</span></code></pre>
+  <details class="cola"><summary>Complemento (não foi dado em aula): mínimo, desejado, máximo e outras políticas</summary><div class="in-body">
+    <p>Todo grupo tem três números: <b>mínimo</b> (nunca fica abaixo, mesmo sem carga), <b>máximo</b> (teto de custo e de segurança) e <b>desejado</b> (quantas quer agora). A política de <b>rastreamento de meta</b> usada acima é a mais simples de entender; existem também políticas por degraus e por horário agendado (útil se você sabe que a Black Friday começa à meia-noite). O "launch configuration" é uma versão mais antiga do modelo de execução, que a AWS está aposentando; hoje o recomendado é o <i>launch template</i>.</p>
+  </div></details>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Encerrar <b>à mão</b> uma instância que pertence a um grupo de Auto Scaling. O grupo detecta a falta e <b>cria outra</b>, e a conta continua rodando. Para desmontar o lab, apague primeiro o <b>grupo</b>. E atenção ao outro lado: mínimo igual ao máximo faz o grupo nunca escalar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Em que ordem se monta tudo isso no laboratório?</div><p>Cada peça depende da anterior.</p></div>
+</section>
+
+<section class="sec" id="lab">
+  <h2><span class="sn">5</span>O roteiro do Lab 6</h2>
+  <p class="gancho">AMI, destino, balanceador, modelo, grupo. Nessa ordem, e por quê.</p>
+  <div class="nota cuidado"><span class="lbl">Aviso: lab não executado</span>Este roteiro vem do slide oficial e do chat da reunião (os nomes que o professor digitou). <b>O laboratório não foi executado</b> e o resultado não foi conferido no Learner Lab. Valores como tipo de política, métrica e metas não aparecem no material. Se você fizer o lab, anote esses valores.</div>
+  <p>É o Lab 6 do módulo 10 do Cloud Foundations, "Dimensionamento e Balanceamento de carga". A ordem faz sentido porque <b>cada passo escolhe algo criado no anterior</b> (a AMI vira o modelo, o grupo de destino entra no balanceador, o modelo entra no grupo de Auto Scaling).</p>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Criar a imagem (AMI) do WebServer</b><p>A partir de uma instância já configurada, como no Capítulo 3. No chat: <code>WebServerAMI</code>, com a descrição <code>Lab AMI for Web Server</code>. Toda máquina nova do grupo será cópia dela.</p></div>
+      <div class="st"><b>2. Criar o grupo de destino</b><p>Escolhendo a <b>Lab VPC</b> (a rede com sub-redes públicas e privadas, do Capítulo 7). No chat: <code>LabGroup</code>.</p></div>
+      <div class="st"><b>3. Criar o balanceador</b><p>Na Lab VPC, <b>voltado para a internet</b>, então nas <b>duas sub-redes públicas</b>. Escolha o Security Group e o grupo de destino. No chat: <code>LabELB</code>.</p></div>
+      <div class="st"><b>4. Criar o Launch Template</b><p>Escolha a <b>AMI</b> criada, a chave <code>vockey</code> e o Security Group. No chat: <code>LabConfig</code>.</p></div>
+      <div class="st"><b>5. Criar o grupo de Auto Scaling</b><p>Nome, modelo de execução e VPC; selecione as <b>sub-redes privadas</b>; crie uma <b>política de auto scaling</b> e uma etiqueta (tag). No chat: <code>Lab Auto Scaling Group</code>, <code>LabScalingPolicy</code> e a tag <code>Lab Instance</code>.</p></div>
+      <div class="st"><b>6. Esperar e testar</b><p>Em <b>3 a 5 minutos</b> as instâncias sobem sozinhas. Copie o <b>DNS do balanceador</b>, cole em outra aba e faça o <b>teste de carga</b>. Como o teste foi feito (ferramenta ou script do lab) a nota não registra.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <p>O desenho que sai disso, como resumo meu (complemento, não foi dado em aula como figura):</p>
+<pre><code>Usuário → Balanceador (sub-redes <b>públicas</b>) → Grupo de destino → EC2 (sub-redes <b>privadas</b>, criadas pelo Auto Scaling)
+                                                                   ↑
+                                          CloudWatch mede a carga e aciona o Auto Scaling</code></pre>
+  <p>É o padrão <b>"a frente pública, o fundo privado"</b> do Capítulo 7: só o balanceador é alcançável da internet; as máquinas ficam protegidas atrás dele.</p>
+  <div class="nota cuidado"><span class="lbl">Custo (complemento, não foi dado em aula)</span>Balanceador, instâncias e o grupo continuam cobrando enquanto existirem, mesmo sem tráfego. Os valores variam por região e por data, então consulte a página de preços. No fim do lab, desmonte na ordem inversa: <b>grupo de Auto Scaling primeiro</b> (ele leva as instâncias junto), depois balanceador, grupo de destino e modelo, e por último a AMI e o snapshot que ela deixa para trás. No fim da aula, um aluno apagou a "Web Server 1" e ela seguiu na lista como "Encerrado" por um tempo: é o estado final normal de uma instância encerrada, e some sozinha.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Dá para conferir se ficou claro?</div><p>Fechamento do capítulo.</p></div>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li><b>ELB</b> distribui o tráfego entre várias instâncias e dá <b>tolerância a falhas</b>. O <b>grupo de destino</b> diz para onde o tráfego vai.</li>
+    <li><b>CloudWatch</b> monitora recursos, guarda logs e cria <b>alarmes</b>. Um alarme pode <b>notificar o SNS</b> ou <b>executar uma ação do Auto Scaling</b>.</li>
+    <li><b>Auto Scaling</b> adiciona e remove instâncias e <b>substitui as danificadas</b>. O <b>grupo</b> é uma unidade de instâncias.</li>
+    <li><b>Launch Template</b> = AMI + tipo de instância + par de chaves + Security Group.</li>
+    <li>No lab, o balanceador fica nas sub-redes <b>públicas</b> e as instâncias do grupo nas <b>privadas</b>.</li>
+    <li>Ordem do lab: <b>AMI, grupo de destino, balanceador, launch template, grupo de Auto Scaling</b>, e depois o teste pelo DNS do balanceador.</li>
+    <li>ELB não cria máquina e CloudWatch não escala: quem cria e remove é o Auto Scaling.</li>
+  </ul></div>
+
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O que o ELB faz e por que isso dá tolerância a falhas?</p>
+    <div class="opts"><button data-k="a">Cria instâncias novas quando a carga sobe.</button><button data-k="b">Distribui o tráfego entre várias instâncias; se uma cai, as outras continuam atendendo.</button><button data-k="c">Guarda os logs da aplicação.</button></div>
+    <div class="fb">Distribuir é o papel dele. Criar instâncias é do Auto Scaling, e logs e alarmes são do CloudWatch.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">O que vai dentro de um Launch Template?</p>
+    <div class="opts"><button data-k="a">A política de escala e o limite do alarme.</button><button data-k="b">O código da aplicação e o banco de dados.</button><button data-k="c">A AMI, o tipo de instância, o par de chaves e o Security Group.</button></div>
+    <div class="fb">É o molde da máquina. A política de escala fica no grupo de Auto Scaling, e o alarme no CloudWatch.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">No lab, onde ficam o balanceador e as instâncias do Auto Scaling?</p>
+    <div class="opts"><button data-k="a">Balanceador nas sub-redes públicas e instâncias nas privadas.</button><button data-k="b">Tudo nas sub-redes públicas.</button><button data-k="c">Balanceador nas privadas e instâncias nas públicas.</button></div>
+    <div class="fb">O balanceador é voltado para a internet, então fica nas duas públicas. As máquinas ficam atrás dele, nas privadas.</div></div>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 4</span><p class="qq">Uma instância do grupo de Auto Scaling fica danificada. O que acontece?</p>
+    <div class="opts"><button data-k="a">Nada: é preciso trocá-la à mão no console.</button><button data-k="b">O grupo detecta e a substitui sem intervenção.</button><button data-k="c">O CloudWatch a conserta sozinho.</button></div>
+    <div class="fb">Detectar e substituir as danificadas é uma das funções do Auto Scaling. Por isso, encerrar uma instância à mão faz o grupo criar outra.</div></div>
+
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash">
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é um grupo de destino?</b></span><span class="bk">A lista de para onde o balanceador manda o tráfego que recebe. Um balanceador pode ter vários.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Dois destinos de um alarme do CloudWatch?</b></span><span class="bk">Notificação pelo SNS e ações do EC2 Auto Scaling.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a frase-resumo da aula?</b></span><span class="bk">O ELB distribui o tráfego entre as instâncias; o Auto Scaling mantém a disponibilidade e ajusta a capacidade automaticamente.</span></button>
+    <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como desmontar o lab sem sobra de custo?</b></span><span class="bk">Apague o grupo de Auto Scaling primeiro (ele leva as instâncias), depois balanceador, grupo de destino, modelo e a AMI. Os preços variam por região e data.</span></button>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 9</div><div class="q">A aplicação já aguenta o pico. E os dados que ela gera, como analisar em escala?</div><p>Com ETL, ELT, Glue e Athena.</p></div>
+</section>
+
+</article>
+</body>
+</html>
