@@ -61,7 +61,7 @@ DNS=<span class="s">"meu-balanceador-123.region.elb.amazonaws.com"</span>
 <span class="k">done</span></code></pre>
   <details class="cola"><summary>Complemento (não foi dado em aula): health check, rodízio e tipos de balanceador</summary><div class="in-body">
     <p>Como o balanceador sabe que uma instância caiu? Pelo <b>health check</b>: o grupo de destino pergunta periodicamente a cada instância se ela responde (por exemplo, pedindo uma página). Quem falha vários testes seguidos sai da rotação até voltar. Por isso, no mundo real, entre a queda e a retirada da rotação existem alguns segundos; a demo acima faz isso instantaneamente para simplificar.</p>
-    <p>A demo reparte os pedidos em <b>rodízio</b> (um para cada, em ordem). É uma forma comum, e no balanceador para HTTP é o comportamento padrão pela documentação, mas o slide não diz qual regra foi usada. A AWS tem mais de um tipo de balanceador (um para tráfego HTTP/HTTPS, outro para TCP e outro para equipamentos de rede). O slide só fala "balanceador de carga", então qual tipo o lab usa fica como ponto a conferir no console.</p>
+    <p>A demo reparte os pedidos em <b>rodízio</b> (um para cada, em ordem). É uma forma comum, e no Application Load Balancer (o de HTTP/HTTPS) o rodízio é o algoritmo padrão do grupo de destino, segundo a documentação da AWS, mas o slide não diz qual regra foi usada. A AWS tem mais de um tipo de balanceador (um para tráfego HTTP/HTTPS, outro para TCP e outro para equipamentos de rede). O slide só fala "balanceador de carga", então qual tipo o lab usa fica como ponto a conferir no console.</p>
   </div></details>
   <div class="nota erro"><span class="lbl">Erro comum</span>Achar que o ELB <b>cria</b> máquinas. Ele só reparte o tráfego entre as que já existem. Quem cria e remove instâncias é o Auto Scaling (seção 4).</div>
   <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quem percebe que a carga subiu, e como isso vira uma ação?</div><p>Alguém precisa medir. É o papel do CloudWatch.</p></div>
@@ -89,7 +89,7 @@ aws cloudwatch <span class="f">put-metric-alarm</span> \
   --threshold <span class="n">70</span> --comparison-operator GreaterThanThreshold \
   --alarm-actions <span class="s">arn:aws:sns:REGIAO:CONTA:TOPICO</span>   <span class="c"># aqui entra a ação: SNS (ou uma política de Auto Scaling)</span></code></pre>
   <details class="cola"><summary>Complemento (não foi dado em aula): três estados e métricas que faltam</summary><div class="in-body">
-    <p>Um alarme tem três estados: <b>OK</b>, <b>ALARM</b> e <b>INSUFFICIENT_DATA</b> (ainda não há dados suficientes para decidir). Para instâncias EC2, as métricas padrão chegam em intervalos de 5 minutos, e existe um monitoramento detalhado, mais frequente, que é opcional. Atenção: o uso de <b>memória não é métrica padrão</b> de uma EC2; para tê-la é preciso instalar o agente do CloudWatch na máquina.</p>
+    <p>Um alarme tem três estados: <b>OK</b>, <b>ALARM</b> e <b>INSUFFICIENT_DATA</b> (ainda não há dados suficientes para decidir). Para instâncias EC2, a maioria das métricas padrão chega em períodos de 5 minutos (as de verificação de status, de 1 minuto), e existe um monitoramento detalhado, de 1 minuto, opcional e cobrado por métrica. Atenção: o uso de <b>memória não é métrica padrão</b> de uma EC2; para tê-la é preciso instalar o agente do CloudWatch na máquina.</p>
   </div></details>
   <div class="nota erro"><span class="lbl">Erro comum</span>Esperar que o CloudWatch, sozinho, resolva o pico. Ele <b>avisa</b> ou <b>aciona</b>; a criação das máquinas é feita pelo Auto Scaling. Outro deslize é criar alarme para uma métrica que a EC2 nem publica (como memória) e ficar com o alarme eternamente em INSUFFICIENT_DATA.</div>
   <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O alarme tocou. Quem de fato cria a máquina nova?</div><p>O grupo de Auto Scaling, a partir de um molde.</p></div>
@@ -123,7 +123,7 @@ aws autoscaling <span class="f">put-scaling-policy</span> --auto-scaling-group-n
   --target-tracking-configuration file://config.json
 <span class="c"># config.json: {"PredefinedMetricSpecification":{"PredefinedMetricType":"ASGAverageCPUUtilization"},"TargetValue":50.0}</span></code></pre>
   <details class="cola"><summary>Complemento (não foi dado em aula): mínimo, desejado, máximo e outras políticas</summary><div class="in-body">
-    <p>Todo grupo tem três números: <b>mínimo</b> (nunca fica abaixo, mesmo sem carga), <b>máximo</b> (teto de custo e de segurança) e <b>desejado</b> (quantas quer agora). A política de <b>rastreamento de meta</b> usada acima é a mais simples de entender; existem também políticas por degraus e por horário agendado (útil se você sabe que a Black Friday começa à meia-noite). O "launch configuration" é uma versão mais antiga do modelo de execução, que a AWS está aposentando; hoje o recomendado é o <i>launch template</i>.</p>
+    <p>Todo grupo tem três números: <b>mínimo</b> (nunca fica abaixo, mesmo sem carga), <b>máximo</b> (teto de custo e de segurança) e <b>desejado</b> (quantas quer agora). A política de <b>rastreamento de meta</b> usada acima é a mais simples de entender; existem também políticas por degraus e por horário agendado (útil se você sabe que a Black Friday começa à meia-noite). O "launch configuration" é uma versão mais antiga do modelo de execução: a AWS recomenda migrar para o <i>launch template</i>, e contas criadas a partir de outubro de 2024 já não conseguem criar um novo.</p>
   </div></details>
   <div class="nota erro"><span class="lbl">Erro comum</span>Encerrar <b>à mão</b> uma instância que pertence a um grupo de Auto Scaling. O grupo detecta a falta e <b>cria outra</b>, e a conta continua rodando. Para desmontar o lab, apague primeiro o <b>grupo</b>. E atenção ao outro lado: mínimo igual ao máximo faz o grupo nunca escalar.</div>
   <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Em que ordem se monta tudo isso no laboratório?</div><p>Cada peça depende da anterior.</p></div>
@@ -188,7 +188,7 @@ aws autoscaling <span class="f">put-scaling-policy</span> --auto-scaling-group-n
     <button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como desmontar o lab sem sobra de custo?</b></span><span class="bk">Apague o grupo de Auto Scaling primeiro (ele leva as instâncias), depois balanceador, grupo de destino, modelo e a AMI. Os preços variam por região e data.</span></button>
   </div>
 
-  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 9</div><div class="q">A aplicação já aguenta o pico. E os dados que ela gera, como analisar em escala?</div><p>Com ETL, ELT, Glue e Athena.</p></div>
+  <div class="ponte rv"><div class="t">E agora?</div><div class="q">A aplicação já aguenta o pico. E os dados que ela gera, como analisar em escala?</div><p>O assunto seguinte da disciplina (ETL, ELT, Glue e Athena) ainda não tem capítulo nesta apostila.</p></div>
 </section>
 
 </article>

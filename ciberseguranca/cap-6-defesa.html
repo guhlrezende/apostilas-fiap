@@ -19,7 +19,7 @@
   <div class="kicker">Capítulo 6 · Complemento</div>
   <h1>Defesa: criptografia, hash e camadas</h1>
   <p class="sub">Os três objetivos da segurança, as ferramentas por trás das defesas e como empilhá-las.</p>
-  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">2 demos · 4 testes · 6 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
   <span class="num">6</span>
 </header>
 
@@ -81,9 +81,49 @@
   <div class="nota lembra"><span class="lbl">2FA em uma linha</span>Combina <i>algo que você sabe</i> (senha) com <i>algo que você tem</i> (celular, chave física) ou <i>algo que você é</i> (biometria). Mesmo que a senha vaze, falta o segundo fator. Prefira aplicativo autenticador ou chave física a SMS, que pode ser desviado.</div>
 </section>
 
+<section class="sec" id="logs">
+  <h2><span class="sn">5</span>Logs de autenticação: registrar o que importa</h2>
+  <p class="gancho">Se a defesa falhar, o que sobra para investigar é o registro.</p>
+  <p>O OWASP propõe um <b>vocabulário padrão</b> para registrar eventos de segurança, com nomes fixos e um nível de gravidade. A vantagem é que todo sistema escreve o mesmo evento com o mesmo nome, e assim fica simples buscar e criar alertas. Registre <b>sucessos e falhas</b> de login, não só as falhas. Alguns eventos do vocabulário:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Evento</th><th>Nível</th><th>Quando</th></tr>
+    <tr><td><code>authn_login_success</code></td><td>INFO</td><td>login com sucesso</td></tr>
+    <tr><td><code>authn_login_fail</code></td><td>WARN</td><td>login que falhou</td></tr>
+    <tr><td><code>authn_login_fail_max</code></td><td>WARN</td><td>falhas repetidas passaram do limite</td></tr>
+    <tr><td><code>authn_login_lock</code></td><td>WARN</td><td>conta bloqueada</td></tr>
+    <tr><td><code>authn_password_change_fail</code></td><td>CRITICAL</td><td>falha ao trocar a senha</td></tr>
+    <tr><td><code>authn_impossible_travel</code></td><td>CRITICAL</td><td>acessos de lugares distantes em tempo impossível</td></tr>
+    <tr><td><code>session_logout</code></td><td>INFO</td><td>encerramento da sessão</td></tr>
+  </table></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido (inventado): lendo uma sequência</span>
+    <div class="l"><div>Uma conta fictícia registra 5 eventos <code>authn_login_fail</code> em 2 minutos, depois <code>authn_login_fail_max</code> e <code>authn_login_lock</code>.</div></div>
+    <div class="l"><div>Leitura: 5 falhas seguidas e o bloqueio sugerem tentativa de adivinhar a senha (força bruta, Capítulo 5). O bloqueio funcionou. Mas se a próxima linha for <code>authn_login_success</code> da mesma conta, de outro lugar, vale investigar.</div></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Achar que existe <code>authn_logout</code>. No vocabulário, o encerramento é <code>session_logout</code>. E nunca registre a senha nem segredos: os campos depois do tipo de evento são opcionais, e até um endereço IP pode virar dado pessoal quando combinado com outros dados.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Depois do login, o que mantém a pessoa autenticada, e até onde ela pode ir?</div><p>Sessão e menor privilégio.</p></div>
+</section>
+
+<section class="sec" id="sessao">
+  <h2><span class="sn">6</span>Sessão e menor privilégio</h2>
+  <p class="gancho">Login não é permissão para tudo, para sempre.</p>
+  <p>Complemento à senha e ao 2FA. A <b>sessão</b> é o estado que mantém você logado. O NIST (800-63B-4) trata dois limites de tempo: o <b>geral</b>, contado desde o login ou a última reautenticação, e o de <b>inatividade</b>, que reinicia quando há atividade. O NIST <b>não define números</b>; cada sistema fixa os seus. O OWASP dá <b>recomendações</b> (não são norma): inatividade de 2 a 5 minutos em sistemas de alto valor e de 15 a 30 minutos em baixo risco, e limite absoluto de 4 a 8 horas em uso diário.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: dois limites ao mesmo tempo</span>
+    <div class="l"><div>Sistema de baixo risco com inatividade de 15 minutos e limite absoluto de 8 horas. Você entra às 09:00.</div></div>
+    <div class="l"><div>Parou às 10:00 e voltou às 10:20: passaram 20 minutos, mais que 15, então a sessão caiu e é preciso entrar de novo.</div></div>
+    <div class="l"><div>Trabalhou sem parar o dia todo: às 17:00 completam-se 8 horas e a sessão cai mesmo ativo.</div></div>
+  </div>
+  <p>Boas práticas do OWASP para sessão: ID <b>aleatório e longo</b>; gerar um <b>ID novo depois do login</b>; o tempo limite vale no <b>servidor</b>, e o logout deve invalidar a sessão no servidor (apagar o cookie no navegador não invalida um ID que alguém copiou). Nos cookies, <code>Secure</code> (só HTTPS), <code>HttpOnly</code> (script não lê) e <code>SameSite</code> como defesa complementar contra CSRF.</p>
+  <p><b>Menor privilégio:</b> segundo o glossário do NIST, cada usuário, ou processo que age por ele, recebe só os acessos indispensáveis à tarefa. Vale também para contas de serviço, não só para pessoas.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido (inventado): quantas contas ficam expostas</span>
+    <div class="l"><div>Um escritório fictício com 12 pessoas e uma pasta financeira. Só 2 precisam dela.</div></div>
+    <div class="l"><div>Com acesso para todos, 12 contas comprometidas dão acesso à pasta. Com menor privilégio, só 2. A superfície caiu de 12 para 2.</div></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Não apresente os números do OWASP como exigência do NIST. São fontes diferentes, e as faixas dependem do risco do sistema.</div>
+</section>
+
 <section class="sec" id="fechamento">
-  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Tríade CIA</b>: confidencialidade, integridade, disponibilidade. Todo ataque fere pelo menos um.</li><li><b>Simétrica</b>: uma chave, rápida (AES). <b>Assimétrica</b>: par público/privada (RSA). O <b>TLS</b> usa as duas.</li><li><b>Hash</b>: resumo de tamanho fixo, <b>sem volta</b>, com efeito avalanche. Para senhas: <b>sal</b> + hash lento (bcrypt, Argon2).</li><li><b>Defesa em profundidade</b>: várias camadas (pessoas, identidade, dispositivo, rede, aplicação, dados, acesso).</li><li><b>Backup 3-2-1</b> e <b>menor privilégio</b> reduzem o estrago quando algo falha.</li></ul></div>
+  <h2><span class="sn">7</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Tríade CIA</b>: confidencialidade, integridade, disponibilidade. Todo ataque fere pelo menos um.</li><li><b>Simétrica</b>: uma chave, rápida (AES). <b>Assimétrica</b>: par público/privada (RSA). O <b>TLS</b> usa as duas.</li><li><b>Hash</b>: resumo de tamanho fixo, <b>sem volta</b>, com efeito avalanche. Para senhas: <b>sal</b> + hash lento (bcrypt, Argon2).</li><li><b>Defesa em profundidade</b>: várias camadas (pessoas, identidade, dispositivo, rede, aplicação, dados, acesso).</li><li><b>Backup 3-2-1</b> e <b>menor privilégio</b> reduzem o estrago quando algo falha.</li><li><b>Logs:</b> eventos com nome padrão (OWASP), sucesso e falha, <code>session_logout</code> (não <code>authn_logout</code>), nunca segredos. <b>Sessão:</b> limite geral e de inatividade, validados no servidor.</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="c"><span class="qt">Pergunta 1</span><p class="qq">Por que senhas devem ser guardadas como hash, e não cifradas?</p>
     <div class="opts"><button data-k="a">Porque o hash é mais fácil de ler.</button><button data-k="b">Porque cifrar é proibido.</button><button data-k="c">Porque o hash não tem volta: quem rouba o banco não obtém as senhas, e a conferência se faz comparando hashes.</button></div>
@@ -91,8 +131,10 @@
     <div class="opts"><button data-k="a">Fazer com que senhas iguais gerem hashes diferentes e inutilizar tabelas prontas de hashes.</button><button data-k="b">Deixar o hash menor.</button><button data-k="c">Cifrar a senha.</button></div>
     <div class="fb">O sal é aleatório e único por usuário, e é guardado junto ao hash.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">No HTTPS, para que serve a criptografia assimétrica?</p>
     <div class="opts"><button data-k="a">Cifrar todo o conteúdo da conversa, por ser mais rápida.</button><button data-k="b">Autenticar o servidor e combinar com segurança a chave simétrica usada na conversa.</button><button data-k="c">Compactar os dados.</button></div>
-    <div class="fb">A assimétrica é mais lenta. Ela abre a conversa; a simétrica, mais rápida, leva o conteúdo.</div></div><h3>Flashcards (clique para virar)</h3>
-  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é a tríade CIA?</b></span><span class="bk">Confidencialidade, integridade e disponibilidade: os três objetivos da segurança da informação.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Simétrica x assimétrica?</b></span><span class="bk">Simétrica usa uma chave para cifrar e decifrar. Assimétrica usa um par: pública cifra, privada decifra.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o efeito avalanche?</b></span><span class="bk">Uma mudança mínima na entrada altera quase todo o hash.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é backup 3-2-1?</b></span><span class="bk">3 cópias, em 2 tipos de mídia, com 1 delas fora do local.</span></button></div><div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Você percorreu o caminho do dado e o do ataque.</div><p>Volte à visão geral e refaça os testes sem olhar as respostas.</p></div>
+    <div class="fb">A assimétrica é mais lenta. Ela abre a conversa; a simétrica, mais rápida, leva o conteúdo.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 4</span><p class="qq">Qual evento do vocabulário OWASP registra o encerramento da sessão?</p>
+    <div class="opts"><button data-k="a"><code>authn_logout</code></button><button data-k="b"><code>session_logout</code></button><button data-k="c"><code>authn_login_lock</code></button></div>
+    <div class="fb">Não existe <code>authn_logout</code>. O logout é um evento de sessão, <code>session_logout</code>, de nível INFO.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é a tríade CIA?</b></span><span class="bk">Confidencialidade, integridade e disponibilidade: os três objetivos da segurança da informação.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Simétrica x assimétrica?</b></span><span class="bk">Simétrica usa uma chave para cifrar e decifrar. Assimétrica usa um par: pública cifra, privada decifra.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o efeito avalanche?</b></span><span class="bk">Uma mudança mínima na entrada altera quase todo o hash.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é backup 3-2-1?</b></span><span class="bk">3 cópias, em 2 tipos de mídia, com 1 delas fora do local.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais limites de tempo uma sessão tem?</b></span><span class="bk">O geral (desde o login ou a última reautenticação) e o de inatividade. O NIST não fixa números; o OWASP recomenda faixas.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é menor privilégio?</b></span><span class="bk">Dar a cada usuário ou processo só os acessos indispensáveis à tarefa.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 7</div><div class="q">Cada defesa vale mais quando sei em que momento do ataque ela age.</div><p>O próximo capítulo lê um ataque inteiro, etapa por etapa, com a Cyber Kill Chain.</p></div>
 </section>
 
 </article>

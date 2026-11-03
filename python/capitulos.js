@@ -82,6 +82,15 @@ window.APOSTILA = {
       "aula": "Complemento",
       "tempo": 45,
       "resumo": "Strings, dicionários na prática, arquivos, tratamento de erros, módulos e boas práticas.",
+      "pergunta": "Escrevi a função e ela parece certa. Como confiro que continua certa depois de qualquer mudança?"
+    },
+    {
+      "n": 10,
+      "file": "cap-10-testando-seu-codigo.html",
+      "titulo": "Testando seu código (complemento)",
+      "aula": "Complemento",
+      "tempo": 35,
+      "resumo": "unittest e assertEqual, testar função com input e print (patch e StringIO) e por que um script de assert não é teste.",
       "pergunta": ""
     }
   ]

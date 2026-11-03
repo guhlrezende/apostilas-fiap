@@ -64,10 +64,50 @@
     <div class="l"><div>Contagem: 19 a 24 → <b>13</b>; 25 a 30 → <b>15</b>; 31 a 36 → <b>8</b>; 37 a 42 → <b>2</b>; 43 a 48 → <b>1</b>; 49 a 54 → <b>1</b>. Soma: 40. Acumulada: 13, 28, 36, 38, 39, 40.</div></div>
     <div class="l"><div>Leitura: a distribuição é <b>assimétrica à direita</b>: a maioria está entre 19 e 30, e poucas pessoas mais velhas esticam a "cauda" para a direita. Por isso (em geral, é a regra prática) a <b>média (28,4)</b> fica acima da <b>mediana (27)</b>.</div></div>
   </div>
+  <h3>A tabela completa, com limites explícitos <small class="muted">(complemento, não foi dado em aula)</small></h3>
+  <p>Dizer "19 a 24" deixa dúvida sobre onde cai a idade 25. Escreva o limite de cada classe e diga qual ponta é fechada. Aqui o intervalo é <b>fechado à esquerda e aberto à direita</b>: <code>[19, 25)</code> inclui o 19 e não inclui o 25. Só a última classe fecha dos dois lados, <code>[49, 55]</code>, para o maior valor não ficar de fora. Junto de fi, fr e Fi entram o <b>ponto médio</b> da classe (<b>xi</b>) e a acumulada relativa (<b>Fr</b>):</p>
+  <div class="tablewrap"><table>
+    <tr><th>Classe</th><th>xi</th><th>fi</th><th>Fi</th><th>fr (%)</th><th>Fr (%)</th></tr>
+    <tr><td>[19, 25)</td><td>22</td><td>13</td><td>13</td><td>32,5</td><td>32,5</td></tr>
+    <tr><td>[25, 31)</td><td>28</td><td>15</td><td>28</td><td>37,5</td><td>70,0</td></tr>
+    <tr><td>[31, 37)</td><td>34</td><td>8</td><td>36</td><td>20,0</td><td>90,0</td></tr>
+    <tr><td>[37, 43)</td><td>40</td><td>2</td><td>38</td><td>5,0</td><td>95,0</td></tr>
+    <tr><td>[43, 49)</td><td>46</td><td>1</td><td>39</td><td>2,5</td><td>97,5</td></tr>
+    <tr><td>[49, 55]</td><td>52</td><td>1</td><td>40</td><td>2,5</td><td>100,0</td></tr>
+  </table></div>
+  <p>Conferência rápida: fi soma 40, Fi termina em 40 e Fr termina em 100%. Se a última linha não fechar assim, falta ou sobra observação. Em R, o <code>cut()</code> faz as classes, e os dois argumentos abaixo são os que mais pegam:</p>
+<pre><code>idades &lt;- c(19, 21, 22, 22, 23, 23, 24, 24, 24, 25, 25, 26, 26, 26, 27, 27, 28, 28, 29, 30,
+            30, 31, 31, 32, 33, 34, 34, 35, 36, 38, 19, 20, 21, 23, 25, 27, 29, 41, 45, 52)
+limites &lt;- c(19, 25, 31, 37, 43, 49, 55)
+classe  &lt;- cut(idades, breaks = limites,
+               right = FALSE,           <span class="c"># fechado à esquerda: [19, 25)</span>
+               include.lowest = TRUE)   <span class="c"># o último limite (55) também entra</span>
+fi &lt;- as.vector(table(classe))          <span class="c"># 13 15 8 2 1 1</span>
+data.frame(classe = levels(classe), xi = (limites[-7] + limites[-1]) / 2,
+           fi = fi, Fi = cumsum(fi),
+           fr = round(100 * fi / sum(fi), 1), Fr = round(100 * cumsum(fi) / sum(fi), 1))</code></pre>
+  <div class="nota cuidado"><span class="lbl">Erro comum: valor que vira NA</span>Com <code>right = FALSE</code> e sem <code>include.lowest = TRUE</code>, um valor igual ao último limite não pertence a nenhuma classe e vira <code>NA</code> em silêncio. Teste: acrescentei uma pessoa de 55 anos às 40. Sem <code>include.lowest</code> a tabela mostra 13, 15, 8, 2, 1, 1 e mais <b>1 NA</b>; com ele, a última classe passa a ter <b>2</b> e o NA some (fonte: documentação de <code>cut()</code> do R; conferido no R 4.6.1). Os rótulos que o R gera, como <code>[19,25)</code>, servem, mas confira se o sentido bate com o que você escreveu no texto.</div>
+</section>
+
+<section class="sec" id="ciclica">
+  <h2><span class="sn">4</span>Ordinal que dá a volta: variável cíclica</h2>
+  <p class="gancho">E se a escala não tem começo nem fim?</p>
+  <p>Fase do dia (madrugada, manhã, tarde, noite) é uma variável <b>cíclica</b>: depois da noite vem a madrugada de novo. Ela parece ordinal, mas a ordem é uma <b>convenção de onde se corta o círculo</b>. Se você numerar 1 a 4 e tratar como ordinal comum, a mediana e a média passam a depender desse corte. <small class="muted">(complemento, não foi dado em aula; o exemplo abaixo é inventado)</small></p>
+  <div class="ex rv"><span class="t">Exemplo: 6 pessoas dizem em que fase do dia mais estudam</span>
+    <div class="l"><div>Respostas: noite, madrugada, noite, madrugada, noite, manhã. Contagem: madrugada 2, manhã 1, tarde 0, noite 3.</div></div>
+    <div class="l"><div>Com códigos 1 a 4 (madrugada = 1 ... noite = 4), a mediana dos códigos é 3, que seria <b>tarde</b>. Ninguém respondeu tarde. A mediana caiu no meio de um grupo que fica nas duas pontas do corte.</div></div>
+    <div class="l"><div>O mesmo vale para horas: a média de 23h e 1h dá <b>12h</b>, mas as duas estão a 2 horas uma da outra, perto da meia-noite.</div></div>
+    <div class="l"><div>O que usar: <b>contagem e moda</b> (aqui, noite), e um gráfico de barras sem prometer ordem. Para médias de hora do dia existem métodos circulares, que ficam fora desta apostila.</div></div>
+  </div>
+<pre><code>fases &lt;- factor(c("noite", "madrugada", "noite", "madrugada", "noite", "manha"),
+                levels = c("madrugada", "manha", "tarde", "noite"))
+table(fases)                                   <span class="c"># madrugada 2, manha 1, tarde 0, noite 3</span>
+levels(fases)[median(as.integer(fases))]       <span class="c"># "tarde": mediana enganosa, ninguém escolheu</span>
+mean(c(23, 1))                                 <span class="c"># 12</span></code></pre>
 </section>
 
 <section class="sec" id="graficos">
-  <h2><span class="sn">4</span>Qual gráfico usar</h2>
+  <h2><span class="sn">5</span>Qual gráfico usar</h2>
   <p class="gancho">A pergunta que decide o gráfico é: o que eu quero mostrar?</p>
   <div class="tablewrap"><table>
     <tr><th>Quero mostrar...</th><th>Use</th></tr>
@@ -81,8 +121,8 @@
 </section>
 
 <section class="sec" id="fechamento">
-  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Qualitativa</b> (nominal, ordinal) x <b>quantitativa</b> (discreta, contínua). O tipo decide as contas e gráficos permitidos.</li><li><b>Tabela de frequência</b>: fi, fr, Fi e Fr. Em ordinal use moda e mediana, não média.</li><li><b>Contínua</b>: classes e histograma. Sturges: <code>k ≈ 1 + 3,322·log₁₀(n)</code> (n = 40 → 6 classes).</li><li>As 40 idades: 13, 15, 8, 2, 1 e 1 pessoas por classe; assimetria à direita; média 28,4 &gt; mediana 27.</li><li>Barras para categorias (com zero no eixo), histograma para contínuas, linhas para tempo, dispersão para duas variáveis.</li></ul></div>
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Qualitativa</b> (nominal, ordinal) x <b>quantitativa</b> (discreta, contínua). O tipo decide as contas e gráficos permitidos.</li><li><b>Tabela de frequência</b>: fi, fr, Fi e Fr. Em ordinal use moda e mediana, não média.</li><li><b>Contínua</b>: classes e histograma. Sturges: <code>k ≈ 1 + 3,322·log₁₀(n)</code> (n = 40 → 6 classes). Escreva os limites (<code>[19, 25)</code>) e use <code>right = FALSE, include.lowest = TRUE</code> no <code>cut()</code>.</li><li><b>Cíclica</b> (fase do dia): não use mediana nem média dos códigos; use contagem e moda.</li><li>As 40 idades: 13, 15, 8, 2, 1 e 1 pessoas por classe; assimetria à direita; média 28,4 &gt; mediana 27.</li><li>Barras para categorias (com zero no eixo), histograma para contínuas, linhas para tempo, dispersão para duas variáveis.</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">O CEP de uma pessoa é uma variável de qual tipo?</p>
     <div class="opts"><button data-k="a">Quantitativa contínua.</button><button data-k="b">Qualitativa nominal: parece número, mas é um código sem ordem nem soma com sentido.</button><button data-k="c">Quantitativa discreta.</button></div>

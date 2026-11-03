@@ -62,6 +62,11 @@
     <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
   </div>
 
+  <h3>Duas armadilhas que o jogo não cobriu</h3>
+  <p class="muted"><b>Complemento, não foi dado em aula.</b> É orientação de boa prática, e não um erro apontado em nenhum trabalho.</p>
+  <p><b>Linhas repetidas.</b> Se a mesma linha aparece duas vezes e o <code>train_test_split</code> embaralha tudo, uma cópia pode ir para o treino e a outra para o teste. O KNN acha a cópia exata, e o teste vira prova com o gabarito dentro. Exemplo inventado: 150 pontos com <code>y = 3x</code> mais ruído (desvio 3), dos quais 60 aparecem duas vezes (210 linhas), KNN com k = 1, média de 200 divisões. O RMSE no teste dá <b>2,78</b> com as repetidas soltas e <b>3,63</b> quando a divisão é feita nas 150 linhas únicas e só depois as cópias entram no treino. O número bonito era fruto da repetição. Regra: procure repetidas (<code>df.duplicated().sum()</code>), decida o que fazer e <b>anote a decisão antes de separar</b>. No Insurance há só 1 linha repetida em 1.338, efeito desprezível, mas o hábito vale para qualquer tabela. (Gerado por <code>gerar_dados_ml.py</code>, scikit-learn 1.6.1.)</p>
+  <p><b>Olhar tudo não é decidir com tudo.</b> A análise exploratória (passo 2) costuma olhar a tabela inteira, e isso é natural. A orientação é que as <b>decisões de modelagem</b> (qual coluna criar, qual limiar usar, qual categoria juntar) venham de estatísticas do <b>treino</b>, ou de uma justificativa que não dependa dos dados, como uma regra do domínio. Se você escolhe o limiar olhando a tabela toda, parte do teste já participou da escolha, um vazamento pequeno e silencioso. Na dúvida, separe primeiro e explore só o treino.</p>
+
   <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Passo 6: "mude uma coisa por vez". Como registrar isso de um jeito que convença?</div><p>Com uma tabela simples.</p></div>
 </section>
 
@@ -96,7 +101,7 @@
 
   <div class="grid2">
     <div class="card rv"><b>Fechar as bases</b><ul><li><code>accuracy_score</code> e a tabela de acurácia por k no Iris.</li><li>De onde saem as fórmulas fechadas de b0 e b1, e os pressupostos da regressão linear.</li></ul></div>
-    <div class="card rv"><b>Preparação com evidência</b><ul><li>Quando o <code>RobustScaler</code> realmente melhora o KNN.</li><li>Boxplot do IMC e a decisão sobre outliers.</li></ul></div>
+    <div class="card rv"><b>Preparação com evidência</b><ul><li><code>RobustScaler</code>: usa a <b>mediana</b> e o <b>intervalo interquartil</b> (Q3 − Q1), conferido rodando o scikit-learn 1.6.1. Melhora o KNN? Depende: no Insurance, com todas as colunas, o RMSE de validação cruzada foi de 5.985 (Standard) para 5.536 (Robust), mas só 5.186 para 5.164 com as colunas já escolhidas. <a href="cap-4-preparar-os-dados.html">Tabela no Capítulo 4</a> (seção 4). Meça no seu caso.</li><li>Boxplot do IMC e a decisão sobre outliers.</li></ul></div>
     <div class="card rv"><b>Busca de hiperparâmetros</b><ul><li><code>RandomizedSearchCV</code> contra <code>GridSearchCV</code>: testar uma amostra em vez de tudo.</li><li>Por que a métrica sai negativa no <code>scoring</code>.</li></ul></div>
     <div class="card rv"><b>Melhorar a regressão linear</b><ul><li>Testar <code>bmi</code> + <code>smoker</code> e uma <b>interação</b> entre os dois.</li><li>Por que o gráfico de resíduos mostra faixas.</li></ul></div>
   </div>
@@ -114,6 +119,7 @@
     <li><b>Mude uma coisa por vez</b> e compare pelo RMSE da validação cruzada, nunca pelo teste.</li>
     <li><b>Vazamento:</b> o teste (ou o alvo) nunca pode influenciar treino, escolha ou pré-processamento.</li>
     <li>Diferença menor que o desvio entre os folds é <b>empate</b>. Relate assim.</li>
+    <li>Linhas repetidas podem cair em treino e teste e inflar a métrica: decida antes de separar. Decisões de modelagem saem do treino.</li>
     <li>Se não superar todas as referências, <b>analise e justifique</b>.</li>
     <li>Toda conclusão honesta tem uma lista de <b>limitações</b>.</li>
   </ul></div>

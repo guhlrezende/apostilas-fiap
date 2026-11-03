@@ -19,7 +19,7 @@
   <div class="kicker">Capítulo 3 · Aulas 1, 2 e 6</div>
   <h1>GPIO, LED e resistor</h1>
   <p class="sub">Que pinos usar, como ligar um LED com o resistor certo e o primeiro programa de saída digital.</p>
-  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">2 demos · 3 testes · 4 flashcards</span><span class="chip">mapa de pinos e calculadora de resistor</span></div>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">4 demos · 4 testes · 4 flashcards</span><span class="chip">pinos, resistor, limiar analógico e HC-SR04</span></div>
   <span class="num">3</span>
 </header>
 
@@ -73,9 +73,83 @@
   <div class="nota cuidado"><span class="lbl">Cuidado: o delay não é "a velocidade da simulação"</span>É uma <b>pausa que trava o processador</b> pelo tempo indicado. Enquanto ele espera, o ESP32 não faz mais nada. O Capítulo 6 mostra o que isso custa.</div>
 </section>
 
+<section class="sec" id="ficha">
+  <h2><span class="sn">4</span>Sensores: a ficha antes do código</h2>
+  <p class="gancho">O LED é saída. E quando o pino precisa ler algo, como organizo o que ligo onde?</p>
+  <p><i>Complemento, não foi dado em aula.</i> Antes de escrever uma linha, monte uma <b>ficha por sensor</b>: componente, pino, função e faixa. Ela vira o <code>#define</code> do código e a legenda do diagrama, e evita o erro clássico de trocar dois fios. Exemplo inventado, com os pinos usados nos capítulos desta apostila:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Componente</th><th>Pino</th><th>Função</th><th>Faixa</th></tr>
+    <tr><td>LDR (divisor de tensão)</td><td>GPIO 34</td><td>entrada analógica (ADC1)</td><td>0 a 4095</td></tr>
+    <tr><td>HC-SR04, Trig</td><td>GPIO 18</td><td>saída digital (pulso de 10 µs)</td><td>HIGH ou LOW</td></tr>
+    <tr><td>HC-SR04, Echo</td><td>GPIO 23</td><td>entrada digital (pelo divisor)</td><td>2 a 400 cm</td></tr>
+    <tr><td>DHT22</td><td>GPIO 19</td><td>entrada digital (dados)</td><td>-40 a 80 °C</td></tr>
+  </table></div>
+  <p>A faixa vem do datasheet do fabricante, não de palpite. O GPIO 34 serve ao LDR porque é só entrada e do ADC1, exatamente o que uma leitura analógica pede.</p>
+
+  <h3>Leitura analógica: o número só vira decisão com um limiar</h3>
+  <p>O <code>analogRead</code> devolve um número, não um sim ou não. O ADC do ESP32 tem <b>12 bits</b>, então a leitura vai de <b>0 a 4095</b> (nada de 0 a 1023, que é o ADC de 10 bits de outras placas). Para agir, o código compara com um <b>limiar</b> escrito de forma explícita, com nome, em vez de um número solto no meio do <code>if</code>. Mova a leitura e o limiar:</p>
+  <div class="demo" data-demo="limiar"></div>
+<pre><code><span class="k">const int</span> LDR_PIN = 34;
+<span class="k">const int</span> LIMIAR = 2000;               <span class="c">// valor de exemplo: ajuste testando a sua montagem</span>
+
+<span class="k">void</span> loop() {
+  <span class="k">int</span> leitura = analogRead(LDR_PIN);   <span class="c">// 0 a 4095 (12 bits)</span>
+  <span class="k">bool</span> escuro = leitura &gt; LIMIAR;
+  Serial.printf("leitura=%d escuro=%d\r\n", leitura, escuro);
+  delay(500);
+}</code></pre>
+  <div class="nota cuidado"><span class="lbl">Cuidado: ruído e Wi-Fi</span>O datasheet do ESP32 recomenda tirar a média de várias amostras para reduzir ruído. E os pinos do ADC2 não funcionam com o Wi-Fi ligado (documentação da Espressif): por isso o LDR fica no ADC1. Fontes: datasheet do ESP32 e docs.espressif.com (Arduino-ESP32, ADC).</div>
+  <div class="nota lembra"><span class="lbl">Complemento: sensor de temperatura 1-Wire (DS18B20)</span>Em tutoriais, o DS18B20 aparece com um resistor de <b>pull-up de 4,7 kΩ</b> no fio de dados. Também é comum ver a leitura <b>+85 °C</b> (valor de reset, antes da primeira conversão) e <b>-127 °C</b> (código que a biblioteca DallasTemperature usa para sensor desconectado). Trate esses números como "valores comuns em tutoriais": o datasheet não foi conferido aqui. Leia-o antes de montar.</div>
+  <p><i>Observação:</i> o código acima compila para o ESP32 (PlatformIO, placa esp32dev) com um setup mínimo, mas não foi testado em hardware. Ajuste o limiar na sua montagem.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E um sensor que mede distância, em vez de luz?</div><p>O HC-SR04 trabalha com tempo, não com tensão.</p></div>
+</section>
+
+<section class="sec" id="ultrassom">
+  <h2><span class="sn">5</span>O HC-SR04: distância medida pelo tempo</h2>
+  <p class="gancho">Sem ADC aqui: a distância sai de um cronômetro.</p>
+  <p><i>Complemento, não foi dado em aula.</i> O <b>HC-SR04</b> é um sensor ultrassônico com quatro pinos: VCC, Trig, Echo e GND. Segundo o datasheet, ele mede de <b>2 a 400 cm</b>, com ângulo de cerca de 15 graus e alimentação de 5 V. O processo tem três passos:</p>
+  <ol>
+    <li>O ESP32 mantém o <b>Trig</b> em HIGH por pelo menos <b>10 µs</b>.</li>
+    <li>O sensor emite o som e coloca o <b>Echo</b> em HIGH enquanto espera a volta.</li>
+    <li>O código mede quanto tempo o Echo ficou em HIGH e calcula <code>distância = tempo × 340 m/s ÷ 2</code>. A divisão por 2 existe porque o som <b>vai e volta</b>.</li>
+  </ol>
+  <div class="ex rv"><span class="t">Exemplo resolvido: obstáculo a 1 m</span>
+    <div class="l"><div>Ida e volta = 2 m. Tempo = 2 m ÷ 340 m/s ≈ 5,88 ms = <b>5882 µs</b>.</div></div>
+    <div class="l"><div>No código: 340 m/s = 0,034 cm/µs. Então <code>5882 × 0,034 ÷ 2 ≈ 100 cm</code>.</div></div>
+    <div class="l"><div>Cada medida leva pelo menos <b>60 ms</b> (datasheet): dá no máximo uns 16 medidas por segundo.</div></div>
+  </div>
+  <div class="demo" data-demo="ultrassom"></div>
+<pre><code><span class="k">#define</span> TRIG 18
+<span class="k">#define</span> ECHO 23
+
+<span class="k">void</span> setup() {
+  Serial.begin(115200);
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+}
+
+<span class="k">void</span> loop() {
+  digitalWrite(TRIG, LOW);  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH); delayMicroseconds(10);       <span class="c">// pulso de 10 us</span>
+  digitalWrite(TRIG, LOW);
+
+  <span class="k">long</span> us = pulseIn(ECHO, HIGH, 30000);               <span class="c">// espera o Echo; desiste em 30 ms</span>
+  <span class="k">if</span> (us == 0) { Serial.println("sem eco"); }
+  <span class="k">else</span> {
+    <span class="k">float</span> cm = us * 0.034 / 2;                         <span class="c">// 340 m/s = 0,034 cm/us; /2 = ida e volta</span>
+    Serial.printf("distancia: %.1f cm\r\n", cm);
+  }
+  delay(100);                                            <span class="c">// respeita o ciclo mínimo de 60 ms</span>
+}</code></pre>
+  <p>O limite de 30 ms no <code>pulseIn</code> cobre o pior caso de 400 cm (cerca de 23,5 ms); se nada voltar, a função devolve 0 e o código avisa em vez de calcular lixo.</p>
+  <div class="nota erro"><span class="lbl">Erro comum: Echo de 5 V direto no GPIO</span>O HC-SR04 trabalha com 5 V, e o Echo sai em nível de 5 V. O datasheet do ESP32 (tabela de características dos GPIOs) dá o máximo de entrada em cerca de <b>VDD + 0,3 V</b>, ou seja, uns 3,6 V com VDD de 3,3 V. Ligar o Echo direto <b>passa do máximo</b> e pode danificar o pino. Use um <b>divisor de tensão</b> (por exemplo 1 kΩ em série e 2 kΩ ao GND, que leva 5 V a 3,33 V) ou um conversor de nível. Fontes: datasheet do HC-SR04 (SparkFun) e datasheet do ESP32 (Espressif). O Trig recebe os 3,3 V do ESP32; o datasheet do sensor não detalha esse nível, então teste na bancada.</div>
+  <p><i>Observação:</i> o código acima compila para o ESP32 (PlatformIO, placa esp32dev), mas não foi testado em hardware. Os números da demo vêm direto da fórmula do datasheet.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Fechamos pinos, LED e sensores. Falta resumir.</div><p>Cola, testes e flashcards do capítulo.</p></div>
+</section>
+
 <section class="sec" id="fechamento">
-  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>GPIO</b>: pinos de entrada ou saída. <b>34, 35, 36, 39</b> só entrada; <b>6 a 11</b> reservados (flash); <b>1 e 3</b> são o serial; <b>2</b> é o LED embutido.</li><li>LED: <b>anodo (+)</b> perna longa, <b>catodo (−)</b> perna curta ao GND. Invertido não acende e não avisa.</li><li>Resistor: <code>R = (V_pino − V_LED)/I</code>. Vermelho + 220 Ω + 3,3 V ≈ 5,9 mA.</li><li>Saída digital: <code>pinMode(pino, OUTPUT)</code> e <code>digitalWrite(pino, HIGH/LOW)</code>. <code>#define</code> troca texto, sem RAM.</li><li><code>delay</code> <b>bloqueia</b> o processador.</li></ul></div>
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>GPIO</b>: pinos de entrada ou saída. <b>34, 35, 36, 39</b> só entrada; <b>6 a 11</b> reservados (flash); <b>1 e 3</b> são o serial; <b>2</b> é o LED embutido.</li><li>LED: <b>anodo (+)</b> perna longa, <b>catodo (−)</b> perna curta ao GND. Invertido não acende e não avisa.</li><li>Resistor: <code>R = (V_pino − V_LED)/I</code>. Vermelho + 220 Ω + 3,3 V ≈ 5,9 mA.</li><li>Saída digital: <code>pinMode(pino, OUTPUT)</code> e <code>digitalWrite(pino, HIGH/LOW)</code>. <code>#define</code> troca texto, sem RAM.</li><li><code>delay</code> <b>bloqueia</b> o processador.</li><li>Ficha por sensor: <b>componente, pino, função, faixa</b>. ADC do ESP32: <b>12 bits, 0 a 4095</b>; a decisão vem de um <b>limiar</b> nomeado.</li><li>HC-SR04: <b>2 a 400 cm</b>, Trig de 10 µs, <code>distância = tempo do Echo × 340 m/s ÷ 2</code>, ciclo de 60 ms. Echo é <b>5 V</b>: divisor ou conversor antes do GPIO.</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Você quer usar o GPIO 34 como saída para acender um LED. Funciona?</p>
     <div class="opts"><button data-k="a">Não: o GPIO 34 é somente entrada.</button><button data-k="b">Sim, qualquer GPIO serve.</button><button data-k="c">Sim, mas só com um resistor maior.</button></div>
@@ -83,7 +157,9 @@
     <div class="opts"><button data-k="a">Cerca de 15 mA.</button><button data-k="b">Cerca de 60 mA.</button><button data-k="c">Cerca de 5,9 mA: (3,3 − 2,0) / 220.</button></div>
     <div class="fb">Lei de Ohm: 1,3 V sobre 220 Ω dá 5,9 mA.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 3</span><p class="qq">O que faz o #define LED 22?</p>
     <div class="opts"><button data-k="a">Cria uma variável do tipo int que ocupa RAM.</button><button data-k="b">Faz o pré-processador trocar o texto LED por 22 antes de compilar.</button><button data-k="c">Liga o LED.</button></div>
-    <div class="fb">É substituição de texto, sem variável nem RAM.</div></div><h3>Flashcards (clique para virar)</h3>
+    <div class="fb">É substituição de texto, sem variável nem RAM.</div></div><div class="quiz" data-ans="b"><span class="qt">Pergunta 4</span><p class="qq">O Echo do HC-SR04 sai em 5 V. O que fazer antes de ligá-lo a um GPIO do ESP32?</p>
+    <div class="opts"><button data-k="a">Nada: todo GPIO aceita 5 V.</button><button data-k="b">Baixar a tensão com um divisor ou conversor de nível, porque o GPIO aceita no máximo cerca de VDD + 0,3 V.</button><button data-k="c">Trocar o pino por um com pull-up interno.</button></div>
+    <div class="fb">O máximo de entrada do ESP32 fica perto de 3,6 V com VDD de 3,3 V. Um divisor de 1 kΩ e 2 kΩ leva 5 V a 3,33 V.</div></div><h3>Flashcards (clique para virar)</h3>
   <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o GND?</b></span><span class="bk">O fio comum de referência (0 V) a que o negativo de todos os componentes se liga.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Por que o LED precisa de resistor?</b></span><span class="bk">Para limitar a corrente. Sem ele, o LED e o pino podem queimar.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>HIGH e LOW?</b></span><span class="bk">HIGH = 3,3 V no pino; LOW = 0 V.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que acontece se o LED for ligado ao contrário?</b></span><span class="bk">Não acende, e não aparece nenhum erro.</span></button></div><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 4</div><div class="q">O LED pisca, mas o programa que o controla ainda é uma caixa preta. Como o setup, o loop e o Serial funcionam?</div><p>Vamos abrir o modelo de execução.</p></div>
 </section>
 

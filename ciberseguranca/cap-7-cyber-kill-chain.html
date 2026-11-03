@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 7: Cyber Kill Chain | Apostila de Cibersegurança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+</head>
+<body data-cap="7" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 7 · Complemento</div>
+  <h1>Cyber Kill Chain: o ataque em sete etapas</h1>
+  <p class="sub">Um modelo para ler um ataque etapa por etapa, escolher defesas por fase e analisar um caso sem misturar fato com suposição.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 caso inventado · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <span class="num">7</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No Capítulo 6 você empilhou defesas em camadas (pessoas, identidade, rede, aplicação, dados, acesso). Faltou um jeito de olhar um ataque de ponta a ponta e perguntar: <b>em qual momento, exatamente, cada camada podia ter parado isso?</b> Este capítulo, que é <b>complemento</b> (não foi dado em aula), apresenta a Cyber Kill Chain, que responde a essa pergunta. Fonte principal: o artigo original da Lockheed Martin (Hutchins, Cloppert e Amin, 2011), lido para esta apostila.</div>
+
+<section class="sec" id="etapas">
+  <h2><span class="sn">1</span>As sete etapas</h2>
+  <p class="gancho">Um ataque não acontece num instante. Ele tem uma sequência.</p>
+  <p>O artigo chama de <b>intrusion kill chain</b> o caminho que quem invade percorre: criar uma carga que atravesse a fronteira de confiança, se estabelecer dentro do ambiente e, de lá, agir em direção ao objetivo. São sete etapas. Os nomes ficam em inglês porque é assim que você os encontra em qualquer texto:</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Etapa</th><th>O que acontece (com palavras minhas)</th></tr>
+    <tr><td>1</td><td><b>Reconnaissance</b></td><td>Pesquisa e escolha do alvo: quem trabalha lá, quais e-mails existem, que tecnologias usam.</td></tr>
+    <tr><td>2</td><td><b>Weaponization</b></td><td>Montar a "arma": juntar um programa de acesso remoto com um jeito de executá-lo, geralmente dentro de um arquivo comum (PDF, documento de escritório).</td></tr>
+    <tr><td>3</td><td><b>Delivery</b></td><td>Fazer a arma chegar ao ambiente. O artigo aponta, nos dados da própria Lockheed entre 2004 e 2010, três vias mais comuns: anexo de e-mail, sites e pendrive.</td></tr>
+    <tr><td>4</td><td><b>Exploitation</b></td><td>O código do atacante dispara. Pode ser uma falha de programa ou de sistema, mas também pode ser explorar a própria pessoa ou um recurso que executa código sozinho.</td></tr>
+    <tr><td>5</td><td><b>Installation</b></td><td>Instalar um acesso remoto ou porta dos fundos para <b>continuar lá dentro</b> (persistência).</td></tr>
+    <tr><td>6</td><td><b>Command and Control (C2)</b></td><td>A máquina comprometida "liga para fora", para um servidor do atacante, e abre um canal de comando. A partir daí há uma pessoa operando.</td></tr>
+    <tr><td>7</td><td><b>Actions on Objectives</b></td><td>Só agora o atacante age pelo que queria: copiar e tirar dados, alterar ou derrubar algo, ou usar a máquina como degrau para outras.</td></tr>
+  </table></div>
+  <p>Repare que as etapas 1 e 2 acontecem <b>fora</b> da rede da vítima. A defesa só enxerga alguma coisa a partir da entrega.</p>
+
+  <div class="ex rv"><span class="t">Exemplo inventado: a Alvorada Contábil</span>
+    <div class="l"><div>Todo o caso abaixo é <b>fictício</b>, criado para estudo: empresa, pessoas, domínios e fatos. Não é nenhum incidente real nem de nenhum trabalho. O domínio <code>alvorada.example</code> usa a terminação reservada para exemplos.</div></div>
+  </div>
+  <div class="stepper rv">
+    <div class="stage">
+      <div class="st"><b>1. Reconnaissance</b><p>O atacante vê no site e nas redes públicas do escritório quem cuida do financeiro, e descobre o nome de um cliente grande.</p></div>
+      <div class="st"><b>2. Weaponization</b><p>Ele prepara uma planilha chamada "boleto_atualizado" com um programa de acesso remoto escondido nela.</p></div>
+      <div class="st"><b>3. Delivery</b><p>Manda a planilha por e-mail, de um domínio quase igual ao real (<code>alvorada-contabil.example</code>), citando o nome do cliente.</p></div>
+      <div class="st"><b>4. Exploitation</b><p>A analista financeira abre o arquivo e clica em "habilitar conteúdo". Quem foi explorada foi a confiança dela, não uma falha de programa.</p></div>
+      <div class="st"><b>5. Installation</b><p>O programa escondido se instala e passa a iniciar junto com o computador.</p></div>
+      <div class="st"><b>6. Command and Control</b><p>O computador começa a consultar um domínio desconhecido a cada poucos minutos. Do outro lado, alguém recebe o aviso e assume o controle.</p></div>
+      <div class="st"><b>7. Actions on Objectives</b><p>O atacante lê a caixa de e-mail da analista e passa a mandar boletos com a conta bancária trocada. Dois clientes pagam para a conta errada antes de alguém perceber.</p></div>
+    </div>
+    <div class="bar2"><button class="btn sm" data-prev>← Voltar</button><div class="dots"></div><button class="btn sm pri" data-next>Próximo →</button></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Achar que o "ataque" é só a etapa 7, o dia em que o dano aparece. Na história acima o estrago foi em uma tarde, mas a preparação começou muito antes. Quem olha só o final perde seis chances de parar o ataque.</div>
+
+  <p>Agora treine a leitura. Em que etapa cada acontecimento do caso inventado se encaixa?</p>
+  <div class="card sorter rv" data-demo="sorter" data-opts="rec:1 Reconnaissance|arm:2 Weaponization|ent:3 Delivery|exp:4 Exploitation|ins:5 Installation|c2:6 C2|obj:7 Actions on Objectives">
+    <div class="item" data-ans="ent"><p>O e-mail com a planilha chega à caixa da analista, vindo de um domínio parecido com o do escritório.</p><span class="why">Delivery: é a transmissão da arma ao ambiente (aqui, anexo de e-mail).</span></div>
+    <div class="item" data-ans="c2"><p>O computador da analista passa a consultar um domínio desconhecido a cada poucos minutos.</p><span class="why">C2: a máquina comprometida liga para fora para abrir o canal de comando.</span></div>
+    <div class="item" data-ans="rec"><p>Alguém lê o site do escritório e anota quem responde pelo financeiro.</p><span class="why">Reconnaissance: pesquisa do alvo, feita fora da rede da vítima.</span></div>
+    <div class="item" data-ans="ins"><p>O programa escondido passa a iniciar junto com o Windows para sobreviver a um reinício.</p><span class="why">Installation: persistência dentro do ambiente.</span></div>
+    <div class="item" data-ans="obj"><p>Boletos com a conta trocada são enviados aos clientes.</p><span class="why">Actions on Objectives: o objetivo do atacante (aqui, desviar dinheiro) só se realiza depois das seis etapas anteriores.</span></div>
+    <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
+  </div>
+
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se são sete etapas, quebrar qualquer uma delas já basta?</div><p>É a ideia central do modelo: defender por fase.</p></div>
+</section>
+
+<section class="sec" id="defesa-por-fase">
+  <h2><span class="sn">2</span>Ações defensivas por fase</h2>
+  <p class="gancho">A defesa deixa de ser uma lista de ferramentas e vira uma matriz: etapa contra ação.</p>
+  <p>O artigo afirma que, se o atacante precisa completar toda a cadeia, <b>basta uma mitigação eficaz em uma etapa para interromper a cadeia inteira</b>. Por isso ele sugere olhar a defesa como uma matriz: para cada etapa, o que posso fazer? Ele usa seis verbos, tirados de doutrina militar de operações de informação:</p>
+  <ul>
+    <li><b>Detect</b> (detectar): perceber que está acontecendo.</li>
+    <li><b>Deny</b> (negar): impedir que aconteça.</li>
+    <li><b>Disrupt</b> (interromper): cortar no meio, depois que começou.</li>
+    <li><b>Degrade</b> (degradar): tornar o ataque mais lento ou pior.</li>
+    <li><b>Deceive</b> (enganar): dar ao atacante informação falsa ou um alvo falso.</li>
+    <li><b>Destroy</b> (destruir): a coluna existe no artigo, mas a tabela dele não traz exemplos nela.</li>
+  </ul>
+  <p>Estes são os exemplos da tabela do artigo, resumidos. As siglas são de ferramentas da época; hoje os nomes mudam, a ideia da coluna continua:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Etapa</th><th>Detectar</th><th>Negar</th><th>Interromper</th><th>Degradar</th><th>Enganar</th></tr>
+    <tr><td><b>Reconnaissance</b></td><td>análise de acessos ao site</td><td>regras de firewall</td><td></td><td></td><td></td></tr>
+    <tr><td><b>Weaponization</b></td><td>NIDS</td><td>NIPS</td><td></td><td></td><td></td></tr>
+    <tr><td><b>Delivery</b></td><td>usuário atento</td><td>filtro de proxy</td><td>antivírus no caminho</td><td>fila</td><td></td></tr>
+    <tr><td><b>Exploitation</b></td><td>HIDS</td><td>atualização (patch)</td><td>DEP</td><td></td><td></td></tr>
+    <tr><td><b>Installation</b></td><td>HIDS</td><td>"chroot" jail</td><td>antivírus</td><td></td><td></td></tr>
+    <tr><td><b>C2</b></td><td>NIDS</td><td>regras de firewall</td><td>NIPS</td><td>tarpit</td><td>redirecionar o DNS</td></tr>
+    <tr><td><b>Actions on Objectives</b></td><td>log de auditoria</td><td></td><td></td><td>qualidade de serviço</td><td>honeypot</td></tr>
+  </table></div>
+  <p>Três leituras que o artigo faz dessa tabela e que valem para a prova:</p>
+  <ol>
+    <li><b>Quanto mais cedo, melhor.</b> O artigo defende empurrar a detecção para as primeiras etapas, o que também encarece o trabalho do atacante.</li>
+    <li><b>Detectar numa etapa é saber que as anteriores já aconteceram.</b> Se você achou o C2, a entrega e a instalação já ocorreram. Por isso é preciso reconstruir as etapas anteriores: sem entender como a entrega foi feita, você não consegue bloqueá-la na próxima vez.</li>
+    <li><b>A resposta a incidentes convencional começa tarde.</b> O artigo observa que o processo tradicional só entra em ação depois da exploração, o que deixa o defensor sempre atrás.</li>
+  </ol>
+  <div class="ex rv"><span class="t">Exemplo resolvido: onde a Alvorada podia ter parado</span>
+    <div class="l"><div><b>Delivery:</b> um filtro de e-mail que desconfia de domínio recém-criado e parecido com o real (negar), ou a analista desconfiar do remetente (detectar, o "usuário atento").</div></div>
+    <div class="l"><div><b>Exploitation:</b> bloquear a execução automática de conteúdo em planilhas vindas de fora (negar). O ataque dependia de um clique.</div></div>
+    <div class="l"><div><b>C2:</b> o computador consultava um domínio desconhecido a cada poucos minutos. Um alerta para esse padrão (detectar) ou bloquear a saída para destinos nunca vistos (negar) interromperia o ataque antes dos boletos falsos.</div></div>
+    <div class="l"><div><b>Actions on Objectives:</b> um log de auditoria do envio de boletos mostraria a troca da conta, mas já com o dano em andamento (detectar tardio).</div></div>
+    <div class="l"><div>Contagem: o ataque tinha <b>7 etapas</b> e a Alvorada tinha defesas em <b>0</b> delas. Bastava <b>1</b> bem colocada.</div></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Tabela cheia não é sistema seguro. O artigo trata a matriz como um <b>mapa de lacunas</b>: ela serve para ver onde você não tem nada, e para medir se o que você tem funciona, não só se existe.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se o modelo é tão útil, onde ele falha?</div><p>Nenhum modelo descreve todo ataque.</p></div>
+</section>
+
+<section class="sec" id="limites">
+  <h2><span class="sn">3</span>Limites do modelo</h2>
+  <p class="gancho">Um modelo é um mapa. Ele ajuda a andar, mas não é o terreno.</p>
+  <p>Use a Kill Chain como <b>orientação geral</b>, não como lei. Os pontos abaixo vêm de críticas ao modelo que a Wikipedia (em inglês, fonte secundária) resume e atribui a textos que eu <b>não abri</b>. Trate-os como pontos para discutir, não como citação:</p>
+  <ul>
+    <li>As primeiras etapas ocorrem <b>fora da rede defendida</b>, onde o defensor pouco vê.</li>
+    <li>O modelo tende a reforçar defesa de <b>perímetro</b> e antivírus.</li>
+    <li>A <b>ameaça interna</b> (alguém que já está dentro) encaixa mal.</li>
+    <li>As etapas <b>não precisam acontecer em ordem estrita</b>; em geral, um ataque real pode repetir, pular ou sobrepor fases. Apresentar as sete como uma escada obrigatória é erro.</li>
+  </ul>
+  <p>Mais uma observação minha, sem fonte: o artigo descreve <b>invasões</b>, e um ataque que não instala nada na máquina da vítima, como um DDoS, encaixa mal nas sete etapas. E o próprio artigo foi escrito a partir de intrusões persistentes e direcionadas (as chamadas APT), então não é garantido que explique bem um ataque em massa e automático.</p>
+  <p>Há modelos que complementam. O <b>MITRE ATT&amp;CK</b> descreve o comportamento observado em <b>táticas</b> (o objetivo do atacante em cada momento) e <b>técnicas</b> (como ele tenta cumprir esse objetivo). Na versão 20 da matriz Enterprise, a página lista 15 táticas. ATT&amp;CK não é lista de defesas nem checklist de controles. A Wikipedia também cita a <b>Unified Kill Chain</b> (2017, 18 fases) como alternativa que junta a Kill Chain ao ATT&amp;CK.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Citar "14 táticas" do ATT&amp;CK por material antigo. O número muda com a versão: cite sempre a versão junto.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Dado um incidente real, como escrevo uma análise que se sustente?</div><p>Separando o que aconteceu do que cada fase explica.</p></div>
+</section>
+
+<section class="sec" id="analise">
+  <h2><span class="sn">4</span>Como analisar um caso real</h2>
+  <p class="gancho">A análise boa tem duas partes que não se misturam.</p>
+  <p>Ao estudar um incidente que já virou notícia ou relatório público, escreva em duas partes:</p>
+  <ol>
+    <li><b>Introdução do incidente.</b> Só fatos, sem etapa nenhuma: quem é a organização, o que aconteceu, quando começou, quando foi descoberto e por quem, o que foi afetado e qual o impacto. Cada fato com a sua fonte.</li>
+    <li><b>Análise por fase.</b> Agora sim, as sete etapas, uma a uma. Em cada uma: o que se sabe (com a fonte), o que é hipótese sua, e o que não se sabe. Depois, que defesa existia e qual faltou.</li>
+  </ol>
+  <p>Separar é importante porque relatórios públicos raramente descrevem as sete etapas. Uma lacuna é uma lacuna: escreva "não divulgado" em vez de preencher com o que parece lógico. Lembre da regra do artigo: se algo foi detectado numa etapa, as anteriores aconteceram, então dá para <b>inferir</b> que existiram, mas inferência vai marcada como inferência.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: o mesmo caso inventado, em duas partes</span>
+    <div class="l"><div><b>Introdução.</b> A Alvorada Contábil (fictícia) descobriu, após o aviso de um cliente, que boletos enviados do e-mail da analista financeira traziam uma conta bancária diferente. Dois clientes pagaram para essa conta. A fonte do caso é a história deste capítulo.</div></div>
+    <div class="l"><div><b>Análise, etapa 3 (Delivery).</b> Fato: o e-mail veio de <code>alvorada-contabil.example</code>. Hipótese: o domínio foi registrado só para este ataque. Não se sabe: de onde o atacante tirou o nome do cliente citado. Defesa que faltou: filtro de domínios parecidos.</div></div>
+    <div class="l"><div><b>Análise, etapa 1 (Reconnaissance).</b> Nada nos fatos prova a origem da pesquisa. Escreve-se "não divulgado", mesmo que a hipótese de redes públicas seja provável.</div></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Em caso real, não invente etapa que a fonte não descreve, e não afirme "foi um ataque sofisticado" ou "o culpado é tal grupo" sem fonte que diga isso. Atribuir autoria de ataque exige evidência que raramente está em relatório público.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E quando as defesas falham e o ataque já está acontecendo?</div><p>Entra a resposta a incidentes.</p></div>
+</section>
+
+<section class="sec" id="incidentes">
+  <h2><span class="sn">5</span>E depois que o ataque acontece: resposta a incidentes</h2>
+  <p class="gancho">A Kill Chain mostra onde parar. A resposta a incidentes é o que fazer quando não parou.</p>
+  <p>A referência padrão é o <b>NIST SP 800-61</b>, e aqui está o ponto em que mais gente se confunde: existem duas revisões, com estruturas <b>diferentes</b>. Diga sempre qual revisão está citando.</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Rev. 2 (2012)</th><th>Rev. 3 (abril de 2025)</th></tr>
+    <tr><td><b>Estrutura</b></td><td><b>4 fases</b> em ciclo</td><td><b>6 funções</b> do CSF 2.0 (framework de cibersegurança do NIST)</td></tr>
+    <tr><td><b>Itens</b></td><td>Preparação; Detecção e análise; <b>Contenção, erradicação e recuperação (uma só fase)</b>; Atividade pós-incidente</td><td>Govern, Identify, Protect, Detect, Respond, Recover</td></tr>
+    <tr><td><b>Observação</b></td><td>"Contenção, erradicação e recuperação" é uma fase, não três.</td><td>Govern, Identify e Protect são de preparação e prevenção. Só <b>Detect, Respond e Recover</b> são a resposta em si. O aprendizado depois do incidente fica em Identify (melhoria contínua).</td></tr>
+  </table></div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Dizer que a Rev. 3 tem "seis fases". São seis <b>funções</b>, que não são uma fila de passos. Se um curso ou material ensina um modelo de seis fases, confira a origem: esse modelo é do material, não do NIST. O mesmo vale para chamar o ciclo de quatro fases de "o padrão atual".</div>
+  <p>A ideia que as duas revisões compartilham, e que é teoria geral: <b>preparar antes</b>, detectar e analisar, conter o estrago e recuperar, e <b>aprender para melhorar</b> o que veio antes. No caso inventado, preparar teria sido ter o filtro de e-mail e um telefone de contato dos clientes; detectar, perceber o aviso do cliente; e aprender, adicionar o alerta de C2.</p>
+  <p class="muted">Fontes: Hutchins, Cloppert e Amin, <i>Intelligence-Driven Computer Network Defense Informed by Analysis of Adversary Campaigns and Intrusion Kill Chains</i> (Lockheed Martin, 2011); NIST SP 800-61 Rev. 3; MITRE ATT&amp;CK, matriz Enterprise (versão 20); Wikipedia (inglês), "Cyber kill chain", usada só para as críticas.</p>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li><b>Kill Chain (Lockheed Martin, 2011), 7 etapas:</b> Reconnaissance, Weaponization, Delivery, Exploitation, Installation, Command and Control, Actions on Objectives.</li>
+    <li>Seis ações defensivas: <b>detectar, negar, interromper, degradar, enganar, destruir</b>. Uma boa defesa em <b>uma</b> etapa já quebra a cadeia, e quanto mais cedo, melhor.</li>
+    <li>Detectar numa etapa implica que as anteriores já ocorreram: reconstrua-as.</li>
+    <li><b>Limites:</b> etapas iniciais fora da rede, viés de perímetro, ameaça interna mal modelada, ordem não obrigatória. Complementos: ATT&amp;CK (táticas e técnicas; cite a versão).</li>
+    <li><b>Análise de caso:</b> introdução só com fatos, depois análise por fase com fato, hipótese e "não divulgado" separados.</li>
+    <li><b>NIST 800-61:</b> Rev. 2 tem 4 fases (contenção, erradicação e recuperação é uma só); Rev. 3 tem 6 funções do CSF 2.0 (Govern, Identify, Protect, Detect, Respond, Recover).</li>
+  </ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Um alerta mostra que uma máquina fala com um servidor externo suspeito. O que dá para concluir pela Kill Chain?</p>
+    <div class="opts"><button data-k="a">Que o ataque ainda não começou.</button><button data-k="b">Que as etapas anteriores (entrega, exploração e instalação) provavelmente já ocorreram, então vale reconstruí-las.</button><button data-k="c">Que o atacante já cumpriu o objetivo.</button></div>
+    <div class="fb">O C2 vem depois da instalação. Detectar uma etapa implica as anteriores. Não dá para dizer, só por isso, que o objetivo já foi cumprido.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Qual é uma crítica ao modelo de sete etapas?</p>
+    <div class="opts"><button data-k="a">Ele só funciona para ataques físicos.</button><button data-k="b">Ele obriga a seguir sempre a mesma ordem, e isso é uma qualidade.</button><button data-k="c">As etapas não precisam acontecer em ordem estrita, e a ameaça interna encaixa mal.</button></div>
+    <div class="fb">O modelo é útil como guia, mas ataques reais podem repetir, pular ou sobrepor etapas, e quem já está dentro não precisa passar pelas primeiras.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Qual afirmação sobre o NIST SP 800-61 está correta?</p>
+    <div class="opts"><button data-k="a">A Rev. 2 tem 4 fases, e a Rev. 3 se organiza pelas 6 funções do CSF 2.0.</button><button data-k="b">A Rev. 3 tem 6 fases, que seguem em fila.</button><button data-k="c">A Rev. 2 separa contenção, erradicação e recuperação em três fases.</button></div>
+    <div class="fb">Na Rev. 2, contenção, erradicação e recuperação formam uma fase. Na Rev. 3, são seis funções, e só três delas são a resposta em si.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais as 7 etapas da Kill Chain?</b></span><span class="bk">Reconnaissance, Weaponization, Delivery, Exploitation, Installation, Command and Control, Actions on Objectives.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais as seis ações defensivas do artigo?</b></span><span class="bk">Detectar, negar, interromper, degradar, enganar e destruir.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como organizar a análise de um caso real?</b></span><span class="bk">Primeiro a introdução do incidente, só com fatos e fontes. Depois a análise por fase, separando fato, hipótese e o que não foi divulgado.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>NIST 800-61: Rev. 2 x Rev. 3?</b></span><span class="bk">Rev. 2: 4 fases. Rev. 3: 6 funções do CSF 2.0 (Govern, Identify, Protect, Detect, Respond, Recover), não 6 fases.</span></button></div>
+  <div class="ponte rv"><div class="t">Fim da apostila</div><div class="q">Você percorreu o caminho do dado, o do ataque e o da defesa.</div><p>Volte à visão geral e refaça os testes sem olhar as respostas.</p></div>
+</section>
+
+</article>
+</body>
+</html>

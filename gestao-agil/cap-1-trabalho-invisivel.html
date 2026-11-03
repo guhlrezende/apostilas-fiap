@@ -64,6 +64,10 @@
     <div class="ev"><b>Valor</b><span>O que ficou utilizável e útil.</span></div>
   </div>
   <div class="nota lembra"><span class="lbl">A primeira Sprint pode não ter tela</span>Contrariando a intuição de que "Sprint = funcionalidade entregue", a primeira pode gerar valor só <b>reduzindo incerteza</b>: validar regras de negócio, entender o domínio, identificar risco técnico, prototipar. <b>Clareza também é uma entrega.</b></div>
+  <details class="cola"><summary>Complemento (não foi dado em aula): dados em fases e previsão com baseline</summary><div class="in-body">
+    <p><b>Dados em fases.</b> Como a primeira Sprint pode reduzir incerteza, não espere ter o dado perfeito para começar. Uma sequência prática: primeiro dados <b>mockados</b> (inventados, só para o fluxo funcionar e o cliente ver a tela), depois dados <b>públicos</b> (reais, mas de fonte aberta), e só então dados do cliente, se existirem. Em cada fase diga qual é a usada, para ninguém confundir teste com medição.</p>
+    <p><b>Previsão com baseline.</b> Se o projeto prevê um número (por exemplo, empréstimos por dia), compare o modelo com um chute simples antes de comemorar. O scikit-learn tem o <code>DummyRegressor</code>, que prevê sempre a média do treino, e o <code>mean_absolute_error</code> (MAE), a média do erro em valor absoluto, na mesma unidade do que se prevê. Exemplo inventado: o treino tem os valores 10, 12, 14, 12, 12, e a média é 12. O teste tem 13, 11, 15 e 13. O baseline prevê 12 em todos: erros 1, 1, 3, 1, então MAE = 6 / 4 = <b>1,5</b>. Um modelo que prevê 13, 12, 14 e 12 erra 0, 1, 1, 1, então MAE = 3 / 4 = <b>0,75</b>. Só vale a pena se o modelo bater o baseline. Calcule a média só com os dados de treino, senão a informação do teste vaza.</p>
+  </div></details>
 </section>
 
 <section class="sec" id="fechamento">

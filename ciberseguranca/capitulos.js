@@ -55,6 +55,15 @@ window.APOSTILA = {
       "aula": "Complemento",
       "tempo": 45,
       "resumo": "Tríade CIA, criptografia simétrica e assimétrica, hash de senhas, 2FA, HTTPS e defesa em profundidade.",
+      "pergunta": "Cada defesa vale mais quando sei em que momento do ataque ela age. Como ler um ataque inteiro, etapa por etapa?"
+    },
+    {
+      "n": 7,
+      "file": "cap-7-cyber-kill-chain.html",
+      "titulo": "Cyber Kill Chain",
+      "aula": "Complemento",
+      "tempo": 45,
+      "resumo": "As sete etapas do artigo da Lockheed Martin, ações defensivas por fase, limites do modelo, análise de caso e NIST 800-61.",
       "pergunta": ""
     }
   ]

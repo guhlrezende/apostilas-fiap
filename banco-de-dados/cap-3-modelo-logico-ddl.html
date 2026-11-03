@@ -20,7 +20,7 @@
   <div class="kicker">Capítulo 3 · Aula 3</div>
   <h1>Modelo lógico e DDL</h1>
   <p class="sub">Transformar o desenho em tabelas, com tipos, chaves e regras que o próprio banco faz valer.</p>
-  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">4 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">5 demos · 3 testes · 4 flashcards</span><span class="chip">SQL executável</span></div>
   <span class="num">3</span>
 </header>
 
@@ -32,7 +32,7 @@
   <p>A alpha precisa alocar funcionários em projetos e pagar por hora trabalhada. Isso levanta três perguntas que toda modelagem lógica responde:</p>
   <ol>
     <li><b>Que tipo de dado</b> cada campo deve ter (data, número, texto)?</li>
-    <li><b>Como garantir</b> que ninguém insira dado inválido (funcionário sem CPF, projeto sem data)?</li>
+    <li><b>Como garantir</b> que ninguém insira dado inválido (funcionário sem nome, projeto sem data)?</li>
     <li><b>Como criar</b> de fato as tabelas?</li>
   </ol>
   <p>A grande ideia da aula: <mark class="hl">as regras de negócio podem morar no próprio banco</mark>, e não só na aplicação. Assim nenhum programa, nem um script mal escrito, nem um acesso direto consegue burlá-las.</p>
@@ -50,18 +50,18 @@
     <tr><th>Restrição</th><th>Resolve o problema de...</th><th>Exemplo</th></tr>
     <tr><td><code>NOT NULL</code></td><td>campo obrigatório ficar vazio</td><td><code>nome VARCHAR(50) NOT NULL</code></td></tr>
     <tr><td><code>DEFAULT</code></td><td>ter um valor sensato quando nada é informado</td><td><code>pais VARCHAR(30) DEFAULT 'Brasil'</code></td></tr>
-    <tr><td><code>UNIQUE</code></td><td>duplicidade (dois clientes com o mesmo CPF)</td><td><code>CPF CHAR(11) UNIQUE</code></td></tr>
+    <tr><td><code>UNIQUE</code></td><td>duplicidade (dois clientes com o mesmo código)</td><td><code>codigo CHAR(6) UNIQUE</code></td></tr>
     <tr><td><code>CHECK</code></td><td>limitar o intervalo aceitável</td><td><code>CHECK (idade &gt;= 18)</code></td></tr>
     <tr><td><code>AUTO_INCREMENT</code></td><td>gerar identificadores sem controle manual</td><td><code>idFuncionario INT AUTO_INCREMENT</code></td></tr>
   </table></div>
-  <p>Teste as regras de verdade. Rode o script, depois tente quebrar cada uma: repita o <code>INSERT</code> com o mesmo CPF, ponha <code>idade</code> 15, ou deixe o CPF de fora.</p>
+  <p>Teste as regras de verdade. Rode o script, depois tente quebrar cada uma: repita o <code>INSERT</code> com o mesmo código, ponha <code>idade</code> 15, ou deixe o código de fora. Os valores desta página são inventados de propósito (<code>CLI001</code> não é documento de ninguém).</p>
 <div class="demo" data-demo="sql" data-db="vazia" data-titulo="Restrições em ação"><pre class="q">CREATE TABLE cliente (
   id    INTEGER PRIMARY KEY AUTOINCREMENT,
-  cpf   CHAR(11) NOT NULL UNIQUE,
+  codigo CHAR(6) NOT NULL UNIQUE,
   idade INT CHECK (idade &gt;= 18),
   pais  VARCHAR(30) DEFAULT 'Brasil'
 );
-INSERT INTO cliente (cpf, idade) VALUES ('11111111111', 30);
+INSERT INTO cliente (codigo, idade) VALUES ('CLI001', 30);
 SELECT * FROM cliente;</pre></div>
   <div class="nota cuidado"><span class="lbl">Cuidado: SQLite x MySQL</span>O navegador roda <b>SQLite</b>. Nele a chave automática se escreve <code>INTEGER PRIMARY KEY AUTOINCREMENT</code>; no MySQL, <code>INT NOT NULL AUTO_INCREMENT</code>. O resto (NOT NULL, UNIQUE, CHECK, DEFAULT, FOREIGN KEY) é igual. No MySQL, o <code>CHECK</code> só passou a ser realmente aplicado a partir da versão 8.0.16.</div>
   <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E os tipos de dados? Qual escolher para cada coluna?</div><p>A escolha muda o espaço usado e o que o banco aceita.</p></div>
@@ -79,7 +79,7 @@ SELECT * FROM cliente;</pre></div>
     <tr><td><b>Texto</b></td><td><code>CHAR(n)</code>, <code>VARCHAR(n)</code>, <code>TEXT</code></td><td>Veja a comparação abaixo.</td></tr>
   </table></div>
   <h3>CHAR x VARCHAR</h3>
-  <p><code>CHAR(4)</code> sempre ocupa 4 bytes (completa com espaços). <code>VARCHAR(4)</code> ocupa o tamanho do texto <b>mais 1 byte</b>. Por isso <code>VARCHAR</code> é melhor para textos de tamanho variável, e <code>CHAR</code> para valores de tamanho fixo (CPF de 11 dígitos, sigla de estado).</p>
+  <p><code>CHAR(4)</code> sempre ocupa 4 bytes (completa com espaços). <code>VARCHAR(4)</code> ocupa o tamanho do texto <b>mais 1 byte</b>. Por isso <code>VARCHAR</code> é melhor para textos de tamanho variável, e <code>CHAR</code> para valores de tamanho fixo (código de 6 caracteres como <code>CLI001</code>, sigla de estado).</p>
   <div class="tablewrap"><table>
     <tr><th>Valor</th><th class="n">CHAR(4)</th><th class="n">VARCHAR(4)</th></tr>
     <tr><td><code>''</code> (vazio)</td><td class="n">4 bytes</td><td class="n">1 byte</td></tr>
@@ -139,6 +139,22 @@ SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
 DELETE FROM Projeto WHERE idProjeto = 3;</pre></div><div class="demo" data-demo="sql" data-db="alpha_fk" data-titulo="FK bloqueando um INSERT"><pre class="q">-- 2) alocar um funcionário que não existe
 INSERT INTO ProjetoFuncionario (idFuncionario, idProjeto, ativo, horas) VALUES (999, 1, 1, 4);</pre></div>
   <p>No MySQL as mensagens são <code>ERROR 1451</code> (não dá para apagar a linha-pai) e <code>ERROR 1452</code> (a linha-pai não existe). O banco defendeu a consistência sem você escrever uma linha de validação.</p>
+
+  <h3>UNIQUE composto: a regra vale para a combinação</h3>
+  <p><mark class="hl">Complemento, não foi dado em aula.</mark> Às vezes nenhuma coluna sozinha pode ser única, mas o <b>par</b> pode. Num cinema (exemplo inventado), o assento <code>A1</code> existe em todas as sessões; o que não pode é vender <code>A1</code> duas vezes <b>na mesma sessão</b>. Um <code>UNIQUE (sessao_id, assento)</code> garante isso. Rode o script (o terceiro <code>INSERT</code> é a mesma poltrona em outra sessão, e passa) e depois acrescente no fim um quarto <code>INSERT</code> repetindo <code>(1, 'A1')</code>:</p>
+<div class="demo" data-demo="sql" data-db="vazia" data-titulo="UNIQUE composto: sessão e assento"><pre class="q">CREATE TABLE ingresso (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  sessao_id INT NOT NULL,
+  assento   VARCHAR(4) NOT NULL,
+  UNIQUE (sessao_id, assento)
+);
+INSERT INTO ingresso (sessao_id, assento) VALUES (1, 'A1');
+INSERT INTO ingresso (sessao_id, assento) VALUES (1, 'A2');
+INSERT INTO ingresso (sessao_id, assento) VALUES (2, 'A1');
+SELECT sessao_id, assento FROM ingresso;</pre></div>
+  <p>O repetido é recusado (no SQLite: <code>UNIQUE constraint failed: ingresso.sessao_id, ingresso.assento</code>; no MySQL, <code>ERROR 1062 Duplicate entry</code>). Fonte: manual do MySQL 8.4, <i>CREATE TABLE</i>, índices <code>UNIQUE</code> sobre várias colunas.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Declarar <code>UNIQUE (sessao_id)</code> e <code>UNIQUE (assento)</code> separados. Aí cada sessão só poderia ter um ingresso, e cada assento só seria vendido uma vez na vida. A regra certa é a do <b>par</b>, em um único <code>UNIQUE (a, b)</code>.</div>
+  <div class="nota lembra"><span class="lbl">Complemento: feche o modelo antes de carregar os dados</span>Mudar o schema com a tabela cheia é mais caro: um <code>NOT NULL</code> novo em coluna que já tem linhas vazias falha, e um <code>UNIQUE</code> novo falha se já existe duplicata. Por isso a ordem segura é <b>modelo conferido (tabelas, tipos, PK, FK, UNIQUE) e só depois a carga</b>, seja num banco local ou num servidor na nuvem. Se for preciso mudar, o <code>ALTER</code> acima existe, mas pense nele como exceção.</div>
 
   <h3>As pegadinhas do slide (para você não cair)</h3>
   <div class="tablewrap"><table>

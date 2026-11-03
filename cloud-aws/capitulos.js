@@ -64,6 +64,15 @@ window.APOSTILA = {
       "aula": "Complemento",
       "tempo": 40,
       "resumo": "VPC, sub-redes, Security Group x NACL, os pilares de uma boa arquitetura, CLI e boto3, e como evitar custo surpresa.",
+      "pergunta": "Sei montar a rede, fechar portas e vigiar o custo. Mas e se o site precisar aguentar um pico de acessos?"
+    },
+    {
+      "n": 8,
+      "file": "cap-8-elb-cloudwatch-auto-scaling.html",
+      "titulo": "ELB, CloudWatch e Auto Scaling",
+      "aula": "Aula 8",
+      "tempo": 50,
+      "resumo": "Como a aplicação aguenta o pico: balanceador de carga, alarmes do CloudWatch, Launch Template e grupo de Auto Scaling, com o roteiro do Lab 6.",
       "pergunta": ""
     }
   ]

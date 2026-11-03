@@ -10,8 +10,8 @@ sys.stdout.reconfigure(encoding="utf-8")
 import numpy as np, pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split, GridSearchCV, KFold, cross_val_score
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.pipeline import Pipeline
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
@@ -87,7 +87,46 @@ ag=df["age"]
 st={"min":int(ag.min()),"max":int(ag.max()),"mean":round(float(ag.mean()),3),"std_pop":round(float(ag.std(ddof=0)),3),"median":float(ag.median()),"q1":float(ag.quantile(.25)),"q3":float(ag.quantile(.75))}
 print(st)
 
-out = {"IRIS":I,"INS":INS,"GRID":grid,"KCURVE":kc,"HOLD":hold,"CVS":cvs,"REF":ref,"LIN":lin,"AGE":st,"BMILINE":[round(b0,4),round(b1,4)]}
+# ---- ablacao (cap. 4): colunas one-hot, alvo com log1p e scaler. Tudo CV no treino (KFold 5, embaralhado, random_state=0), RMSE/MAE na escala original
+def mk2(cats, scaler, log):
+    tr = [("num", scaler(), num)] + ([("cat", OneHotEncoder(handle_unknown="ignore"), cats)] if cats else [])
+    m = Pipeline([("pre", ColumnTransformer(tr)), ("m", KNeighborsRegressor(n_neighbors=5))])
+    return TransformedTargetRegressor(m, func=np.log1p, inverse_func=np.expm1) if log else m
+cvf = KFold(5, shuffle=True, random_state=0)
+def cvm(m):
+    r = cross_val_score(m, Xtr, ytr, cv=cvf, scoring="neg_root_mean_squared_error")
+    a = cross_val_score(m, Xtr, ytr, cv=cvf, scoring="neg_mean_absolute_error")
+    return {"RMSE": round(float(-r.mean()),0), "MAE": round(float(-a.mean()),0)}
+ABL = {"skew": round(float(y.skew()),2)}
+for nome, cats in [("todas",cat),("sem_region",["sex","smoker"]),("sem_region_sex",["smoker"])]:
+    for log in [False, True]:
+        ABL[f"{nome}|{'log' if log else 'cru'}|Standard"] = cvm(mk2(cats, StandardScaler, log))
+for sc in [StandardScaler, MinMaxScaler, RobustScaler]:
+    for nome, cats in [("todas",cat),("sem_region_sex",["smoker"])]:
+        ABL[f"{nome}|cru|{sc.__name__}"] = cvm(mk2(cats, sc, False))
+print("ABL", ABL)
+
+# ---- duplicatas (cap. 6): dado INVENTADO. 150 linhas unicas, y = 3x + ruido; 40% delas aparecem 2 vezes. KNN k=1, 200 sementes de divisao
+from sklearn.model_selection import ShuffleSplit
+rg = np.random.RandomState(7)
+ux = rg.uniform(0, 10, size=(150, 1)); uy = 3 * ux[:, 0] + rg.normal(0, 3, 150)
+dup_idx = rg.choice(150, 60, replace=False)
+dx = np.vstack([ux, ux[dup_idx]]); dy = np.concatenate([uy, uy[dup_idx]])
+def split_rmse(Xa, ya, sd):
+    a, b, c, d = train_test_split(Xa, ya, test_size=0.3, random_state=sd)
+    return rm(d, KNeighborsRegressor(n_neighbors=1).fit(a, c).predict(b))
+def honesto(sd):  # separa as 150 linhas unicas e so depois repete as duplicatas no treino
+    i_tr, i_te = train_test_split(np.arange(150), test_size=0.3, random_state=sd)
+    tr_idx = list(i_tr) + [j for j in dup_idx if j in set(i_tr)]
+    m = KNeighborsRegressor(n_neighbors=1).fit(ux[tr_idx], uy[tr_idx])
+    return rm(uy[i_te], m.predict(ux[i_te]))
+d_dup = [split_rmse(dx, dy, s) for s in range(200)]
+d_ok = [honesto(s) for s in range(200)]
+DUP = {"linhas": int(len(dx)), "unicas": 150, "repetidas": 60, "RMSE_com_duplicatas": round(float(np.mean(d_dup)),2), "RMSE_sem_vazar": round(float(np.mean(d_ok)),2), "sigma_ruido": 3,
+       "dup_insurance": int(df.duplicated().sum()), "linhas_insurance": int(len(df))}
+print("DUP", DUP)
+
+out = {"IRIS":I,"INS":INS,"GRID":grid,"KCURVE":kc,"HOLD":hold,"CVS":cvs,"REF":ref,"LIN":lin,"AGE":st,"BMILINE":[round(b0,4),round(b1,4)],"ABL":ABL,"DUP":DUP,"SKV":__import__("sklearn").__version__}
 js = "/* Dados reais gerados com scikit-learn 1.6 e o dataset Insurance (ver docs). Nao editar a mao. */\nwindow.MLDATA = " + json.dumps(out, separators=(",",":"), ensure_ascii=False) + ";\n"
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "machine-learning", "ml-data.js"),"w",encoding="utf-8").write(js)
 print(len(js))

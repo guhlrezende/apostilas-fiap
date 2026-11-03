@@ -135,4 +135,29 @@
     }
     el.addEventListener("click", function (e) { var b = e.target.closest("button[data-m]"); if (b) show(b.getAttribute("data-m")); }); show("tr");
   };
+
+  /* ---- decisões de preparação medidas (ABL vem de gerar_dados_ml.py) ---- */
+  E.demos.ablacao4 = function (el) {
+    var A = D.ABL, L = [
+      ["Base: todas as colunas, StandardScaler, custo cru", "todas|cru|Standard"],
+      ["Sem region", "sem_region|cru|Standard"],
+      ["Só smoker (sem region e sem sex)", "sem_region_sex|cru|Standard"],
+      ["Todas as colunas, alvo em log", "todas|log|Standard"],
+      ["Só smoker, alvo em log", "sem_region_sex|log|Standard"],
+      ["Todas as colunas, MinMaxScaler", "todas|cru|MinMaxScaler"],
+      ["Todas as colunas, RobustScaler", "todas|cru|RobustScaler"],
+      ["Só smoker, MinMaxScaler", "sem_region_sex|cru|MinMaxScaler"],
+      ["Só smoker, RobustScaler", "sem_region_sex|cru|RobustScaler"]
+    ];
+    var best = Math.min.apply(null, L.map(function (l) { return A[l[1]].RMSE; })), max = Math.max.apply(null, L.map(function (l) { return A[l[1]].RMSE; }));
+    var h = '<h4>Erro na validação cruzada (treino), em dólares</h4><div class="tablewrap"><table><tr><th>Variante</th><th class="n">RMSE</th><th class="n">MAE</th></tr>';
+    L.forEach(function (l) { var r = A[l[1]], b = r.RMSE === best; h += '<tr><td>' + l[0] + '</td><td class="n">' + (b ? '<b>' : '') + E.fmt(r.RMSE, 0) + (b ? '</b>' : '') + '</td><td class="n">' + E.fmt(r.MAE, 0) + '</td></tr>'; });
+    h += '</table></div>';
+    var sc = ["todas|cru|Standard", "todas|cru|MinMaxScaler", "todas|cru|RobustScaler"].map(function (k) { return A[k].RMSE; });
+    var swS = Math.max.apply(null, sc) - Math.min.apply(null, sc), swC = A["todas|cru|Standard"].RMSE - A["sem_region_sex|cru|Standard"].RMSE;
+    var sc2 = ["sem_region_sex|cru|Standard", "sem_region_sex|cru|MinMaxScaler", "sem_region_sex|cru|RobustScaler"].map(function (k) { return A[k].RMSE; });
+    var sw2 = Math.max.apply(null, sc2) - Math.min.apply(null, sc2);
+    h += '<div class="read">Com todas as colunas, trocar o scaler mexe até <b>' + E.fmt(swS, 0) + '</b> no RMSE; tirar colunas mexe <b>' + E.fmt(swC, 0) + '</b>. Com as colunas já escolhidas, os scalers diferem em só <b>' + E.fmt(sw2, 0) + '</b>. Um único corte de validação cruzada, KNN k = 5, scikit-learn ' + D.SKV + '.</div>';
+    el.innerHTML = h;
+  };
 })();

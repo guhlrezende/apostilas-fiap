@@ -56,6 +56,22 @@
   <p class="gancho">Quando o processador dorme, o mundo continua.</p>
   <p>Um código típico faz o LED piscar quando o botão é apertado, com <code>delay(1000)</code> duas vezes (aceso e apagado). Durante esses 2 segundos o ESP32 está <b>"surdo"</b>: não lê o botão. Quanto isso custa? A demo simula um botão apertado a cada 0,7 s por 10 s (cada toque dura 150 ms) e mostra quantos toques o programa percebe, conforme o intervalo entre leituras:</p>
   <div class="demo" data-demo="bloqueio"></div>
+  <h3>Um clique, uma ação</h3>
+  <p><i>Complemento, não foi dado em aula.</i> Se o <code>loop()</code> roda milhares de vezes por segundo, um clique que dura 150 ms é lido <b>várias vezes</b> como LOW. Um código que troca o LED a cada leitura LOW vai liga-e-desliga dezenas de vezes por clique. A regra é agir só na <b>mudança</b> de estado (a borda): compare a leitura atual com a anterior.</p>
+<pre><code><span class="k">bool</span> anterior = HIGH;                 <span class="c">// pull-up: solto = HIGH</span>
+<span class="k">bool</span> ledLigado = false;
+
+<span class="k">void</span> loop() {
+  <span class="k">bool</span> atual = digitalRead(BTN_PIN);
+  <span class="k">if</span> (anterior == HIGH &amp;&amp; atual == LOW) {   <span class="c">// HIGH para LOW = acabou de apertar</span>
+    ledLigado = !ledLigado;               <span class="c">// uma ação por clique</span>
+    digitalWrite(LED_PIN, ledLigado);
+    Serial.println(ledLigado ? "LED ligado" : "LED desligado");
+  }
+  anterior = atual;
+  delay(20);                              <span class="c">// pausa curta entre leituras (debounce de verdade: veja o complemento abaixo)</span>
+}</code></pre>
+  <p>Troque a condição para <code>anterior == LOW &amp;&amp; atual == HIGH</code> e a ação acontece ao <b>soltar</b>. Em qualquer dos casos, limpe o que a ação anterior deixou (por exemplo, apague a mensagem antiga do Serial ou zere o contador) para o resultado de um clique não se misturar com o do próximo. Este trecho compila para o ESP32 (PlatformIO, placa esp32dev), mas não foi testado em hardware.</p>
   <div class="nota lembra"><span class="lbl">Complemento: millis() e debounce</span>A saída é <b>não bloquear</b>: em vez de <code>delay</code>, guarde o instante da última ação e compare com <code>millis()</code> (milissegundos desde que a placa ligou):<pre><code>unsigned long ultimo = 0;
 const unsigned long INTERVALO = 500;
 bool ledLigado = false;
@@ -73,7 +89,7 @@ void loop() {
 
 <section class="sec" id="fechamento">
   <h2><span class="sn">3</span>Fechamento do capítulo</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Entrada</b>: <code>pinMode(pino, INPUT_PULLUP)</code> e <code>digitalRead(pino)</code>.</li><li>Com pull-up: <b>solto = HIGH, apertado = LOW</b> (lógica invertida). Sem pull-up, o pino <b>flutua</b> e lê valores aleatórios.</li><li>O botão não precisa de resistor externo com <code>INPUT_PULLUP</code>; o LED precisa do dele.</li><li><code>delay</code> deixa o ESP32 <b>surdo</b>: toques entre leituras se perdem. Solução: <code>millis()</code> (complemento), e debounce para o 'quique' do botão.</li></ul></div>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Entrada</b>: <code>pinMode(pino, INPUT_PULLUP)</code> e <code>digitalRead(pino)</code>.</li><li>Com pull-up: <b>solto = HIGH, apertado = LOW</b> (lógica invertida). Sem pull-up, o pino <b>flutua</b> e lê valores aleatórios.</li><li>O botão não precisa de resistor externo com <code>INPUT_PULLUP</code>; o LED precisa do dele.</li><li><code>delay</code> deixa o ESP32 <b>surdo</b>: toques entre leituras se perdem. Solução: <code>millis()</code> (complemento), e debounce para o 'quique' do botão.</li><li>Um clique, uma ação: aja só na <b>borda</b> (HIGH para LOW ao apertar), comparando a leitura atual com a anterior.</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Com INPUT_PULLUP, qual o valor lido quando o botão está solto?</p>
     <div class="opts"><button data-k="a">HIGH.</button><button data-k="b">LOW.</button><button data-k="c">Aleatório.</button></div>

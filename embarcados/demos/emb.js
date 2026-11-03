@@ -69,6 +69,35 @@
     el.addEventListener("input", go); go();
   };
 
+  /* ---- cap 3: limiar numa leitura analógica (ADC de 12 bits, 0 a 4095) ---- */
+  E.demos.limiar = function (el) {
+    el.innerHTML = '<h4>Leitura analógica vira decisão</h4><div class="ctrls"><label>leitura do <code>analogRead</code> <input type="range" id="lm-r" min="0" max="4095" step="5" value="3200"><output id="lm-ro"></output></label><label>limiar <input type="number" id="lm-l" min="1" max="4094" value="2000" style="width:90px"></label></div><div class="grid2"><div><b>Código</b><pre class="raw lm-c"></pre></div><div class="card" style="margin:0"><div class="lm-s"></div></div></div><div class="read"></div>';
+    var g = function (id) { return el.querySelector(id); };
+    function go() {
+      var r = +g("#lm-r").value, l = Math.max(1, Math.min(4094, Math.round(+g("#lm-l").value) || 2000)), escuro = r > l; g("#lm-ro").textContent = r;
+      g(".lm-c").textContent = "const int LIMIAR = " + l + ";\nint leitura = analogRead(34);   // 0 a 4095\nbool escuro = leitura > LIMIAR;\n// leitura = " + r + "  ->  escuro = " + escuro;
+      g(".lm-s").innerHTML = "<div style='font:.95rem var(--f-mono);line-height:1.8'>faixa usada: <b>" + fb(r / 4095 * 100, 1) + "%</b> de 4095<br>" + r + " &gt; " + l + " ? <b style='color:var(--pen)'>" + escuro + "</b><br>ação: <b>" + (escuro ? "acender a luz (ambiente escuro)" : "luz apagada") + "</b></div>";
+      g(".read").innerHTML = "O ADC do ESP32 tem <b>12 bits</b>: " + "2<sup>12</sup> = 4096 valores, de 0 a 4095. Neste exemplo o LDR fica entre o pino e o GND e um resistor fixo entre o 3,3 V e o pino: <b>mais luz, menor resistência do LDR, menor leitura</b>. Se você trocar de lugar o LDR e o resistor, a lógica inverte. O limiar é uma regra <b>escrita no código</b>, e " + l + " é só um valor de exemplo: o certo sai do teste com a sua montagem.";
+    }
+    el.addEventListener("input", go); el.addEventListener("change", go); go();
+  };
+
+  /* ---- cap 3: HC-SR04, tempo do Echo e distância ---- */
+  E.demos.ultrassom = function (el) {
+    el.innerHTML = '<h4>HC-SR04: do tempo do Echo à distância</h4><div class="ctrls"><label>obstáculo a <input type="range" id="us-d" min="1" max="450" step="1" value="100"><output id="us-do"></output> cm</label><label><input type="checkbox" id="us-v"> Echo ligado por divisor de tensão (1 kΩ e 2 kΩ)</label></div><div class="sg"></div><div class="grid2"><div><b>Código</b><pre class="raw us-c"></pre></div><div class="card" style="margin:0"><div class="us-s"></div></div></div><div class="read"></div>';
+    var g = function (id) { return el.querySelector(id); };
+    function go() {
+      var d = +g("#us-d").value, div = g("#us-v").checked, ok = d >= 2 && d <= 400; g("#us-do").textContent = d;
+      var t = d * 2 / 34000 * 1e6, vpino = div ? 5 * 2 / 3 : 5;
+      var it = [["tempo do Echo", ok ? fb(t, 0) + " µs" : "fora da faixa"], ["distância calculada", ok ? fb(t * 0.034 / 2, 1) + " cm" : "sem leitura"], ["ciclo de medida", "≥ 60 ms"], ["tensão no pino", fb(vpino, 2) + " V"]];
+      g(".sg").innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0">' + it.map(function (p) { return '<div class="card" style="margin:0;padding:8px 10px"><small class="muted">' + p[0] + '</small><div style="font:700 1.05rem var(--f-mono)">' + p[1] + '</div></div>'; }).join("") + '</div>';
+      g(".us-c").textContent = "digitalWrite(TRIG, LOW);\ndelayMicroseconds(2);\ndigitalWrite(TRIG, HIGH);\ndelayMicroseconds(10);   // pulso de 10 us\ndigitalWrite(TRIG, LOW);\n\nlong us = pulseIn(ECHO, HIGH, 30000);\nfloat cm = us * 0.034 / 2;\n// " + (ok ? "us = " + Math.round(t) + "  ->  cm = " + fb(t * 0.034 / 2, 1) : "sem eco válido: pulseIn devolve 0 no timeout");
+      g(".us-s").innerHTML = "<div style='font:.95rem var(--f-mono);line-height:1.8'>limite do GPIO (VDD + 0,3 V): <b>3,6 V</b><br>Echo no pino: <b style='color:" + (vpino > 3.6 ? "var(--red)" : "var(--green)") + "'>" + fb(vpino, 2) + " V</b><br>" + (vpino > 3.6 ? "<b style='color:var(--red)'>acima do máximo: risco para o pino</b>" : "dentro do limite") + "</div>";
+      g(".read").innerHTML = "A distância é <code>tempo do Echo × 340 m/s ÷ 2</code>: o som <b>vai e volta</b>, então só metade do tempo conta. Em centímetros por microssegundo, 340 m/s é <code>0,034</code>. Ex.: a " + d + " cm o Echo dura " + fb(t, 0) + " µs (cerca de 58,8 µs por centímetro). A faixa do datasheet é de 2 a 400 cm" + (ok ? "." : "; neste valor o sensor não promete leitura.") + " Como cada medida leva pelo menos 60 ms, não adianta pedir mais de umas 16 por segundo. O Echo é um sinal de <b>5 V</b>; o GPIO do ESP32 aceita no máximo cerca de VDD + 0,3 V. O divisor 1 kΩ e 2 kΩ (valores de exemplo) leva 5 V a " + fb(5 * 2 / 3, 2) + " V.";
+    }
+    el.addEventListener("input", go); el.addEventListener("change", go); go();
+  };
+
   /* ---- cap 3: setup, loop e variável global ---- */
   E.demos.serial = function (el) {
     el.innerHTML = '<h4>Simule o Monitor Serial</h4><div class="ctrls"><label>variável <code>id</code> <select id="sr-v"><option value="g">global (fora do loop)</option><option value="l">local (dentro do loop)</option></select></label><label>impressão <select id="sr-p"><option value="ln">println (quebra linha)</option><option value="pr">print (sem quebra)</option></select></label><label>delay(ms) <input type="range" id="sr-d" min="100" max="3000" step="100" value="2000"><output id="sr-do"></output></label></div><div class="grid2"><div><b>Código</b><pre class="raw sr-code"></pre></div><div><b>Monitor Serial</b><pre class="raw sr-out" style="min-height:130px"></pre></div></div><div class="read"></div>';

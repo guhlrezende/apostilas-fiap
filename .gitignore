@@ -8,3 +8,7 @@ __pycache__/
 CLAUDE.local.md
 .claude/settings.local.json
 Rplots.pdf
+
+# ferramentas locais de agentes
+.claude/
+docs/referencias/

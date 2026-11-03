@@ -62,8 +62,21 @@ lm(y ~ x)                   <span class="c"># modelo linear: intercepto 2.2 e in
   <div class="nota lembra"><span class="lbl">O mesmo problema no machine learning</span>Um modelo que aprende "fundo verde = cachorro" aprendeu uma correlação que não tem relação com o conceito. É a variável de confusão disfarçada de feature, o tema do Capítulo 2 da apostila de Redes Neurais.</div>
 </section>
 
+<section class="sec" id="tamanho">
+  <h2><span class="sn">4</span>Significativo não é o mesmo que grande</h2>
+  <p class="gancho">Com dados demais, o teste enxerga qualquer diferença. Isso não a torna importante.</p>
+  <p>O <b>valor-p</b> responde "quão surpreendente seria esse resultado se não houvesse efeito nenhum?". Ele não responde "o efeito é grande?". A declaração da American Statistical Association de 2016 diz isso no seu princípio 5: o valor-p não mede o tamanho de um efeito nem a importância de um resultado. <small class="muted">(complemento, não foi dado em aula; fonte: ASA, <i>Statement on p-values</i>, 2016, amstat.org/asa/files/pdfs/p-valuestatement.pdf)</small></p>
+  <p>Quanto maior a amostra, menor o erro do teste, então diferenças minúsculas passam a dar p pequeno. Experimento inventado, rodado no R 4.6.1 (<code>set.seed(42)</code>): dois grupos de 200 mil pessoas, nota com média 100 e desvio 15 em um grupo e média real 100,3 no outro. A diferença observada foi de <b>0,335 ponto</b> e o <code>t.test</code> deu <b>p ≈ 1,6·10⁻¹²</b>, bastante "significativo". Só que o tamanho do efeito, o <b>d de Cohen</b> (diferença das médias dividida pelo desvio), é <b>0,022</b>: 2% de um desvio padrão, praticamente nada. O contrário também acontece: com 20 pessoas por grupo (semente 7) e uma diferença observada de 4,8 pontos, o p foi <b>0,34</b>, não significativo, mesmo com o efeito real sendo bem maior (10 pontos nos dados simulados).</p>
+<pre><code>set.seed(42); n &lt;- 200000
+a &lt;- rnorm(n, 100, 15); b &lt;- rnorm(n, 100.3, 15)
+t.test(b, a)$p.value                          <span class="c"># 1.6e-12</span>
+mean(b) - mean(a)                             <span class="c"># 0.335</span>
+(mean(b) - mean(a)) / sqrt((var(a) + var(b)) / 2)   <span class="c"># d = 0.022</span></code></pre>
+  <div class="nota cuidado"><span class="lbl">Erro comum: parar no p</span>Relatório que diz só "diferença significativa (p &lt; 0,05)" deixa o leitor sem saber se vale a pena agir. Sempre acompanhe o p de uma medida de tamanho (a diferença nas unidades do dado, o d de Cohen, o R²) e de um intervalo de confiança. O número de cima não garante que importa; o de baixo não garante que não importa.</div>
+</section>
+
 <section class="sec" id="adiante">
-  <h2><span class="sn">4</span>O caminho até o machine learning</h2>
+  <h2><span class="sn">5</span>O caminho até o machine learning</h2>
   <p class="gancho">A estatística do segundo semestre é a base do modelo que você já usa.</p>
   <div class="tablewrap"><table>
     <tr><th>Tema</th><th>Pergunta que responde</th><th>Aparece no machine learning como</th></tr>
@@ -76,8 +89,8 @@ lm(y ~ x)                   <span class="c"># modelo linear: intercepto 2.2 e in
 </section>
 
 <section class="sec" id="fechamento">
-  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>r</b> de Pearson: de −1 a 1, mede relação <b>linear</b>. <b>R² = r²</b>: fatia da variação de y explicada pela reta.</li><li>Reta de mínimos quadrados: <code>b = Sxy/Sxx</code>, <code>a = ȳ − b·x̄</code>. No exemplo: ŷ = 2,2 + 0,6x, r = 0,775, R² = 0,60.</li><li><b>Anscombe</b>: mesmos r e reta (r ≈ 0,816, ŷ ≈ 3 + 0,5x), formas diferentes. Sempre olhe o gráfico.</li><li><b>Correlação ≠ causalidade</b>: causa comum, coincidência. Só experimento sustenta causa.</li><li>Probabilidade, inferência, regressão e regressão logística formam a ponte para o machine learning.</li></ul></div>
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Amostra grande deixa quase tudo significativo: o valor-p não mede o tamanho do efeito (ASA 2016, princípio 5). Relate p e tamanho do efeito juntos.</li><li><b>r</b> de Pearson: de −1 a 1, mede relação <b>linear</b>. <b>R² = r²</b>: fatia da variação de y explicada pela reta.</li><li>Reta de mínimos quadrados: <code>b = Sxy/Sxx</code>, <code>a = ȳ − b·x̄</code>. No exemplo: ŷ = 2,2 + 0,6x, r = 0,775, R² = 0,60.</li><li><b>Anscombe</b>: mesmos r e reta (r ≈ 0,816, ŷ ≈ 3 + 0,5x), formas diferentes. Sempre olhe o gráfico.</li><li><b>Correlação ≠ causalidade</b>: causa comum, coincidência. Só experimento sustenta causa.</li><li>Probabilidade, inferência, regressão e regressão logística formam a ponte para o machine learning.</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">r = 0 significa que as variáveis não têm nenhuma relação?</p>
     <div class="opts"><button data-k="a">Sim, nenhuma.</button><button data-k="b">Não: significa nenhuma relação linear. Pode haver uma relação curva.</button><button data-k="c">Sim, e o R² também é 1.</button></div>

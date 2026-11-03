@@ -21,7 +21,7 @@
   <div class="kicker">Capítulo 4 · Aula 7</div>
   <h1>Preparar os dados</h1>
   <p class="sub">Transformar texto em número, colocar tudo na mesma régua e, principalmente, fazer isso sem deixar o teste espiar. É o capítulo que separa um resultado bonito de um resultado verdadeiro.</p>
-  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">6 demos · 3 testes · 4 flashcards</span><span class="chip">dados reais: Insurance</span></div>
+  <div class="meta"><span class="chip"><b>~40 min</b></span><span class="chip">7 demos · 3 testes · 4 flashcards</span><span class="chip">dados reais: Insurance</span></div>
   <span class="num">4</span>
 </header>
 
@@ -119,7 +119,25 @@ X_dummies = pd.<span class="f">get_dummies</span>(X, columns=cat_cols, dtype=<sp
   <div class="demo" data-demo="peso"></div>
 
   <p>Isso tem uma consequência prática importante: <mark class="hl p">colunas 0/1 podem dominar a distância do KNN</mark>. Para <code>smoker</code>, isso é ótimo (fumar é o que mais separa o custo, como você viu no Capítulo 3). Para uma coluna que pouco informa sobre o alvo, é <b>ruído</b>: ela distancia pessoas parecidas por um motivo que não ajuda a prever o custo. No Insurance, o custo médio varia de 12.347 a 14.735 entre as regiões e de 12.570 a 13.957 entre os sexos, bem menos que os 8.434 contra 32.050 de não fumantes e fumantes. Isso é um indício, e não uma prova: quem decide se a coluna fica é a validação cruzada.</p>
-  <div class="nota lembra"><span class="lbl">Lembra</span>Daí vem uma pergunta que vale um trabalho inteiro: <b>será que todas as colunas merecem entrar no modelo?</b> Escolher e criar colunas (<i>feature engineering</i>) é parte do jogo, e é onde costuma estar o maior ganho. Fica de gancho para o Capítulo 6.</div>
+  <div class="nota lembra"><span class="lbl">Lembra</span>Daí vem uma pergunta que vale um trabalho inteiro: <b>será que todas as colunas merecem entrar no modelo?</b> Escolher e criar colunas (<i>feature engineering</i>) é parte do jogo, e é onde costuma estar o maior ganho. Logo abaixo eu meço três dessas decisões. O roteiro completo fica no Capítulo 6.</div>
+
+
+  <h3 id="medidas">Medindo três decisões de preparação</h3>
+  <p>Teoria à parte, quanto cada escolha mexe no erro? Medi no próprio Insurance, <b>só com o treino</b> e validação cruzada (5 partes, embaralhadas, um único corte), KNN com k = 5. O erro está em dólares, a escala original do custo.</p>
+  <p class="muted"><b>Complemento, não foi dado em aula.</b> Números gerados por <code>gerar_dados_ml.py</code> com scikit-learn 1.6.1.</p>
+
+  <div class="demo" data-demo="ablacao4"></div>
+
+  <p><b>1. Colunas 0/1 sem sinal.</b> Tirar <code>region</code> e <code>sex</code> e ficar só com <code>smoker</code> reduz o erro, porque essas colunas distanciam pessoas parecidas sem ajudar a prever o custo. Como saber quais tirar? Testando com a validação cruzada, uma de cada vez, como na tabela. Olhar a média por grupo (parágrafo acima) só sugere a candidata.</p>
+  <p><b>2. Alvo assimétrico.</b> O custo tem cauda longa para a direita (assimetria 1,52): poucas pessoas custam muito mais que o resto. Uma saída é treinar com <code>log1p(custo)</code> e desfazer com <code>expm1</code>. O <code>TransformedTargetRegressor</code> faz as duas pontas e devolve a previsão <b>já na escala original</b>, então o erro é comparável com os anteriores:</p>
+<pre><code>modelo = <span class="f">TransformedTargetRegressor</span>(
+    regressor=pipe,
+    <span class="an" tabindex="0" data-t="Treina com o log do custo, que achata a cauda longa. O 1p soma 1 antes do log, para aceitar custo zero.">func=np.log1p</span>,
+    <span class="an" tabindex="0" data-t="Desfaz o log na hora de prever. Sem isso, o erro sairia em escala de log e não se compararia com mais nada.">inverse_func=np.expm1</span>)</code></pre>
+  <p>O resultado é <b>misto</b>, e isso é parte da lição: com todas as colunas, o MAE melhora (3.754 para 3.614), mas o RMSE <b>piora</b> (5.985 para 6.420). Só com <code>smoker</code>, os dois melhoram (RMSE 5.186 para 4.981; MAE 3.043 para 2.573). Hipótese minha, não testada: a média no log, desfeita depois, tende a ficar abaixo da média comum, e o RMSE castiga os erros nos custos altos. Por isso <b>escolha a métrica antes de olhar a tabela</b>.</p>
+  <p><b>3. O scaler pesa menos que a escolha de colunas.</b> Com todas as colunas, trocar de scaler mexe até 506 no RMSE (Standard 5.985, MinMax 6.042, Robust 5.536), enquanto tirar colunas mexe 799 (5.985 para 5.186). Com as colunas já escolhidas, a diferença entre scalers cai para 134. Vale para este dataset e este corte: <b>meça no seu caso</b> antes de generalizar.</p>
+
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Todas as escolhas acima saíram da validação cruzada no <b>treino</b>. O teste ficou fechado. Se você escolhesse a coluna olhando o teste, estaria vazando por outro caminho (Capítulo 6).</div>
 
   <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O scaler calcula médias e desvios. De quais linhas?</div><p>Se a resposta for "de todas", você acabou de cometer o erro mais silencioso do machine learning.</p></div>
 </section>
@@ -184,6 +202,7 @@ pipe = <span class="f">Pipeline</span>([(<span class="s">"prep"</span>, prep), (
     <li><b>MinMax</b> = (x−mín)/(máx−mín). <b>Standard</b> = (x−média)/desvio. <b>Robust</b> = (x−mediana)/(Q3−Q1).</li>
     <li>Outliers estragam MinMax e Standard. O <b>Robust</b> aguenta melhor.</li>
     <li>Com MinMax, colunas 0/1 pesam o <b>máximo</b> na distância (1,0).</li>
+    <li>Coluna 0/1 sem sinal atrapalha a distância do KNN: teste tirá-la com validação cruzada. Alvo com cauda longa: <code>TransformedTargetRegressor</code> com <code>log1p</code>/<code>expm1</code>, erro na escala original.</li>
     <li><b>Vazamento:</b> o scaler só pode aprender (<code>fit</code>) com o <b>treino</b>. Use <b>Pipeline</b>.</li>
   </ul></div>
 

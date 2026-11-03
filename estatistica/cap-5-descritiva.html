@@ -39,6 +39,7 @@
     <div class="l"><div><b>Moda</b>: nenhum valor se repete, então <b>não há moda</b>.</div></div>
     <div class="l"><div>Agora entra um novo funcionário que ganha <b>40</b>: média = 76,7 / 10 = <b>7,67</b> e a mediana sobe só de 4,0 para <b>4,1</b>. A média quase dobrou por causa de uma pessoa; a mediana mal se mexeu.</div></div>
   </div>
+  <div class="nota cuidado"><span class="lbl">Moda com empate</span>Em <code>2, 3, 3, 5, 5, 7</code> o 3 e o 5 aparecem duas vezes cada: são <b>duas modas</b> (dado bimodal), e não existe "a moda". Em R, <code>table(y)</code> mostra a contagem de cada valor e deixa o empate visível; <code>names(which(table(y) == max(table(y))))</code> devolve <code>"3" "5"</code>. Quem escreve "a moda é 3" por ter olhado só o primeiro resultado omite metade da resposta. Em medida contínua com muitas casas decimais, quase nenhum valor se repete, então a moda dos valores brutos diz pouco: nesse caso olhe a <b>classe modal</b> do histograma (Capítulo 3). <small class="muted">(complemento; o teste é nosso, rodado no R 4.6.1)</small></div>
   <div class="nota lembra"><span class="lbl">A média mente?</span>Quando a distribuição é <b>assimétrica</b> ou há valores extremos (salário, preço de imóvel, tempo de espera), a mediana descreve melhor o "caso típico". Diferença grande entre média e mediana é um sinal de alerta.</div>
 </section>
 
@@ -47,9 +48,9 @@
   <p class="gancho">Duas turmas com a mesma média podem ser bem diferentes.</p>
   <ul>
     <li><b>Amplitude</b>: máximo menos mínimo (sensível a extremos).</li>
-    <li><b>Variância</b> amostral: <code>s² = Σ(xᵢ − x̄)² / (n − 1)</code>. Média dos quadrados dos desvios, com <b>n − 1</b> no denominador porque se estima a média com a própria amostra.</li>
+    <li><b>Variância</b> amostral: <code>s² = Σ(xᵢ − x̄)² / (n − 1)</code>. Média dos quadrados dos desvios, com <b>n − 1</b> no denominador porque se estima a média com a própria amostra. Atenção à unidade: se o dado está em reais, a variância está em <b>reais ao quadrado</b> (R$²), que ninguém sabe interpretar. Por isso se usa o desvio.</li>
     <li><b>Desvio padrão</b>: <code>s = √s²</code>, na mesma unidade do dado.</li>
-    <li><b>Coeficiente de variação</b>: <code>CV = s / x̄</code>, em %. Permite comparar variabilidade de variáveis em escalas diferentes.</li>
+    <li><b>Coeficiente de variação</b>: <code>CV = s / x̄</code>, em %. Permite comparar variabilidade de variáveis em escalas diferentes. Não tem unidade (é uma razão). Só faz sentido com média positiva e longe de zero: com média perto de zero o CV explode.</li>
   </ul>
   <div class="ex rv"><span class="t">Continuando o exemplo dos 9 salários</span>
     <div class="l"><div>Desvios em relação a 4,0778: −1,078; −0,878; −0,578; −0,278; −0,078; +0,122; +0,422; +0,922; +1,422.</div></div>
@@ -57,11 +58,31 @@
     <div class="l"><div><code>s = √0,677 = <b>0,823</b></code> (R$ 823 em torno da média). <code>CV = 0,823 / 4,078 = <b>20,2%</b></code>.</div></div>
     <div class="l"><div>Com o valor extremo 40 incluído: <b>s = 11,39</b> e <b>CV = 148,4%</b>. Um único dado transformou um grupo homogêneo em um grupo "disperso".</div></div>
   </div>
+  <div class="nota lembra"><span class="lbl">As faixas de CV são convenção</span>Você vai ver regras do tipo "CV abaixo de 15% é baixa dispersão, acima de 30% é alta". Não achei fonte oficial para esses cortes: sites e livros diferentes usam outros números (10/30, 15/35, 5/15/30/50), e áreas como laboratório usam limites bem mais baixos. Trate como <b>convenção de quem escreve</b>, confirme com o corte que a sua aula ou professor adota e diga qual usou. O cálculo <code>s / x̄</code> em si é padrão (o NIST define o CV da normal como σ/μ). Fontes: NIST e-Handbook (seção da distribuição normal) e <code>scipy.stats.variation</code>, que também avisa que o resultado fica negativo com média negativa.</div>
   <div class="nota cuidado"><span class="lbl">Cuidado: n ou n − 1?</span>Se você dividir por <b>n</b> em vez de <b>n − 1</b>, os 9 salários dão variância 0,602 em vez de 0,677. Em Python, <code>pandas.Series.var()</code> e <code>statistics.variance</code> usam n − 1, mas <code>numpy.var()</code> usa <b>n</b> por padrão (use <code>ddof=1</code>). Em R, <code>var()</code> e <code>sd()</code> usam n − 1. Para dados de uma <b>amostra</b>, o certo é n − 1.</div>
 </section>
 
+<section class="sec" id="linear">
+  <h2><span class="sn">3</span>Mudar de escala: multiplicar e somar</h2>
+  <p class="gancho">Converter moeda ou unidade muda os números, mas nem todos do mesmo jeito.</p>
+  <p>Aplique <code>y = k·x + c</code> em todos os valores. Multiplicar por <b>k</b> multiplica a média, a mediana, os quartis e o <b>desvio</b> por k. Somar <b>c</b> desloca a média e a mediana em c, mas <b>não mexe no desvio</b>: a dispersão é distância entre valores, e somar o mesmo número em todos não muda essas distâncias. <small class="muted">(complemento; conferido por teste nosso no R 4.6.1)</small></p>
+  <div class="ex rv"><span class="t">Os 9 salários (R$ mil), três transformações</span>
+    <div class="l"><div>Original: média <b>4,078</b>, desvio <b>0,823</b>, CV <b>20,18%</b>.</div></div>
+    <div class="l"><div><b>3x</b> (multiplicar): média 12,233, desvio 2,468, CV <b>20,18%</b>. O CV <b>não muda</b>, porque desvio e média foram multiplicados pelo mesmo 3.</div></div>
+    <div class="l"><div><b>x + 10</b> (somar): média 14,078, desvio <b>0,823</b> (igual), CV <b>5,84%</b>. O CV <b>muda</b>, porque só a média cresceu.</div></div>
+    <div class="l"><div><b>3x + 10</b>: média 22,233, desvio 2,468, CV 11,10%. Também muda.</div></div>
+  </div>
+  <div class="nota erro"><span class="lbl">Erro comum: "transformação linear não muda o CV"</span>Falso. Só <b>multiplicar</b> preserva o CV. Quem soma uma constante (por exemplo, um bônus fixo para todos) muda a média e, com isso, o CV, mesmo sem alterar a dispersão. Isso também explica por que o CV só compara bem variáveis medidas desde um zero verdadeiro (salário, peso), e mal temperatura em °C, cujo zero é arbitrário.</div>
+<pre><code>x &lt;- c(3.0, 3.2, 3.5, 3.8, 4.0, 4.2, 4.5, 5.0, 5.5)
+cv &lt;- function(v) sd(v) / mean(v)
+cv(x)             <span class="c"># 0.2017683</span>
+cv(3 * x)         <span class="c"># 0.2017683  (igual)</span>
+cv(x + 10)        <span class="c"># 0.05844433 (mudou)</span>
+sd(x + 10)        <span class="c"># 0.8227663  (o desvio não mudou)</span></code></pre>
+</section>
+
 <section class="sec" id="posicao">
-  <h2><span class="sn">3</span>Posição: quartis, IQR, boxplot e outliers</h2>
+  <h2><span class="sn">4</span>Posição: quartis, IQR, boxplot e outliers</h2>
   <p class="gancho">Quatro fatias com o mesmo número de observações.</p>
   <p>Os <b>quartis</b> dividem os dados ordenados em quatro partes: <b>Q1</b> (25% abaixo), <b>Q2</b> (a mediana) e <b>Q3</b> (75% abaixo). A <b>distância interquartil</b> é <code>IQR = Q3 − Q1</code>. O <b>boxplot</b> desenha a caixa de Q1 a Q3, o traço da mediana e "bigodes" até os valores mais extremos que <b>não são outliers</b>. Pela regra de Tukey, é <b>outlier</b> o que passa de <code>Q3 + 1,5·IQR</code> ou fica abaixo de <code>Q1 − 1,5·IQR</code>.</p>
   <p>Nos 9 salários: Q1 = 3,5, Q3 = 4,5, IQR = 1,0; limite superior 6,0 e inferior 2,0, então <b>não há outlier</b> (o máximo é 5,5). Com o 40 incluído, Q1 = 3,575, Q3 = 4,875, IQR = 1,3 e limite superior 6,825: o <b>40 é outlier</b>. Teste você mesmo, editando os valores e usando o botão do valor extremo:</p>
@@ -69,7 +90,7 @@
 </section>
 
 <section class="sec" id="codigo">
-  <h2><span class="sn">4</span>Tudo isso em uma linha de código</h2>
+  <h2><span class="sn">5</span>Tudo isso em uma linha de código</h2>
   <p class="gancho">Entender a conta é o que permite confiar na linha.</p>
 <pre><code><span class="k">import</span> pandas <span class="k">as</span> pd
 sal = pd.Series([3.0, 3.2, 3.5, 3.8, 4.0, 4.2, 4.5, 5.0, 5.5])
@@ -89,8 +110,8 @@ boxplot(sal)</code></pre>
 </section>
 
 <section class="sec" id="fechamento">
-  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Média</b> usa todos os valores (sensível a extremos). <b>Mediana</b> é o valor do meio (robusta). <b>Moda</b> é o mais frequente (a única para nominal).</li><li><b>Variância amostral</b> divide por <b>n − 1</b>; <b>desvio padrão</b> = √variância; <b>CV</b> = desvio / média.</li><li><b>Quartis</b>, <b>IQR</b> = Q3 − Q1 e a regra de Tukey: outlier fora de [Q1 − 1,5·IQR; Q3 + 1,5·IQR].</li><li>9 salários: média 4,08, mediana 4,0, desvio 0,823, CV 20,2%. Com o 40: média 7,67, mediana 4,1, desvio 11,39.</li><li>Cuidado: <code>numpy.var</code> usa n por padrão; pandas e R usam n − 1.</li></ul></div>
+  <h2><span class="sn">6</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Média</b> usa todos os valores (sensível a extremos). <b>Mediana</b> é o valor do meio (robusta). <b>Moda</b> é o mais frequente (a única para nominal).</li><li><b>Variância amostral</b> divide por <b>n − 1</b>; <b>desvio padrão</b> = √variância; <b>CV</b> = desvio / média.</li><li><b>Quartis</b>, <b>IQR</b> = Q3 − Q1 e a regra de Tukey: outlier fora de [Q1 − 1,5·IQR; Q3 + 1,5·IQR].</li><li>9 salários: média 4,08, mediana 4,0, desvio 0,823, CV 20,2%. Com o 40: média 7,67, mediana 4,1, desvio 11,39.</li><li>Cuidado: <code>numpy.var</code> usa n por padrão; pandas e R usam n − 1.</li><li>Variância fica em unidade ao quadrado; desvio volta à unidade. Faixas de CV (15%, 30%) são convenção, não regra.</li><li>Multiplicar por k mantém o CV; somar constante muda o CV. Moda pode ter empate (bimodal).</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="a"><span class="qt">Pergunta 1</span><p class="qq">Um valor extremo muito alto entra nos dados. O que acontece com a média e a mediana?</p>
     <div class="opts"><button data-k="a">A média sobe bastante; a mediana quase não muda.</button><button data-k="b">A mediana sobe mais que a média.</button><button data-k="c">Nenhuma muda.</button></div>

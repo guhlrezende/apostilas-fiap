@@ -92,6 +92,16 @@
   <p>Um relacionamento <b>N:N</b> não cabe numa tabela só. Um funcionário em vários projetos e um projeto com vários funcionários exige uma <mark class="hl">tabela associativa</mark> (ou "tabela ponte") no meio, cuja PK é composta pelas duas chaves. Essa tabela ainda pode guardar dados <i>do relacionamento</i>, como as horas de cada pessoa em cada projeto. Você vai criá-la no Capítulo 3. Veja a ideia com os dados reais da startup:</p>
   <div class="demo" data-demo="ponte"></div>
   <div class="nota exemplo"><span class="lbl">Exercício da ACME, pensando junto</span>Departamentos têm nome, número único e um chefe (funcionário), com data de início na chefia. Funcionários têm nome, CPF, endereço, salário, sexo e nascimento, trabalham em <b>um</b> departamento e participam de <b>vários</b> projetos (com as horas por projeto). Cada departamento <b>controla</b> projetos, que têm nome, id único e uma única localização. Há dependentes, com vínculo (filho, filha). <b>Entidades:</b> Departamento, Funcionário, Projeto, Dependente. <b>Relacionamentos:</b> Chefia (1:1), Lotação (1:N), Controle (1:N, departamento e projetos), Participação (N:N, com horas), Dependência (1:N). As "várias regiões" (localizações) de um departamento viram uma entidade ou tabela própria, porque são vários valores.</div>
+
+  <h3>Complemento: fontes de dado diferentes, entidades diferentes</h3>
+  <p><mark class="hl">Complemento, não foi dado em aula.</mark> Quando o mesmo assunto chega por caminhos diferentes, vale uma entidade para cada caminho, ligadas a uma entidade central. Exemplo inventado: um cinema tem a <b>Sessão</b> (filme e horário). Uma catraca automática registra <b>contagens de entrada</b> várias vezes por sessão, e o gerente faz <b>anotações</b> à mão ("projetor falhou"). Misturar as duas numa tabela só deixaria colunas vazias (a catraca nunca escreve texto, o gerente nunca conta entrada) e esconderia de onde veio cada dado. Separadas, cada uma fica com as colunas que fazem sentido.</p>
+  <div class="ex rv"><span class="t">Estrela: um centro e vários 1:N</span>
+    <div class="l"><div><b>Centro:</b> Sessão. <b>Pontas:</b> Contagem da catraca (leitura automática) e Anotação do gerente (registro manual).</div></div>
+    <div class="l"><div>Sessão para Contagem é <b>1:N</b>, (1,n) do lado da sessão se toda sessão tem leitura. Sessão para Anotação é <b>1:N</b>, (0,n), porque pode não haver nenhuma anotação.</div></div>
+    <div class="l"><div>Não há N:N em lugar nenhum, então <b>nenhuma tabela associativa</b> é necessária. Só crie uma quando o cenário realmente pedir muitos de cada lado.</div></div>
+  </div>
+  <p>Conferido no SQLite com duas leituras da sessão 1 (42 e 3 entradas), uma leitura da sessão 2 (50) e uma anotação na sessão 1: o total por sessão dá <b>45</b> e <b>50</b>, e a contagem de anotações dá <b>1</b> e <b>0</b>. Cada ponta tem uma <code>FOREIGN KEY</code> para <code>sessao(id)</code>.</p>
+  <div class="nota cuidado"><span class="lbl">Guarde o arquivo-fonte do modelo</span>Exportar o diagrama como imagem (PNG ou PDF) serve para entregar e colar em documento, mas a imagem não se edita. Guarde também o <b>arquivo do próprio brModelo</b> (o projeto que você abre e altera): se faltar uma entidade, você corrige o desenho em vez de redesenhar tudo.</div>
 </section>
 
 <section class="sec" id="fechamento">

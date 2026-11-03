@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 10: Testando seu código (complemento) | Apostila de Python e Pensamento Computacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/cap-10-testes.js"></script>
+</head>
+<body data-cap="10" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 10 · Complemento</div>
+  <h1>Testando seu código (complemento)</h1>
+  <p class="sub">Como saber que a função continua certa depois de mexer nela, sem digitar tudo de novo a cada vez.</p>
+  <div class="meta"><span class="chip"><b>~35 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <span class="num">10</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>No capítulo 9 você viu erros, arquivos, módulos e o <code>if __name__ == "__main__":</code>. Este capítulo é <b>complemento</b> (não foi dado em aula) e responde ao que sobrou: depois de escrever uma função, como conferir que ela está certa, e continua certa depois de qualquer mudança? Os exemplos (uma função de desconto e uma que pergunta a quantidade) são inventados só para este capítulo, e todos os códigos e saídas foram executados no Python 3.13.</div>
+
+<section class="sec" id="assert">
+  <h2><span class="sn">1</span>Um script de assert não é um teste</h2>
+  <p class="gancho">Quase todo mundo começa conferindo com um arquivo cheio de <code>assert</code>. Funciona, até um dia deixar de funcionar.</p>
+  <p>Vamos testar esta função de um arquivo <code>loja.py</code> (ela devolve o preço depois de um desconto em porcentagem):</p>
+<pre><code><span class="c"># loja.py</span>
+<span class="k">def</span> <span class="f">desconto</span>(preco, percentual):
+    <span class="s">"""Devolve o preço depois de aplicar o desconto em porcentagem."""</span>
+    <span class="k">if</span> percentual &lt; <span class="n">0</span> <span class="k">or</span> percentual &gt; <span class="n">100</span>:
+        <span class="k">raise</span> <span class="n">ValueError</span>(<span class="s">"percentual fora de 0 a 100"</span>)
+    <span class="k">return</span> <span class="f">round</span>(preco * (<span class="n">1</span> - percentual / <span class="n">100</span>), <span class="n">2</span>)</code></pre>
+  <p>A primeira tentativa de conferir costuma ser um arquivo solto:</p>
+<pre><code><span class="c"># verifica.py</span>
+<span class="k">import</span> loja
+
+<span class="k">assert</span> loja.<span class="f">desconto</span>(<span class="n">50.0</span>, <span class="n">10</span>) == <span class="n">45.0</span>
+<span class="k">assert</span> loja.<span class="f">desconto</span>(<span class="n">50.0</span>, <span class="n">0</span>) == <span class="n">50.0</span>
+<span class="f">print</span>(<span class="s">"tudo certo"</span>)</code></pre>
+  <p>Rodando <code>python verifica.py</code>, aparece <code>tudo certo</code>. O problema é o que esse arquivo <b>não</b> faz:</p>
+  <ul>
+    <li><b>Para no primeiro erro.</b> Se o primeiro <code>assert</code> falha, o programa termina com <code>AssertionError</code> e você não sabe se os outros passam.</li>
+    <li><b>Roda quando é importado.</b> Tudo no topo do arquivo executa no <code>import</code>, e o <code>print</code> aparece mesmo sem ninguém pedir.</li>
+    <li><b>Não é descoberto por nenhuma ferramenta.</b> Um runner de testes procura testes, e aqui não há nenhum para ele contar.</li>
+  </ul>
+  <p>Para ver isso na prática, mande o <code>unittest</code> carregar esse arquivo (testado):</p>
+<pre><code>$ python -m unittest verifica
+tudo certo
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.000s
+
+NO TESTS RAN</code></pre>
+  <p>O <code>tudo certo</code> apareceu porque o arquivo foi executado ao ser importado, e mesmo assim o resultado é <b>0 testes rodados</b> (o comando termina com código de saída 5, que ferramentas de automação leem como falha). Passar sem testar nada é pior que falhar: dá confiança sem motivo.</p>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Achar que "o script rodou sem erro" significa "está testado". Um teste de verdade precisa ser <b>achado, contado e relatado</b> individualmente por uma ferramenta, e precisa continuar rodando mesmo que o vizinho falhe.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Se o script solto não serve, qual é a forma que serve?</div><p>O Python já traz um módulo pronto para isso: o <code>unittest</code>.</p></div>
+</section>
+
+<section class="sec" id="unittest">
+  <h2><span class="sn">2</span>unittest: uma classe, métodos <code>test_</code> e assertEqual</h2>
+  <p class="gancho">Cada comportamento que você quer garantir vira um método pequeno, com nome que explica o que ele garante.</p>
+  <p><b>Intuição.</b> Um teste é uma pergunta com resposta conhecida: "se eu pedir 10% de desconto em 50, deve dar 45". Você escreve a pergunta uma vez e o computador refaz sempre que você mandar.</p>
+  <p><b>Definição.</b> No <code>unittest</code> você cria uma classe que herda de <code>unittest.TestCase</code>. Cada método cujo nome <b>começa com <code>test</code></b> é um teste. Dentro dele, <code>self.assertEqual(obtido, esperado)</code> compara os dois valores; se forem diferentes, o teste falha e mostra os dois. Para conferir que uma exceção sai, use <code>with self.assertRaises(ValueError):</code>.</p>
+<pre><code><span class="c"># test_loja.py</span>
+<span class="k">import</span> unittest
+<span class="k">import</span> loja
+
+<span class="k">class</span> <span class="f">TestDesconto</span>(unittest.TestCase):
+    <span class="k">def</span> <span class="f">test_dez_por_cento</span>(self):
+        self.<span class="f">assertEqual</span>(loja.<span class="f">desconto</span>(<span class="n">50.0</span>, <span class="n">10</span>), <span class="n">45.0</span>)
+
+    <span class="k">def</span> <span class="f">test_sem_desconto</span>(self):
+        self.<span class="f">assertEqual</span>(loja.<span class="f">desconto</span>(<span class="n">50.0</span>, <span class="n">0</span>), <span class="n">50.0</span>)
+
+    <span class="k">def</span> <span class="f">test_percentual_invalido</span>(self):
+        <span class="k">with</span> self.<span class="f">assertRaises</span>(<span class="n">ValueError</span>):      <span class="c"># o teste passa SE a exceção acontecer</span>
+            loja.<span class="f">desconto</span>(<span class="n">50.0</span>, <span class="n">150</span>)
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    unittest.<span class="f">main</span>()</code></pre>
+  <p>Para rodar, <code>python -m unittest</code> na pasta (ele acha os arquivos <code>test*.py</code> sozinho), ou <code>python test_loja.py</code> por causa do bloco final. Com o código certo, a saída é:</p>
+<pre><code>$ python -m unittest -v
+test_dez_por_cento (test_loja.TestDesconto.test_dez_por_cento) ... ok
+test_percentual_invalido (test_loja.TestDesconto.test_percentual_invalido) ... ok
+test_sem_desconto (test_loja.TestDesconto.test_sem_desconto) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK</code></pre>
+  <div class="ex rv"><span class="t">Exemplo resolvido: o que cada teste conta</span>
+    <div class="l"><div><code>desconto(50.0, 10)</code>: <code>50.0 * (1 - 10/100)</code> = <code>50.0 * 0.9</code> = <b>45.0</b>. O esperado no teste é 45.0, então passa.</div></div>
+    <div class="l"><div><code>desconto(50.0, 0)</code>: <code>50.0 * (1 - 0)</code> = <b>50.0</b>. Passa.</div></div>
+    <div class="l"><div><code>desconto(50.0, 150)</code>: 150 é maior que 100, a função levanta <code>ValueError</code>. O <code>assertRaises</code> espera exatamente isso, então passa.</div></div>
+  </div>
+  <p>Agora o proveito de ter isso escrito. Troque a versão do código na demo e rode os testes: cada defeito deixa uma marca diferente.</p>
+  <div class="demo" data-demo="testesdefeito"></div>
+  <p>Repare em dois tipos de problema, que o resumo final conta separado:</p>
+  <ul>
+    <li><b>Falha (<code>F</code>, <code>FAIL</code>)</b>: o teste rodou e o <code>assert</code> não passou. O valor obtido é diferente do esperado.</li>
+    <li><b>Erro (<code>E</code>, <code>ERROR</code>)</b>: aconteceu uma exceção que o teste não esperava, como um <code>ValueError</code> estourando dentro do código.</li>
+  </ul>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Dar ao método um nome sem o prefixo <code>test</code> (por exemplo <code>verifica_zero</code>). O <code>unittest</code> <b>ignora esse método sem avisar</b>: no meu teste, o método com nome errado tinha uma conta propositalmente errada, e mesmo assim a saída foi <code>Ran 1 test ... OK</code>. Se a contagem de testes não bate com o que você escreveu, confira os nomes.</div>
+  <div class="nota cuidado"><span class="lbl">Cuidado</span>Os testes só protegem o que eles perguntam. Na demo, o defeito 2 só aparece porque existe um teste que pede um percentual inválido. Para cada função, escreva ao menos um caso normal, um limite (como o 0) e um caso de erro.</div>
+  <details class="cola"><summary>Outra ferramenta: pytest</summary><div class="in-body"><p>O <code>pytest</code> é uma biblioteca de terceiros (instala com <code>pip</code>) que dispensa a classe: o teste é uma função <code>test_...</code> com um <code>assert</code> simples, e ele mostra os valores quando falha. É muito usado, mas o <code>unittest</code> vem com o Python, sem instalar nada, e é o que este capítulo usa. Fonte: documentação oficial do pytest.</p></div></details>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se a função não devolve nada, mas lê com <code>input()</code> e escreve com <code>print()</code>?</div><p>Os testes acima só chamam funções que recebem parâmetros e devolvem um valor. Programas de verdade conversam com a pessoa.</p></div>
+</section>
+
+<section class="sec" id="entrada">
+  <h2><span class="sn">3</span>Testando função que usa input e print</h2>
+  <p class="gancho">Um teste não pode ficar parado esperando alguém digitar, e o que foi impresso precisa de um jeito de ser conferido.</p>
+  <p>Esta função repete a pergunta até receber um inteiro maior que zero (o padrão "pedir de novo" do capítulo 9):</p>
+<pre><code><span class="c"># loja.py (continuação)</span>
+<span class="k">def</span> <span class="f">pedir_quantidade</span>():
+    <span class="s">"""Pergunta até receber um inteiro maior que zero."""</span>
+    <span class="k">while</span> <span class="k">True</span>:
+        texto = <span class="f">input</span>(<span class="s">"Quantas unidades? "</span>)
+        <span class="k">try</span>:
+            n = <span class="f">int</span>(texto)
+        <span class="k">except</span> <span class="n">ValueError</span>:
+            <span class="f">print</span>(<span class="s">"Digite um número inteiro."</span>)
+            <span class="k">continue</span>
+        <span class="k">if</span> n &gt; <span class="n">0</span>:
+            <span class="k">return</span> n
+        <span class="f">print</span>(<span class="s">"Precisa ser maior que zero."</span>)</code></pre>
+  <p>Duas peças da biblioteca padrão resolvem. A primeira é o <code>unittest.mock.patch</code>, que <b>troca um nome por outro só durante o teste</b> e restaura o original no fim. A segunda é o <code>io.StringIO</code>, um "arquivo" que vive na memória: se ele ocupar o lugar do <code>sys.stdout</code>, tudo que o <code>print</code> escreve cai nele, e o método <code>getvalue()</code> devolve o texto.</p>
+<pre><code><span class="k">import</span> io
+<span class="k">import</span> unittest
+<span class="k">from</span> unittest.mock <span class="k">import</span> patch
+<span class="k">import</span> loja
+
+<span class="k">class</span> <span class="f">TestPedirQuantidade</span>(unittest.TestCase):
+    <span class="k">def</span> <span class="f">test_aceita_valor_valido</span>(self):
+        <span class="k">with</span> <span class="f">patch</span>(<span class="s">"builtins.input"</span>, return_value=<span class="s">"3"</span>):      <span class="c"># input() devolve "3" sem esperar ninguém</span>
+            self.<span class="f">assertEqual</span>(loja.<span class="f">pedir_quantidade</span>(), <span class="n">3</span>)
+
+    <span class="k">def</span> <span class="f">test_pede_de_novo_apos_erro</span>(self):
+        <span class="c"># side_effect com lista: cada chamada de input() devolve o próximo item</span>
+        <span class="k">with</span> <span class="f">patch</span>(<span class="s">"builtins.input"</span>, side_effect=[<span class="s">"abc"</span>, <span class="s">"0"</span>, <span class="s">"4"</span>]):
+            <span class="k">with</span> <span class="f">patch</span>(<span class="s">"sys.stdout"</span>, new_callable=io.StringIO) <span class="k">as</span> saida:   <span class="c"># captura o print</span>
+                resultado = loja.<span class="f">pedir_quantidade</span>()
+        self.<span class="f">assertEqual</span>(resultado, <span class="n">4</span>)
+        self.<span class="f">assertIn</span>(<span class="s">"Digite um número inteiro."</span>, saida.<span class="f">getvalue</span>())
+        self.<span class="f">assertIn</span>(<span class="s">"maior que zero"</span>, saida.<span class="f">getvalue</span>())</code></pre>
+  <div class="ex rv"><span class="t">Exemplo resolvido: as três respostas simuladas</span>
+    <div class="l"><div>1ª chamada de <code>input()</code> devolve <code>"abc"</code>: o <code>int</code> falha, imprime "Digite um número inteiro." e volta ao início do laço.</div></div>
+    <div class="l"><div>2ª devolve <code>"0"</code>: é inteiro, mas não é maior que zero, então imprime "Precisa ser maior que zero." e repete.</div></div>
+    <div class="l"><div>3ª devolve <code>"4"</code>: serve, e a função devolve <b>4</b>. O teste confere o 4 <b>e</b> as duas mensagens que apareceram no caminho. Rodando com o código certo, passou: <code>Ran 5 tests</code> com os 5 testes deste capítulo, <code>OK</code>.</div></div>
+  </div>
+  <p>Este teste é o do <b>caminho de erro seguido de acerto</b>, e vale pedir sempre: errar e depois acertar. Um erro típico é a função aceitar a primeira tentativa certa e quebrar na errada (ou pedir só uma vez). Na demo, o defeito 3 retira o <code>try/except</code> e só esse teste percebe.</p>
+  <div class="nota lembra"><span class="lbl">Onde o patch age</span>A documentação do <code>unittest.mock</code> orienta trocar o nome <b>no lugar onde ele é usado</b>. Aqui o <code>input</code> é uma função embutida do Python, por isso <code>"builtins.input"</code>. Para trocar uma função sua que outro módulo importou, o alvo é o módulo que a usa.</div>
+  <div class="nota erro"><span class="lbl">Erro comum</span>Deixar um <code>input()</code> ou um <code>main()</code> solto no topo do arquivo. Importar o arquivo no teste dispararia a pergunta e travaria tudo esperando teclado. Por isso o programa fica em <code>main()</code> dentro do <code>if __name__ == "__main__":</code> (capítulo 9): o <code>import loja</code> só define as funções, e nada é perguntado (testado).</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Quantos testes escrever, e quando rodar?</div><p>Fechamos com os hábitos que fazem os testes valerem o trabalho.</p></div>
+</section>
+
+<section class="sec" id="habitos">
+  <h2><span class="sn">4</span>Hábitos que fazem o teste valer a pena</h2>
+  <p class="gancho">Um teste ruim dá medo de mexer no código. Um teste bom dá coragem.</p>
+  <ul>
+    <li><b>Um teste, um comportamento.</b> O nome diz o que se garante (<code>test_percentual_invalido</code>), e quando falha você já sabe onde olhar.</li>
+    <li><b>Rode depois de cada mudança.</b> O valor está em descobrir o defeito minutos depois de criá-lo, e não na véspera da entrega.</li>
+    <li><b>Teste os limites e os erros</b>, e não só o caso do meio: o zero, o vazio, o valor inválido, o "errou e depois acertou".</li>
+    <li><b>Não toque nos seus dados de verdade.</b> Se a função grava arquivo, o teste usa uma pasta temporária (capítulo 9), e não o arquivo que você usa.</li>
+    <li><b>Quando um defeito aparece, escreva primeiro o teste que o pega</b> e só então corrija. Ele passa a impedir que o defeito volte.</li>
+  </ul>
+</section>
+
+<section class="sec" id="fechamento">
+  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul>
+    <li>Script solto de <code>assert</code> roda no import, para no primeiro erro e não é contado. <code>python -m unittest verifica</code> mostrou <b>0 testes</b>.</li>
+    <li><code>unittest</code>: classe que herda de <code>TestCase</code>, métodos que <b>começam com <code>test</code></b>, <code>self.assertEqual(obtido, esperado)</code>, <code>assertRaises</code> para exceção. Rodar: <code>python -m unittest</code>.</li>
+    <li><b>Falha</b> (<code>F</code>): o <code>assert</code> não passou. <b>Erro</b> (<code>E</code>): exceção inesperada.</li>
+    <li>Método sem o prefixo <code>test</code> é ignorado sem aviso.</li>
+    <li><code>patch("builtins.input", side_effect=[...])</code> simula as digitações; <code>patch("sys.stdout", new_callable=io.StringIO)</code> captura o que o <code>print</code> escreveu (<code>getvalue()</code>).</li>
+    <li>Teste sempre o caminho de erro seguido de acerto, e deixe o programa dentro de <code>main()</code> com <code>if __name__ == "__main__":</code>.</li>
+  </ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Um arquivo só com <code>assert</code> no topo roda sem erro. Por que isso <b>não</b> basta como teste?</p>
+    <div class="opts"><button data-k="a">Porque o assert só funciona dentro de classes.</button><button data-k="b">Porque nenhuma ferramenta o conta como teste: ele roda no import e para no primeiro assert que falhar.</button><button data-k="c">Porque assert é proibido em Python.</button></div>
+    <div class="fb">O <code>assert</code> funciona em qualquer lugar. O problema é que o arquivo não é descoberto, contado nem relatado teste a teste, e o primeiro erro esconde os demais.</div></div>
+  <div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Você escreveu o método <code>def verifica_zero(self):</code> numa classe <code>TestCase</code>. O que o <code>unittest</code> faz com ele?</p>
+    <div class="opts"><button data-k="a">Roda normalmente.</button><button data-k="b">Dá erro dizendo que o nome é inválido.</button><button data-k="c">Ignora sem avisar, porque o nome não começa com <code>test</code>.</button></div>
+    <div class="fb">Só métodos que começam com <code>test</code> são testes. Se a contagem de "Ran N tests" estiver menor do que o esperado, confira os nomes.</div></div>
+  <div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Como testar uma função que chama <code>input()</code> três vezes, sem ninguém digitar?</p>
+    <div class="opts"><button data-k="a"><code>patch("builtins.input", side_effect=["abc", "0", "4"])</code>: cada chamada devolve o próximo item da lista.</button><button data-k="b">Trocar <code>input</code> por <code>print</code> no código.</button><button data-k="c">Não dá: só funções sem <code>input</code> podem ser testadas.</button></div>
+    <div class="fb">O <code>patch</code> troca o <code>input</code> só durante o teste, e o <code>side_effect</code> com lista entrega as respostas em ordem.</div></div>
+  <h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Qual a diferença entre falha e erro num teste?</b></span><span class="bk">Falha: o assert não passou (valor diferente do esperado). Erro: uma exceção inesperada estourou durante o teste.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais métodos o unittest executa?</b></span><span class="bk">Os que começam com <code>test</code>, dentro de uma classe que herda de <code>unittest.TestCase</code>. Os outros são ignorados sem aviso.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o io.StringIO num teste?</b></span><span class="bk">É um arquivo em memória. No lugar do <code>sys.stdout</code>, guarda o que o <code>print</code> escreveu; <code>getvalue()</code> devolve o texto para conferir.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como simular as digitações de input()?</b></span><span class="bk"><code>patch("builtins.input", side_effect=[...])</code>: cada chamada devolve o próximo valor da lista, e o original volta no fim do <code>with</code>.</span></button></div>
+  <div class="ponte rv"><div class="t">E agora?</div><div class="q">Você sabe escrever, organizar e testar seu código.</div><p>O próximo passo é aplicar nos seus projetos: comece cada função nova pelo teste mais simples que ela precisa passar. Volte à <a href="index.html">visão geral</a> sempre que quiser revisar.</p></div>
+</section>
+
+</article>
+</body>
+</html>

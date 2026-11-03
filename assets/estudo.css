@@ -166,6 +166,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 tr.dest td{background:var(--green-soft);font-weight:600}
 pre{position:relative;margin:16px 0;padding:16px 18px;background:#161b27;color:#dfe6f7;border-radius:12px;overflow-x:auto;font:.85rem/1.6 var(--f-mono);border:1px solid #2a3350}
 pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+:not(pre)>code,.paper a{overflow-wrap:anywhere}
+.paper p,.paper li{overflow-wrap:break-word}
 pre .c{color:#7f8db3} pre .k{color:#ff9ac1} pre .s{color:#a5e88d} pre .f{color:#8fc1ff} pre .n{color:#ffcf7a}
 pre .an{background:rgba(255,226,90,.16);border-bottom:2px solid #ffd84a;border-radius:3px;cursor:help;position:relative}
 .copy{position:absolute;right:8px;top:8px;border:1px solid #39446a;background:#1e2540;color:#c7d3f5;border-radius:8px;font-size:.75rem;padding:2px 9px;opacity:.0;transition:opacity .2s}

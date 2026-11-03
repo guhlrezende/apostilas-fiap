@@ -67,9 +67,55 @@
   <div class="nota lembra"><span class="lbl">Cinco perguntas antes de treinar</span>(1) Qual decisão o modelo vai influenciar? (2) Os dados representam quem será afetado? (3) Como saber que ele errou, e quanto custa o erro? (4) Alguém consegue revisar uma decisão contestada? (5) Quando e como o modelo será reavaliado?</div>
 </section>
 
+<section class="sec" id="saidas">
+  <h2><span class="sn">5</span>Saídas com várias classes e a classe rara (complemento)</h2>
+  <p class="gancho">A sigmoide responde "sim ou não". E quando as respostas possíveis são três ou mais, ou quando o "sim" quase nunca acontece?</p>
+  <p><b>Intuição.</b> A sigmoide dá a chance de <i>uma</i> classe. Com três ou mais classes, precisamos de uma chance para cada uma, e as chances têm de somar 1, porque o caso só pode ser uma delas. Essa é a função <b>softmax</b>.</p>
+  <p><b>Definição.</b> Para os valores brutos <code>z₁ ... zₖ</code> da última camada, <code>softmax(zᵢ) = e<sup>zᵢ</sup> / (e<sup>z₁</sup> + ... + e<sup>zₖ</sup>)</code>. Com duas classes ela se reduz à sigmoide. No scikit-learn, o <code>MLPClassifier</code> usa a logística na saída para 2 classes e a softmax para mais de 2.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: três classes (valores inventados)</span>
+    <div class="l"><div>A última camada devolve <code>z = [2,0; 1,0; 0,1]</code> para as classes A, B e C. Os exponenciais são 7,39, 2,72 e 1,11, e a soma é 11,21.</div></div>
+    <div class="l"><div>Softmax: <b>0,659</b> para A, <b>0,242</b> para B e <b>0,099</b> para C. Somam 1. A rede responde A, mas com "só" 66% de confiança.</div></div>
+  </div>
+  <p><b>Classe rara.</b> Imagine 1000 leituras de uma máquina em que apenas 20 são falhas (2%). Um "modelo" que responde <i>nunca há falha</i> acerta 980: <b>acurácia 0,98</b>, e não encontra falha nenhuma. A acurácia sozinha engana quando uma classe domina (é a ideia da "régua" do Capítulo 9, levada ao extremo). Por isso se olham outras duas perguntas:</p>
+  <div class="formula">precisão = acertos entre os alertas = VP / (VP + FP)<br>recall = falhas encontradas entre as reais = VP / (VP + FN)<br>F1 = média harmônica dos dois<small>VP: alerta certo. FP: alarme falso. FN: falha que passou batida.</small></div>
+  <div class="ex rv"><span class="t">Exemplo resolvido: 1000 leituras, 20 falhas (inventado)</span>
+    <div class="l"><div>Um modelo dispara 16 alertas. Em 12 havia falha (VP = 12) e 4 foram alarme falso (FP = 4). Ficaram 8 falhas sem alerta (FN = 8).</div></div>
+    <div class="l"><div>Precisão = 12/16 = <b>0,75</b>. Recall = 12/20 = <b>0,60</b>. F1 = <b>0,667</b>. A acurácia é (12 + 976)/1000 = <b>0,988</b>, quase igual à do chute que não acha nada (0,98), enquanto o recall do chute é 0.</div></div>
+    <div class="l"><div>Leitura: a acurácia quase não separou os dois. Precisão e recall mostram que o modelo acha 60% das falhas, e que 1 em cada 4 alertas é falso.</div></div>
+  </div>
+  <div class="nota cuidado"><span class="lbl">Qual dos dois importa mais?</span>Depende do custo. Se perder uma falha é caro, prefira recall alto e aceite alarmes falsos. Se cada alerta custa uma visita técnica, a precisão pesa mais. Dizer qual foi a escolha, e por quê, faz parte da resposta. Outros recursos para classes raras, como ponderar as classes no treino (<code>class_weight</code>) ou reamostrar, ficam fora desta apostila.</div>
+  <p class="muted">Fonte: documentação do scikit-learn (guias de redes neurais supervisionadas e de avaliação de modelos). Os exemplos são inventados e os números foram conferidos com <code>scripts/conferir_exemplos_rn.py</code> (scikit-learn 1.6.1).</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">E se nem existe o rótulo "falha"? Como achar o que foge do normal sem ninguém ter marcado?</div><p>Com uma rede que aprende só o que é normal.</p></div>
+</section>
+
+<section class="sec" id="autoencoder">
+  <h2><span class="sn">6</span>Autoencoder: achar o "fora do normal" sem rótulo (complemento)</h2>
+  <p class="gancho">Se só temos exemplos normais, dá para ensinar a rede o que é normal e estranhar o resto?</p>
+  <p><b>Intuição.</b> Um <b>autoencoder</b> é uma rede treinada para devolver a própria entrada, mas passando por um <b>gargalo</b> (uma camada bem menor que a entrada). Para sobreviver ao gargalo, ela aprende a regra que liga as colunas nos dados normais. Um exemplo que quebra essa regra volta mal reconstruído.</p>
+  <p><b>Definição.</b> O <b>erro de reconstrução</b> é a diferença entre a entrada e a saída (aqui, o erro quadrático médio). O método tem quatro passos: treinar <b>só com exemplos normais</b>; medir o erro neles; fixar um <b>limiar</b> (por exemplo, a média do erro mais 3 desvios); tratar como anomalia o que passar do limiar. Nenhum rótulo de "anomalia" é usado no treino.</p>
+  <div class="ex rv"><span class="t">Exemplo resolvido: demo mínima com dados inventados</span>
+    <div class="l"><div>Três colunas geradas de um mesmo valor <code>t</code> (a 2ª é o dobro da 1ª, a 3ª é o oposto, todas com ruído pequeno). 500 exemplos normais para treinar e 200 normais novos. Mais 20 anomalias em que essa relação foi quebrada.</div></div>
+    <div class="l"><div>Rede 3 → 4 → <b>1</b> → 4 → 3: o gargalo de 1 neurônio força a rede a guardar só o <code>t</code>.</div></div>
+    <div class="l"><div>Erro médio de reconstrução: <b>0,0375</b> no treino, <b>0,0400</b> em normais novos e <b>1,2218</b> nas anomalias. Limiar (média + 3 desvios do treino): <b>0,3640</b>.</div></div>
+    <div class="l"><div>Resultado: <b>5 de 200</b> normais novos passaram do limiar (alarme falso) e <b>15 de 20</b> anomalias foram pegas. As 5 anomalias que passaram batido foram o preço do limiar escolhido.</div></div>
+  </div>
+<pre><code><span class="k">from</span> sklearn.neural_network <span class="k">import</span> MLPRegressor
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+esc = StandardScaler().<span class="f">fit</span>(X_normais)                     <span class="c"># escala aprendida só nos normais</span>
+A = esc.<span class="f">transform</span>(X_normais)
+ae = <span class="f">MLPRegressor</span>(hidden_layer_sizes=(<span class="n">4</span>, <span class="n">1</span>, <span class="n">4</span>), activation=<span class="s">"tanh"</span>,
+                  max_iter=<span class="n">3000</span>, random_state=<span class="n">0</span>)
+ae.<span class="f">fit</span>(A, A)                                           <span class="c"># entrada = alvo: a rede tenta copiar</span>
+<span class="an" tabindex="0" data-t="Erro quadrático médio por exemplo: quanto a rede não conseguiu copiar.">erro = ((ae.<span class="f">predict</span>(M) - M) ** <span class="n">2</span>).<span class="f">mean</span>(axis=<span class="n">1</span>)</span>
+limiar = erro_treino.<span class="f">mean</span>() + <span class="n">3</span> * erro_treino.<span class="f">std</span>()   <span class="c"># acima disso: fora do normal</span></code></pre>
+  <div class="nota erro"><span class="lbl">Erro comum</span>(1) Gargalo do tamanho da entrada: a rede aprende a copiar tudo, inclusive o anômalo, e o erro fica baixo para todo mundo. (2) Treinar com anomalias misturadas: elas passam a parecer normais. (3) Copiar o limiar de outro problema: ele depende dos seus dados. Subir o limiar troca alarmes falsos por anomalias perdidas (as mesmas perguntas de precisão e recall da seção anterior).</div>
+  <p class="muted">Ideia do método baseada no tutorial de autoencoders do TensorFlow (tensorflow.org/tutorials/generative/autoencoder). A demo, os dados e os números acima são meus, rodados com scikit-learn 1.6.1; outra versão ou outra semente muda os decimais.</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Fechamos o catálogo de arquiteturas. O que levar para a prova?</div><p>A cola abaixo junta tudo, das convoluções ao autoencoder.</p></div>
+</section>
+
 <section class="sec" id="fechamento">
-  <h2><span class="sn">5</span>Fechamento do capítulo</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>CNN</b>: filtros pequenos deslizam pela imagem e são reaproveitados, detectando bordas, texturas e depois formas.</li><li><b>RNN/LSTM</b> processam sequências com memória. <b>Transformers</b> (2017) usam atenção e dominam a linguagem.</li><li><b>Transfer learning</b> reaproveita uma rede pré-treinada: menos dados e tempo, mas herda vieses.</li><li>Frameworks: TensorFlow/Keras, PyTorch, scikit-learn, JAX.</li><li>Em produção: viés, explicabilidade (SHAP/LIME), drift, LGPD art. 20 e segurança de arquivos de modelo.</li></ul></div>
+  <h2><span class="sn">7</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>CNN</b>: filtros pequenos deslizam pela imagem e são reaproveitados, detectando bordas, texturas e depois formas.</li><li><b>RNN/LSTM</b> processam sequências com memória. <b>Transformers</b> (2017) usam atenção e dominam a linguagem.</li><li><b>Transfer learning</b> reaproveita uma rede pré-treinada: menos dados e tempo, mas herda vieses.</li><li>Frameworks: TensorFlow/Keras, PyTorch, scikit-learn, JAX.</li><li>Em produção: viés, explicabilidade (SHAP/LIME), drift, LGPD art. 20 e segurança de arquivos de modelo.</li><li><b>Softmax</b>: uma chance por classe, somando 1 (3 ou mais classes); com 2 classes vira a sigmoide. <b>Classe rara</b>: acurácia engana; use precisão (VP/(VP+FP)), recall (VP/(VP+FN)) e F1.</li><li><b>Autoencoder</b>: treina só com o normal, passa por um gargalo e marca como anomalia o que tem erro de reconstrução acima de um limiar.</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Por que uma CNN usa muito menos pesos que uma MLP para imagens?</p>
     <div class="opts"><button data-k="a">Porque ignora os pixels.</button><button data-k="b">Porque reaproveita o mesmo filtro pequeno em toda a imagem.</button><button data-k="c">Porque só olha o centro.</button></div>

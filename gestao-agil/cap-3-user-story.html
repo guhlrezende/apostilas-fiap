@@ -49,6 +49,16 @@
     <div class="muted" style="margin-top:10px"><b class="sc">0 de 0 certas</b></div>
   </div>
   <p>Uma boa tarefa continua conectada à história. Se ninguém sabe responder <b>"por que estamos fazendo isso?"</b>, o trabalho já ficou invisível.</p>
+  <details class="cola"><summary>Complemento (não foi dado em aula): o card completo e o critério como teste</summary><div class="in-body">
+    <p>No quadro, cada história vira um <b>card</b>. Um modelo simples de card tem quatro campos: a <b>história</b>, os <b>critérios de aceite</b>, o <b>responsável</b> e o <b>prazo</b>. Exemplo inventado:</p>
+    <ul>
+      <li><b>História</b>: Como monitor do laboratório, quero ver os equipamentos emprestados há mais de 7 dias para cobrar a devolução.</li>
+      <li><b>Critérios</b>: a lista mostra só equipamentos com mais de 7 dias; vem ordenada do maior atraso para o menor; mostra o nome de quem pegou.</li>
+      <li><b>Responsável</b>: uma pessoa do time (se são duas, ninguém responde).</li>
+      <li><b>Prazo</b>: o dia em que o card deve chegar em "Em validação".</li>
+    </ul>
+    <p>Cada critério deve virar um <b>teste que dá resposta sim ou não</b>. Em vez de "a lista deve funcionar bem", escreva: <i>dado que há 3 equipamentos emprestados há mais de 7 dias e 5 dentro do prazo, quando abro a lista, então vejo exatamente 3 linhas, a primeira com o maior atraso</i>. Quem lê sabe o que conferir, e o resultado é verificável. Isso é o "T" de testável do INVEST (fonte: Agile Alliance, glossário) e o Dado/Quando/Então vem do Gherkin (documentação do Cucumber). Lembrete: Gherkin é uma forma de escrever, não uma regra obrigatória do Scrum.</p>
+  </div></details>
 </section>
 
 <section class="sec" id="prioridade">
@@ -70,6 +80,7 @@
     <li>evidência anexada (print, log, relatório);</li>
     <li>revisado por outra pessoa do time.</li>
   </ul>
+  <div class="nota erro"><span class="lbl">Erro comum: pronto do card não é pronto da sprint</span>O Scrum Guide 2020 coloca a Definition of Done como compromisso do <b>Incremento</b>, e trabalho que não a cumpre não pode ser mostrado na Sprint Review (volta ao Product Backlog). Exemplo inventado: o card "lista de equipamentos atrasados" está no Done, mas só abre no computador de quem programou, e o relatório que deveria usá-la ainda não a lê. Cada card parece pronto; o Incremento, não. Um critério de ponta a ponta resolve: "uma pessoa que não programou abre o sistema do zero, faz o fluxo inteiro e chega ao relatório sem passo manual". Se esse critério falha, a sprint não está pronta, mesmo com todos os cards no Done. Leitura minha a partir do Guide, não uma frase literal dele.</div>
   <div class="nota cuidado"><span class="lbl">Cuidado</span>Definir a DoD <b>depois</b> de codar é o mesmo que escolher o critério de sucesso depois de ver o resultado. Combine antes, e escreva onde todos vejam.</div>
 </section>
 

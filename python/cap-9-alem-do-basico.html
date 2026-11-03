@@ -50,6 +50,25 @@ nome.<span class="f">strip</span>().<span class="f">upper</span>()        <span 
     <span class="f">print</span>(chave, <span class="s">"=&gt;"</span>, valor)
 <span class="s">"idade"</span> <span class="k">in</span> aluno                       <span class="c"># True: testa se a chave existe</span>
 aluno.<span class="f">get</span>(<span class="s">"curso"</span>, <span class="s">"não informado"</span>)   <span class="c"># 'não informado' (sem erro)</span></code></pre>
+  <p><b>Registros com id e data.</b> Quando cada item é um dicionário (uma tarefa, um pedido), dois cuidados evitam dor de cabeça. O primeiro: <b>identifique o item por um <code>id</code> que não muda</b>, e não pela posição na lista. A posição muda quando alguém apaga um item antes dele:</p>
+<pre><code>tarefas = [{<span class="s">"id"</span>: <span class="n">1</span>, <span class="s">"texto"</span>: <span class="s">"estudar"</span>}, {<span class="s">"id"</span>: <span class="n">2</span>, <span class="s">"texto"</span>: <span class="s">"lavar"</span>}, {<span class="s">"id"</span>: <span class="n">3</span>, <span class="s">"texto"</span>: <span class="s">"treinar"</span>}]
+tarefas.<span class="f">pop</span>(<span class="n">0</span>)                 <span class="c"># apaga a primeira</span>
+tarefas[<span class="n">1</span>][<span class="s">"texto"</span>]             <span class="c"># 'treinar': a posição 1 agora é outra tarefa</span>
+
+<span class="k">def</span> <span class="f">achar</span>(tarefas, id_):
+    <span class="k">for</span> t <span class="k">in</span> tarefas:
+        <span class="k">if</span> t[<span class="s">"id"</span>] == id_:
+            <span class="k">return</span> t               <span class="c"># o id 3 continua apontando para "treinar"</span>
+
+proximo = <span class="f">max</span>((t[<span class="s">"id"</span>] <span class="k">for</span> t <span class="k">in</span> tarefas), default=<span class="n">0</span>) + <span class="n">1</span>   <span class="c"># 4: nunca reaproveita um id usado</span></code></pre>
+  <p>O segundo cuidado: <b>data guardada como texto</b>. No formato <code>AAAA-MM-DD</code> (com zeros), ordenar o texto já ordena as datas. No formato brasileiro <code>DD/MM/AAAA</code>, não: o texto é comparado a partir do dia.</p>
+<pre><code><span class="k">from</span> datetime <span class="k">import</span> datetime
+br = [<span class="s">"15/01/2026"</span>, <span class="s">"02/03/2025"</span>, <span class="s">"10/12/2024"</span>]
+<span class="f">sorted</span>(br)              <span class="c"># ['02/03/2025', '10/12/2024', '15/01/2026']  (errado)</span>
+<span class="f">sorted</span>([<span class="s">"2026-01-15"</span>, <span class="s">"2025-03-02"</span>, <span class="s">"2024-12-10"</span>])   <span class="c"># ['2024-12-10', '2025-03-02', '2026-01-15']  (certo)</span>
+<span class="f">sorted</span>(br, key=<span class="k">lambda</span> t: datetime.<span class="f">strptime</span>(t, <span class="s">"%d/%m/%Y"</span>))   <span class="c"># ['10/12/2024', '02/03/2025', '15/01/2026']</span>
+datetime.<span class="f">strptime</span>(<span class="s">"31/02/2025"</span>, <span class="s">"%d/%m/%Y"</span>)   <span class="c"># ValueError: day is out of range for month</span></code></pre>
+  <p>O <code>strptime</code> converte o texto em data seguindo o formato e levanta <code>ValueError</code> se não casar, então serve para validar o que a pessoa digitou. Escreva <b>sempre o ano no formato</b>: com <code>"%d/%m"</code> o Python 3.13 não dá erro, assume o ano 1900 e avisa que o comportamento vai mudar no 3.15. E atenção ao texto ISO: sem os zeros (<code>"2025-3-02"</code>) ele volta a ordenar errado, porque <code>"10"</code> vem antes de <code>"3"</code> como texto.</p>
 </section>
 
 <section class="sec" id="erros">
@@ -71,6 +90,19 @@ aluno.<span class="f">get</span>(<span class="s">"curso"</span>, <span class="s"
   </table></div>
   <p>Para <b>tratar</b> um erro previsto (como o usuário digitar texto onde se espera número), use <code>try</code> e <code>except</code>. O programa abaixo pede de novo até a pessoa acertar (as duas digitações do exemplo são <code>abc</code> e <code>21</code>):</p>
 <div class="demo" data-demo="trace"><script type="application/json">{"code": ["while True:", "    texto = input(\"Digite um numero: \")", "    try:", "        n = int(texto)", "        break", "    except ValueError:", "        print(\"Isso nao e um numero inteiro.\")", "print(n * 2)"], "steps": [{"l": 0, "v": {}, "o": "", "n": ""}, {"l": 1, "v": {}, "o": "", "n": "Primeira volta: a pessoa digita <code>abc<\/code>."}, {"l": 2, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": ""}, {"l": 3, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": "<code>int('abc')<\/code> falha e levanta um <code>ValueError<\/code>."}, {"l": 5, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": "O erro é <b>capturado<\/b> aqui: o programa não quebra."}, {"l": 6, "v": {"texto": "abc"}, "o": "Digite um numero: abc", "n": "Mostra o aviso e o <code>while True<\/code> volta ao início."}, {"l": 0, "v": {"texto": "abc"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.", "n": ""}, {"l": 1, "v": {"texto": "abc"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.", "n": "Segunda volta: a pessoa digita <code>21<\/code>."}, {"l": 2, "v": {"texto": "21"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": ""}, {"l": 3, "v": {"texto": "21"}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": "<code>int('21')<\/code> funciona: <code>n<\/code> vira 21."}, {"l": 4, "v": {"texto": "21", "n": 21}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": "Sem erro: o <code>break<\/code> sai do laço."}, {"l": 7, "v": {"texto": "21", "n": 21}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21", "n": "O programa segue normalmente."}, {"l": -1, "v": {"texto": "21", "n": 21}, "o": "Digite um numero: abc\nIsso nao e um numero inteiro.\nDigite um numero: 21\n42", "n": "Fim do programa. O estado final das variáveis está na tabela."}], "titulo": "try/except: pedir de novo até acertar"}</script></div>
+  <p>Pedir de novo é um padrão que você vai repetir (mês, quantidade, opção do menu). Vale transformá-lo numa <b>função</b> que só devolve quando o valor serve: o <code>return</code> dentro do <code>while</code> encerra a função e o laço juntos.</p>
+<pre><code><span class="k">def</span> <span class="f">pedir_inteiro</span>(msg, minimo, maximo):
+    <span class="k">while</span> <span class="k">True</span>:
+        <span class="k">try</span>:
+            n = <span class="f">int</span>(<span class="f">input</span>(msg))
+        <span class="k">except</span> <span class="n">ValueError</span>:                      <span class="c"># não é número</span>
+            <span class="f">print</span>(<span class="s">"Digite um número inteiro."</span>)
+            <span class="k">continue</span>
+        <span class="k">if</span> minimo &lt;= n &lt;= maximo:               <span class="c"># é número, mas serve?</span>
+            <span class="k">return</span> n
+        <span class="f">print</span>(<span class="s">f"Precisa estar entre {minimo} e {maximo}."</span>)
+
+mes = <span class="f">pedir_inteiro</span>(<span class="s">"Mês (1 a 12): "</span>, <span class="n">1</span>, <span class="n">12</span>)   <span class="c"># digitando abc, 13 e 7, devolve 7</span></code></pre>
   <div class="nota cuidado"><span class="lbl">Cuidado</span>Capture <b>o erro específico</b> (<code>except ValueError</code>), e não um genérico <code>except:</code> que engole tudo, inclusive erros de digitação seus. Esconder erros é pior do que deixá-los aparecer.</div>
 </section>
 
@@ -90,10 +122,30 @@ aluno.<span class="f">get</span>(<span class="s">"curso"</span>, <span class="s"
     <li>O <code>with</code> garante que o arquivo é <b>fechado</b> mesmo se der erro no meio.</li>
     <li>Informe <code>encoding="utf-8"</code> para acentos não virarem símbolos estranhos.</li>
   </ul>
+  <p><b>Onde o arquivo vai parar.</b> Um nome como <code>"notas.txt"</code> é um <b>caminho relativo</b>: vale a partir da pasta onde o terminal está quando o programa roda, e não da pasta do script. Rodando o mesmo script de duas pastas diferentes, o arquivo aparece em cada uma delas (testado). Para ficar ao lado do script, parta do <code>__file__</code>; para um teste que escreve arquivo, use uma <b>pasta temporária</b>, que some ao sair do <code>with</code> e não encosta nos seus dados de verdade:</p>
+<pre><code><span class="k">import</span> os, tempfile
+<span class="k">from</span> pathlib <span class="k">import</span> Path
+
+pasta_do_script = Path(<span class="n">__file__</span>).<span class="f">resolve</span>().parent     <span class="c"># não depende de onde o terminal está</span>
+
+<span class="k">with</span> tempfile.<span class="f">TemporaryDirectory</span>() <span class="k">as</span> pasta:
+    caminho = os.path.<span class="f">join</span>(pasta, <span class="s">"tarefas.json"</span>)
+    <span class="k">with</span> <span class="f">open</span>(caminho, <span class="s">"w"</span>, encoding=<span class="s">"utf-8"</span>) <span class="k">as</span> f:
+        f.<span class="f">write</span>(<span class="s">"[]"</span>)
+    os.path.<span class="f">exists</span>(caminho)             <span class="c"># True</span>
+os.path.<span class="f">exists</span>(pasta)                    <span class="c"># False: a pasta foi apagada ao sair do with</span></code></pre>
   <p>Um <b>módulo</b> é código pronto que você importa. A biblioteca padrão já traz muito: <code>math</code>, <code>random</code>, <code>datetime</code>, <code>csv</code>, <code>json</code>. Bibliotecas de terceiros se instalam com <code>pip install nome</code> (por exemplo, <code>pandas</code> e <code>numpy</code> nas disciplinas de dados).</p>
 <pre><code><span class="k">import</span> math, random
 math.<span class="f">sqrt</span>(<span class="n">16</span>)            <span class="c"># 4.0</span>
 random.<span class="f">randint</span>(<span class="n">1</span>, <span class="n">10</span>)    <span class="c"># inteiro aleatório de 1 a 10</span></code></pre>
+  <p>Todo arquivo seu também é um módulo: outro arquivo pode fazer <code>import loja</code>. Só que importar <b>executa o arquivo inteiro</b>, e um <code>input()</code> ou <code>print()</code> solto no topo rodaria na hora. A saída é o <code>if __name__ == "__main__":</code>. O Python guarda o nome do módulo em <code>__name__</code>: vale <code>"__main__"</code> quando você roda o arquivo direto e o nome do arquivo quando alguém o importa. O bloco só roda no primeiro caso:</p>
+<pre><code><span class="c"># loja.py</span>
+<span class="k">def</span> <span class="f">main</span>():
+    n = <span class="f">int</span>(<span class="f">input</span>(<span class="s">"Quantas unidades? "</span>))
+    <span class="f">print</span>(<span class="s">f"Total: R$ {20.0 * n:.2f}"</span>)
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:     <span class="c"># python loja.py roda main(); import loja não pede nada</span>
+    <span class="f">main</span>()</code></pre>
   <div class="nota lembra"><span class="lbl">Complemento: ambiente virtual</span>Cada projeto deve ter suas próprias bibliotecas, para versões diferentes não brigarem. O jeito padrão é um <b>ambiente virtual</b>: <code>python -m venv .venv</code> (e ativá-lo). E nunca versione essa pasta: ela entra no <code>.gitignore</code> (Capítulo 7).</div>
 </section>
 
@@ -111,7 +163,7 @@ random.<span class="f">randint</span>(<span class="n">1</span>, <span class="n">
 
 <section class="sec" id="fechamento">
   <h2><span class="sn">6</span>Fechamento da apostila</h2>
-  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Strings</b> são imutáveis: os métodos (<code>strip</code>, <code>split</code>, <code>replace</code>) devolvem novas strings.</li><li><b>Dicionário</b>: <code>get(chave, padrão)</code> evita KeyError; ótimo para contar.</li><li><b>Traceback</b>: leia de baixo para cima. A última linha diz o tipo e o motivo.</li><li><code>try/except ValueError</code> trata um erro previsto. Capture o <b>específico</b>.</li><li><code>with open(...)</code> fecha o arquivo sozinho. <code>"w"</code> apaga; <code>"a"</code> acrescenta.</li><li><b>PEP 8</b>, nomes claros, funções pequenas: escreva para quem vai ler.</li></ul></div>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li><b>Strings</b> são imutáveis: os métodos (<code>strip</code>, <code>split</code>, <code>replace</code>) devolvem novas strings.</li><li><b>Dicionário</b>: <code>get(chave, padrão)</code> evita KeyError; ótimo para contar.</li><li><b>Traceback</b>: leia de baixo para cima. A última linha diz o tipo e o motivo.</li><li><code>try/except ValueError</code> trata um erro previsto. Capture o <b>específico</b>.</li><li><code>with open(...)</code> fecha o arquivo sozinho. <code>"w"</code> apaga; <code>"a"</code> acrescenta.</li><li><b>Registros</b>: identifique por <code>id</code> estável, não por posição. Data em texto: <code>AAAA-MM-DD</code> ordena, <code>DD/MM/AAAA</code> não; valide com <code>strptime</code> e sempre com o ano no formato.</li><li><b>Arquivos</b>: caminho relativo depende da pasta onde o programa roda; teste que escreve arquivo usa <code>tempfile.TemporaryDirectory()</code>. <code>if __name__ == "__main__":</code> impede que o import execute o programa.</li><li><b>PEP 8</b>, nomes claros, funções pequenas: escreva para quem vai ler.</li></ul></div>
   <h3>Teste rápido</h3>
   <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">Depois de <code>s = 'ana'</code> e <code>s.upper()</code> (sem atribuir), quanto vale <code>s</code>?</p>
     <div class="opts"><button data-k="a">'ANA'</button><button data-k="b">'ana': a string não muda, o método devolveu outra.</button><button data-k="c">None</button></div>
@@ -121,7 +173,7 @@ random.<span class="f">randint</span>(<span class="n">1</span>, <span class="n">
     <div class="opts"><button data-k="a">Escreve e apaga o conteúdo anterior do arquivo.</button><button data-k="b">Acrescenta no final.</button><button data-k="c">Só lê.</button></div>
     <div class="fb">Para acrescentar sem apagar, use <code>"a"</code>. Para só ler, <code>"r"</code>.</div></div><h3>Flashcards (clique para virar)</h3>
   <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como ler um traceback?</b></span><span class="bk">De baixo para cima: a última linha mostra o tipo e o motivo do erro; as de cima mostram o caminho.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Para que serve o with?</b></span><span class="bk">Garante que o arquivo seja fechado ao sair do bloco, mesmo se ocorrer um erro.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é o PEP 8?</b></span><span class="bk">O guia de estilo oficial do Python (nomes, recuo, tamanho de linha).</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>dict.get(chave, 0)?</b></span><span class="bk">Devolve o valor da chave, ou 0 se ela não existir, sem dar KeyError.</span></button></div>
-  <div class="ponte rv"><div class="t">E agora?</div><div class="q">Você percorreu o caminho de variáveis até algoritmos.</div><p>O melhor próximo passo é um projeto seu: um quiz, um controle de gastos, um organizador de notas. Comece pequeno, versione no Git e use o que viu aqui. Volte à <a href="index.html">visão geral</a> sempre que quiser revisar.</p></div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 10</div><div class="q">Escrevi a função e ela parece certa. Como confiro que continua certa depois de qualquer mudança?</div><p>Você percorreu o caminho de variáveis até algoritmos. O capítulo 10 mostra como testar o que você escreve. Depois, o melhor passo é um projeto seu: um quiz, um controle de gastos, um organizador de notas. Volte à <a href="index.html">visão geral</a> sempre que quiser revisar.</p></div>
 </section>
 
 </article>

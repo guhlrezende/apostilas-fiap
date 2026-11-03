@@ -107,6 +107,22 @@ Serial.println(ligado ? "ligado" : "desligado");   <span class="c">// condição
   }
 }</code></pre>
   <p><code>Serial.available()</code> diz se há algo esperando. <code>Serial.readStringUntil('\n')</code> é <b>bloqueante</b>: trava o <code>loop()</code>, acumulando caracteres até achar o <code>\n</code> ou estourar o tempo limite (<i>timeout</i>). Por isso se testa <code>available() &gt; 0</code> <b>antes</b>: é o padrão "verificar antes de bloquear". (O slide da aula fala em 5 s de tempo limite; o padrão do núcleo Arduino costuma ser 1 s, e <code>Serial.setTimeout()</code> muda. Confira na sua versão.)</p>
+  <div class="nota cuidado"><span class="lbl">Complemento: o Enter pode vir como \r\n</span>Dependendo da configuração do Monitor Serial, o Enter manda <b>dois</b> caracteres: <code>\r</code> (retorno) e <code>\n</code> (nova linha). Com <code>readStringUntil('\n')</code> está resolvido: o <code>\n</code> encerra a leitura e o <code>trim()</code> tira o <code>\r</code> que sobrou no fim. O problema aparece quando você lê <b>caractere a caractere</b> e fecha a linha no <code>\r</code>: o <code>\n</code> chega logo depois e vira um comando vazio na volta seguinte. É preciso ignorá-lo:
+<pre><code>String linha = "";
+
+void loop() {
+  while (Serial.available() &gt; 0) {
+    char c = Serial.read();
+    if (c == '\n') continue;            <span class="c">// ignora o \n que vem depois do \r</span>
+    if (c == '\r') {                    <span class="c">// fim da linha</span>
+      linha.trim();
+      if (linha.length() &gt; 0) Serial.printf("comando: %s\r\n", linha.c_str());
+      linha = "";
+    } else {
+      linha += c;
+    }
+  }
+}</code></pre>Este trecho não foi compilado aqui. Teste no Wokwi ou no PlatformIO, trocando a opção de fim de linha do Monitor Serial.</div>
 </section>
 
 <section class="sec" id="fechamento">
