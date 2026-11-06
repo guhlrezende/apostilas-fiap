@@ -8,5 +8,6 @@ window.APOSTILAS = [
   { id: "redes-neurais", titulo: "Redes Neurais e Deep Learning", emoji: "🧠", desc: "Do neurônio ao deep learning, com redes treinando na sua tela, e algoritmos genéticos.", path: "redes-neurais/index.html", caps: 9, pronta: true },
   { id: "estatistica", titulo: "Estatística com R e Python", emoji: "📊", desc: "Da pesquisa à correlação, com Python e R lado a lado e calculadoras de estatística ao vivo.", path: "estatistica/index.html", caps: 6, pronta: true },
   { id: "gestao-agil", titulo: "Gestão Ágil e Pitch", emoji: "🧭", desc: "Scrum, user stories, Kanban e limite de WIP, pitch de 5 minutos e UML, com simuladores.", path: "gestao-agil/index.html", caps: 6, pronta: true },
-  { id: "embarcados", titulo: "Sistemas Embarcados com ESP32", emoji: "🔌", desc: "GPIO, LED, Serial, C++ no ESP32, botão e o sensor DHT22, com circuitos e Monitor Serial simulados.", path: "embarcados/index.html", caps: 7, pronta: true }
+  { id: "embarcados", titulo: "Sistemas Embarcados com ESP32", emoji: "🔌", desc: "GPIO, LED, Serial, C++ no ESP32, botão e o sensor DHT22, com circuitos e Monitor Serial simulados.", path: "embarcados/index.html", caps: 7, pronta: true },
+  { id: "terminal-git", titulo: "Terminal e Git", emoji: "⌨️", desc: "Terminal, pipes, permissões, SSH, Git e GitHub, com PowerShell e Git Bash lado a lado e um terminal simulado para treinar. Complemento, não foi dado em aula.", path: "terminal-git/index.html", caps: 6, pronta: true }
 ];

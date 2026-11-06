@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Apostila de Terminal e Git</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+</head>
+<body data-hub data-root="../">
+<article class="paper">
+  <header class="capa">
+    <div class="kicker">Complemento · Linha de comando e controle de versão</div>
+    <h1>Apostila de Terminal e Git</h1>
+    <p class="sub">Do primeiro comando ao pull request: terminal, pipes, permissões, SSH, Git e GitHub, com PowerShell e Git Bash lado a lado e um terminal simulado para treinar.</p>
+    <div class="meta"><span class="chip"><b>6</b> capítulos</span><span class="chip"><b>~3h55</b> de estudo ativo</span><span class="chip">4 demos: terminal, pipes, permissões e grafo do Git</span><span class="chip">complemento, não foi dado em aula</span></div>
+    <span class="num">TE</span>
+  </header>
+
+  <section class="sec">
+    <h2><span class="sn">1</span>A história que esta apostila conta</h2>
+    <p>Esta apostila é <mark class="hl">complemento</mark>: <b>nada dela foi dado em aula</b>. Ela anda em degraus. Primeiro você aprende a falar com o computador por texto (terminal, shell, arquivos). Depois a ligar comandos pequenos para fazer algo maior (pipes, redirecionamento, grep, awk). Em seguida vem o que faz isso útil de verdade: permissões, variáveis, scripts, processos, curl e SSH. Por fim, o Git guarda o histórico e o GitHub leva isso para o trabalho em equipe.</p><p>Em todo comando que existe nos dois mundos, mostro o <b>Git Bash e o PowerShell</b>. O que eu consegui rodar vem sem aviso; o que não consegui vem marcado como <mark class="hl p">não testado aqui</mark>.</p>
+    <div class="thread" id="thread"></div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="sn">2</span>Os capítulos</h2>
+    <div class="hubgrid" id="caps"></div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="sn">3</span>Como estudar com isto aqui</h2>
+    <div class="grid2">
+      <div class="nota"><span class="lbl">Dica</span>Faça um capítulo por sessão. Leia o <b>gancho</b> do começo, mexa em <b>todas</b> as demos (é onde a ideia fixa) e só então abra as respostas dos testes.</div>
+      <div class="nota lembra"><span class="lbl">Lembra</span>O que veio de leitura (IBM, Microsoft, documentação do Git) está marcado como <b>complemento</b>, e cada capítulo termina com as fontes. <b>Algumas fontes da IBM têm de 2011 a 2022</b>: confira flags e versões antes de depender delas. Os comandos foram rodados em um Windows 11 com Git Bash e PowerShell 5.1.</div>
+    </div>
+  </section>
+
+<section class="sec" id="fontes">
+    <h2><span class="sn">4</span>Fontes e avisos</h2>
+    <p class="gancho">De onde veio cada coisa, e o que eu não consegui conferir?</p>
+    <div class="nota cuidado"><span class="lbl">Fontes antigas</span>Algumas fontes da IBM são de <b>2011 a 2022</b>. Os conceitos seguem valendo, mas flags, versões e detalhes de segurança (por exemplo, o tipo de chave de SSH) podem estar desatualizados. Confira no manual da sua versão.</div>
+    <p>Esta apostila é <b>complemento</b>: nada daqui foi dado em aula. Ela nasceu da leitura das páginas abaixo (as da IBM são a base) e de comandos que eu rodei no Windows 11, com Git Bash e PowerShell 5.1. Onde a IBM não cobre o assunto (PowerShell, Git Bash, curl, .gitignore, processos), usei documentação oficial de outra organização ou o que testei, e marquei como tal.</p>
+    <h3>IBM</h3><ul><li><a href="https://developer.ibm.com/tutorials/l-lpic1-103-1/" target="_blank" rel="noopener">IBM Developer: Prepare for LPIC-1 103.1, a linha de comando do Linux</a> <span class="muted">(IBM, 2015)</span></li><li><a href="https://developer.ibm.com/articles/l-linux-shells/" target="_blank" rel="noopener">IBM Developer: Evolution of shells in Linux</a> <span class="muted">(IBM, 2011 (marcado como arquivado em 2023))</span></li><li><a href="https://developer.ibm.com/tutorials/l-lpic1-103-4/" target="_blank" rel="noopener">IBM Developer: Prepare for LPIC-1 103.4, streams, pipes e redirecionamentos</a> <span class="muted">(IBM, 2015)</span></li><li><a href="https://developer.ibm.com/articles/au-unixtext/" target="_blank" rel="noopener">IBM Developer: Introduction to text manipulation on UNIX-based systems</a> <span class="muted">(IBM, 2012)</span></li><li><a href="https://developer.ibm.com/tutorials/l-lpic1-104-5/" target="_blank" rel="noopener">IBM Developer: Prepare for LPIC-1 104.5, permissões e donos de arquivos</a> <span class="muted">(IBM, 2016)</span></li><li><a href="https://developer.ibm.com/tutorials/l-lpic1-105-1/" target="_blank" rel="noopener">IBM Developer: Prepare for LPIC-1 105.1, o ambiente do shell</a> <span class="muted">(IBM, 2022)</span></li><li><a href="https://developer.ibm.com/tutorials/l-lpic1-105-2/" target="_blank" rel="noopener">IBM Developer: Prepare for LPIC-1 105.2, scripts simples</a> <span class="muted">(IBM, 2016)</span></li><li><a href="https://developer.ibm.com/articles/au-sshsecurity/" target="_blank" rel="noopener">IBM Developer: Getting started with SSH security and configuration</a> <span class="muted">(IBM, 2014)</span></li><li><a href="https://developer.ibm.com/tutorials/d-learn-workings-git/" target="_blank" rel="noopener">IBM Developer: How Git works, branches, merges e colaboração</a> <span class="muted">(IBM, 2021)</span></li><li><a href="https://www.ibm.com/think/topics/pull-request" target="_blank" rel="noopener">IBM Think: What is a pull request?</a> <span class="muted">(IBM, sem data na página)</span></li></ul>
+    <h3>Fora da IBM</h3><ul><li><a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pipelines" target="_blank" rel="noopener">Microsoft Learn: about_Pipelines (PowerShell)</a> <span class="muted">(fora da IBM, documentação atual)</span></li><li><a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_environment_variables" target="_blank" rel="noopener">Microsoft Learn: about_Environment_Variables (PowerShell)</a> <span class="muted">(fora da IBM, documentação atual)</span></li><li><a href="https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse" target="_blank" rel="noopener">Microsoft Learn: OpenSSH no Windows (instalação e primeiro uso)</a> <span class="muted">(fora da IBM, documentação atual)</span></li><li><a href="https://git-scm.com/docs/gitignore" target="_blank" rel="noopener">Git: documentação oficial do gitignore</a> <span class="muted">(fora da IBM, documentação atual)</span></li></ul>
+    <div class="nota lembra"><span class="lbl">Não testado aqui</span>Não consegui rodar: um login real por SSH (nem <code>ssh-copy-id</code>, <code>ssh-agent</code> ou a instalação do cliente pelo <code>Add-WindowsCapability</code>), um pull request no GitHub (nem o <code>gh</code> ou a autenticação com o GitHub), a política de execução de scripts do PowerShell, gravar variável de ambiente permanente, permissões em um Linux de verdade (o Git Bash no Windows não se comporta igual), <code>git push --force</code>, <code>git cherry-pick</code> e a limpeza de histórico com <code>git filter-repo</code> ou BFG. Esses pontos aparecem no texto com o aviso. O que eu rodei de verdade em 06/11/2026, em pastas temporárias: rebase, revert, conflito de merge, <code>ssh-keygen</code> (Git Bash e PowerShell), remoto em pasta local, <code>.gitignore</code> criado pelo PowerShell e os comandos de processo e de curl.</div>
+  </section>
+
+  <footer class="rodape">Projeto de estudo. Complemento a partir de leitura e de testes; não é material de aula.</footer>
+</article>
+</body>
+</html>

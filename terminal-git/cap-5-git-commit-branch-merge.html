@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cap. 5: Git: commit, branch, merge e .gitignore | Apostila de Terminal e Git</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estudo.css">
+<script src="../assets/estudo.js"></script>
+<script src="capitulos.js"></script>
+<script src="demos/tg-core.js"></script>
+<script src="demos/cap-5.js"></script>
+</head>
+<body data-cap="5" data-root="../">
+<article class="paper">
+
+<header class="capa">
+  <div class="kicker">Capítulo 5 · Complemento</div>
+  <h1>Git: commit, branch, merge e .gitignore</h1>
+  <p class="sub">O histórico do projeto como uma linha de fotos, com branches para testar ideias e merge para juntar.</p>
+  <div class="meta"><span class="chip"><b>~45 min</b></span><span class="chip">1 demo · 3 testes · 4 flashcards</span><span class="chip">complemento, não foi dado em aula</span></div>
+  <span class="num">5</span>
+</header>
+
+<div class="recap rv"><b>Onde paramos</b>O capítulo 4 fechou o bloco do terminal. Falta o assunto que o terminal mais serve hoje: guardar o histórico dos arquivos e voltar atrás quando algo dá errado. Este capítulo, <b>complemento</b> como o resto, trata do Git local: commit, branch, merge e .gitignore.</div><div class="nota lembra"><span class="lbl">Complemento, não foi dado em aula</span>Este capítulo vem de leitura (tutoriais da IBM, documentação da Microsoft e do Git) e de comandos que eu rodei. Não é conteúdo de aula. Comandos que não consegui rodar aqui trazem o aviso <mark class="hl p">não testado aqui</mark>.</div><section class="sec" id="tres-lugares">
+  <h2><span class="sn">1</span>Os três lugares e o commit</h2>
+  <p class="gancho">Por que o Git pede <code>add</code> e <code>commit</code> separados? Não bastava salvar?</p>
+<p><b>Intuição.</b> Pense numa foto de grupo. Primeiro você <b>arruma quem vai aparecer</b> (o <code>add</code>), depois <b>aperta o botão</b> (o <code>commit</code>). O resultado é uma foto do projeto naquele momento, que fica guardada e dá para rever depois. Se você mudou 5 arquivos mas só 2 contam a mesma história, tira uma foto com 2 e outra com 3.</p><p><b>Definição.</b> Um repositório Git tem <b>três lugares</b>: a <b>pasta de trabalho</b> (os arquivos que você edita), a <b>área de preparação</b> (staging: o que vai entrar na próxima foto) e o <b>repositório</b> (a pasta escondida <code>.git</code>, onde as fotos ficam). Um <b>commit</b> é um registro de um estado do projeto, com identificador (hash), autor, mensagem e um ponteiro para o commit anterior (IBM Developer, tutorial de 2021).</p><div class="ex rv"><span class="t">Exemplo resolvido: do arquivo novo ao primeiro commit</span><div class="l"><div>Crio <code>notas.txt</code>. O <code>git status</code> o lista em <b>Untracked files</b>: o Git vê, mas ainda não acompanha.</div></div><div class="l"><div><code>git add notas.txt</code> põe o arquivo na área de preparação. O <code>git status -s</code> (versão curta) mostra <code>A  notas.txt</code>: A de <i>added</i>.</div></div><div class="l"><div><code>git commit -m "primeiro commit"</code> responde <code>1 file changed, 1 insertion(+)</code>: <b>1</b> arquivo, <b>1</b> linha nova. O <code>git log --oneline</code> mostra <b>1</b> commit, com hash curto de 7 caracteres.</div></div></div><pre><code><span class="k">$ </span>git init -b main                  <span class="c"># cria o repositório (a pasta .git); main é o nome da branch</span>
+Initialized empty Git repository in C:/Users/voce/estudo/projeto-git/.git/
+<span class="k">$ </span>git status
+On branch main
+
+No commits yet
+
+Untracked files:
+  (use "git add &lt;file&gt;..." to include in what will be committed)
+	notas.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+<span class="k">$ </span>git add notas.txt                 <span class="c"># arruma a foto</span>
+warning: in the working copy of 'notas.txt', LF will be replaced by CRLF the next time Git touches it
+<span class="k">$ </span>git status -s
+A  notas.txt
+<span class="k">$ </span>git commit -m "primeiro commit"   <span class="c"># aperta o botão</span>
+[main (root-commit) 8727806] primeiro commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 notas.txt
+<span class="k">$ </span>git log --oneline
+8727806 primeiro commit</code></pre><p class="muted">Nos exemplos, o Git sabia quem era o autor porque passei a identidade por variáveis de ambiente (nome fictício, e-mail de exemplo). No seu computador isso se configura uma vez com <code>git config --global user.name</code> e <code>git config --global user.email</code>; <mark class="hl p">não rodei esses dois no seu computador</mark>. No PowerShell os comandos <code>git</code> são exatamente os mesmos, porque o <code>git</code> é um programa e não um comando de shell.</p><div class="ex rv"><span class="t">Exemplo resolvido: ver a diferença antes de registrar</span><div class="l"><div>Acrescento a linha <code>nova</code> a um arquivo de 3 linhas. O <code>git diff</code> mostra a mudança: linhas com <code>+</code> entraram, com <code>-</code> saíram. Aqui apareceu <b>1</b> linha com <code>+nova</code>.</div></div><div class="l"><div><code>git restore notas.txt</code> desfaz a edição e volta ao último commit. O <code>git status -s</code> fica vazio.</div></div></div><pre><code><span class="k">$ </span>git diff
+diff --git a/notas.txt b/notas.txt
+index e2e365a..a7ce375 100644
+--- a/notas.txt
++++ b/notas.txt
+@@ -1,3 +1,4 @@
+ a
+ l2
+ l3
++nova
+<span class="k">$ </span>git restore notas.txt     <span class="c"># CUIDADO: descarta a edição que não foi commitada</span></code></pre><div class="nota erro"><span class="lbl">Erro comum</span>Dois tropeços. (1) Ver <code>warning: LF will be replaced by CRLF</code> e achar que quebrou tudo. Não é erro fatal: é o Git do Windows avisando que vai converter o fim de linha (configuração <code>core.autocrlf</code>). Não ignore sem entender se o seu time usa a mesma regra. (2) <b>Rodar <code>git restore</code> sem pensar</b>: ele descarta mudanças que não foram commitadas, e não há como recuperar.</div>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Já tiro fotos do projeto. E se eu quiser testar uma ideia sem estragar a versão que funciona?</div><p>Com branches e merge.</p></div>
+</section><section class="sec" id="branches">
+  <h2><span class="sn">2</span>Branches, HEAD e merge</h2>
+  <p class="gancho">Quero testar uma ideia sem arriscar a versão que funciona. Preciso copiar a pasta inteira?</p>
+<p><b>Intuição.</b> Não precisa copiar nada. Uma <b>branch</b> é só uma <b>etiqueta</b> colada num commit. Criar outra etiqueta é instantâneo. Quando você faz um commit novo, a etiqueta em que você está anda para a frente; as outras ficam onde estavam. O <b>HEAD</b> é o 'você está aqui': aponta para a branch atual.</p><p><b>Definição.</b> <code>git branch nome</code> cria a etiqueta; <code>git switch nome</code> muda para ela (<code>git switch -c nome</code> cria e muda). <code>git merge nome</code> junta o trabalho de <code>nome</code> na branch em que você está. Há dois resultados: <b>fast-forward</b> (a branch atual não andou, então o merge só move a etiqueta e <b>não cria commit</b>) ou <b>merge commit</b> (as duas andaram, então nasce um commit novo com <b>dois pais</b>). (IBM Developer, tutorial de 2021.)</p><div class="ex rv"><span class="t">Exemplo resolvido: os dois tipos de merge, com número</span><div class="l"><div><b>Cenário A, fast-forward.</b> Parto de 1 commit (<code>c1</code>). Crio <code>feature</code> e faço 2 commits nela (<code>c2</code>, <code>c3</code>). Volto para a main, que não andou, e faço <code>git merge feature</code>: a resposta é <code>Fast-forward</code>. Total: <b>3</b> commits, em linha reta, e <b>nenhum commit de merge</b>.</div></div><div class="l"><div><b>Cenário B, dois pais.</b> Mesmo começo, mas depois de voltar para a main eu faço o commit <code>c4</code> nela. Agora as duas branches andaram. O <code>git merge feature</code> cria o commit <code>c5</code> com <b>2 pais</b> (<code>c4</code> e <code>c3</code>). Total: <b>5</b> commits.</div></div><div class="l"><div>Na saída real do cenário B, o <code>git log --graph</code> desenha o losango: a linha da feature sai de <code>c1</code> e volta no commit de merge.</div></div></div><pre><code><span class="c"># Cenário A: fast-forward</span>
+<span class="k">$ </span>git merge feature
+Updating f4a794f..00d811c
+Fast-forward
+ notas.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+<span class="k">$ </span>git log --oneline --graph --all
+* 00d811c (HEAD -&gt; main, feature) c3: exercicio
+* bfc05a0 c2
+* f4a794f primeiro commit
+
+<span class="c"># Cenário B: as duas andaram, então nasce um commit de merge</span>
+<span class="k">$ </span>git merge feature -m "c5: junta feature"
+Merge made by the 'ort' strategy.
+ notas.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+<span class="k">$ </span>git log --oneline --graph --all
+*   2e19467 (HEAD -&gt; main) c5: junta feature
+|\
+| * 84a1923 (feature) c3: exercicio
+| * cb32ac7 c2
+* | 93b03f0 c4: so na main
+|/
+* bd48c22 primeiro commit</code></pre><p class="muted">Nas saídas reais acima, os hashes (como <code>2e19467</code>) vêm da minha execução e seriam outros no seu computador. Os nomes entre parênteses (<code>HEAD -&gt; main</code>, <code>feature</code>) o Git mostra quando a saída vai para um terminal; para reproduzir isso eu rodei com <code>--decorate</code>. Também encurtei as saídas: tirei os avisos de CRLF do Windows e as linhas de progresso que o Git imprime no terminal. Na demo, para ficar legível, os commits se chamam <code>c1</code>, <code>c2</code> e assim por diante. A mensagem do merge também é diferente: na demo, o Git de mentira escreve <code>Merge branch 'feature'</code>. Use um cenário pronto ou digite os seus comandos.</p><div class="demo" data-demo="gitGrafo"></div><h3>Quando o merge não consegue sozinho: conflito</h3><p>Se as duas branches mudaram a <b>mesma linha</b> do mesmo arquivo, o Git não sabe qual vale, e para. Ele escreve os dois lados no arquivo, entre marcadores, e espera você decidir. Rodei isso de verdade:</p><pre><code><span class="k">$ </span>git merge ajuste
+Auto-merging leia.txt
+CONFLICT (content): Merge conflict in leia.txt
+Automatic merge failed; fix conflicts and then commit the result.
+<span class="k">$ </span>git status -s
+UU leia.txt                          <span class="c"># UU: os dois lados mudaram</span>
+<span class="k">$ </span>cat leia.txt
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+titulo: Guia de Git                  <span class="c"># o que está na sua branch (main)</span>
+=======
+titulo: Git na pratica               <span class="c"># o que veio da outra branch (ajuste)</span>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; ajuste
+<span class="c"># edite o arquivo, deixe a versão final sem os marcadores, e então:</span>
+<span class="k">$ </span>git add leia.txt
+<span class="k">$ </span>git commit -m "resolve conflito"   <span class="c"># fecha o merge, com 2 pais como o cenário B</span></code></pre><div class="nota erro"><span class="lbl">Erro comum</span>Resolver o conflito às cegas com <code>git checkout --theirs</code> ou <code>--ours</code>, ou apagar os marcadores sem ler. Abra o arquivo, ache os <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, decida o texto final com a cabeça e só então faça o <code>git add</code> e o commit. Esquecer um marcador dentro do arquivo é um erro que costuma ir parar no repositório.</div><details class="cola"><summary>Complemento do complemento: rebase e revert (rodei um caso simples)</summary><div class="in-body"><p>O <b>rebase</b> reaplica os commits de uma branch em cima da ponta de outra, criando commits <i>novos</i> e deixando o histórico em linha reta. Num teste simples (a <code>main</code> com <code>m1</code> e <code>m2</code>, e uma branch <code>rb</code> que saiu de <code>m1</code> com o commit <code>r1</code>), o <code>git rebase main</code> respondeu <code>Successfully rebased and updated refs/heads/rb.</code> O <code>r1</code> trocou de hash (era <code>cee1e6c</code> e virou <code>f90b08b</code>, ou seja, é um commit novo) e o <code>git log --graph</code> ficou reto, com 3 commits e sem losango. A IBM alerta: <b>não reescreva commits que já foram enviados a outras pessoas</b>, porque o rebase troca os hashes. O <code>git revert --no-edit HEAD</code> faz o contrário de apagar: cria um commit novo que desfaz o anterior (rodei: saiu <code>[main bb731b5] Revert "r1"</code>, com <code>1 file changed, 1 deletion(-)</code>, e o commit original continua no log, logo abaixo). Não testei <code>cherry-pick</code>.</p></div></details>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">O Git guarda tudo que está na pasta. Mas e arquivos que nunca devem entrar, como senhas e chaves?</div><p>Com o .gitignore.</p></div>
+</section><section class="sec" id="gitignore">
+  <h2><span class="sn">3</span>.gitignore: o que nunca entra</h2>
+  <p class="gancho">Quase todo projeto tem um arquivo com senha ou chave, tipo um <code>.env</code>. Como garantir que ele nunca vá parar no GitHub?</p>
+<p><b>Intuição.</b> O <code>.gitignore</code> é uma lista de 'não quero que você nem olhe para isso'. O Git passa a fingir que esses arquivos não existem: eles não aparecem no <code>git status</code> e não entram no <code>git add</code> comum.</p><p><b>Definição.</b> É um arquivo de texto na raiz do repositório com um padrão por linha (<code>.env</code>, <code>logs/</code>, <code>*.log</code>). Vale só para arquivos que <b>ainda não estão sendo acompanhados</b>. Um arquivo já commitado continua acompanhado até você mandar o Git parar de acompanhá-lo. (Documentação oficial do Git.)</p><div class="ex rv"><span class="t">Exemplo resolvido: ignorar antes, e o que fazer se for tarde</span><div class="l"><div>Com <code>.env</code> e <code>logs/a.log</code> na pasta e um <code>.gitignore</code> com as linhas <code>.env</code> e <code>logs/</code>, o <code>git status -s</code> lista só <code>.gitignore</code> e <code>app.txt</code>: <b>2</b> arquivos. Os outros 2 ficaram invisíveis.</div></div><div class="l"><div><code>git check-ignore -v .env</code> mostra a regra responsável (<code>.gitignore:1:.env</code>). É a forma de tirar a dúvida 'por que o Git está ignorando isto?'.</div></div><div class="l"><div>O caso difícil: um arquivo <code>.env2</code> <b>já foi commitado</b>. Adiciono <code>.env2</code> ao <code>.gitignore</code> e edito o arquivo. O <code>git status -s</code> ainda mostra <code> M .env2</code> (modificado): continua acompanhado. Só <code>git rm --cached .env2</code> faz o Git parar de acompanhá-lo: ele imprime <code>rm '.env2'</code>, o status passa a <code>D  .env2</code> e o arquivo <b>continua na sua pasta</b>. Mas isso vale <b>daqui para a frente</b>: o conteúdo antigo continua nos commits que já existem (o <code>git show HEAD~1:.env2</code> do bloco abaixo mostra isso).</div></div></div><pre><code><span class="k">$ </span>cat .gitignore
+.env
+logs/
+<span class="k">$ </span>git status -s
+?? .gitignore
+?? app.txt
+<span class="k">$ </span>git check-ignore -v .env logs/a.log
+.gitignore:1:.env	.env
+.gitignore:2:logs/	logs/a.log
+
+<span class="c"># o caso difícil: o arquivo já foi commitado</span>
+<span class="k">$ </span>echo ".env2" &gt;&gt; .gitignore
+<span class="k">$ </span>echo mudou &gt;&gt; .env2
+<span class="k">$ </span>git status -s
+ M .env2                  <span class="c"># ainda acompanhado, apesar do .gitignore</span>
+?? .gitignore
+?? app.txt
+<span class="k">$ </span>git rm --cached .env2   <span class="c"># <span class="an" tabindex="0" data-t="tira do Git, mas não apaga o arquivo da pasta">--cached</span></span>
+rm '.env2'
+<span class="k">$ </span>git status -s
+D  .env2
+?? .gitignore
+?? app.txt
+<span class="k">$ </span>git commit -m "para de acompanhar o .env2"    <span class="c"># saída do commit omitida</span>
+<span class="k">$ </span>git show HEAD~1:.env2   <span class="c"># <span class="an" tabindex="0" data-t="o commit anterior ao da remoção">HEAD~1</span>: o conteúdo antigo continua no histórico</span>
+env2</code></pre><div class="nota erro"><span class="lbl">Erro comum</span>Achar que o <code>.gitignore</code> resolve um segredo que já foi commitado. <b>Não resolve</b>: o arquivo continua no histórico e em quem já baixou o repositório. Se uma senha ou chave de API foi parar num commit, trate como <b>vazada</b>: o passo obrigatório é <b>revogar ou trocar a credencial</b> (gerar outra e invalidar a antiga no serviço). O <code>git rm --cached</code> só tira o arquivo dos commits <i>futuros</i>: a chave continua no histórico e, se você já fez push, no remoto e em quem clonou (rodei: depois do <code>rm --cached</code> e do commit, o <code>git show</code> do commit anterior ainda mostrou o conteúdo). Apagar do histórico exige reescrevê-lo com <code>git filter-repo</code> ou com o BFG Repo-Cleaner e dar um <code>push --force</code>, o que reescreve o histórico de todo mundo que usa o repositório: <mark class="hl p">não testado aqui</mark>. Mesmo assim, troque a credencial, porque cópias antigas podem existir. (A parte de orientação é boa prática geral; o que eu medi foi o <code>git show</code>.)</div><p class="muted"><b>Cuidado ao criar o <code>.gitignore</code> pelo PowerShell 5.1.</b> Rodei (com um arquivo de teste no lugar do <code>.env</code>): <code>&quot;.env&quot; &gt; .gitignore</code> grava o arquivo em <b>UTF-16 LE</b> (bytes <code>255 254 46 0 101 0 ...</code>) e o Git <b>não o lê</b>: o <code>.env</code> continuou aparecendo como <code>??</code> e o <code>git check-ignore -v .env</code> não imprimiu nada. O <code>Out-File</code> sem opção faz o mesmo. É um risco real de commitar um segredo achando que ele estava ignorado. O que funcionou nos meus testes: <code>Set-Content .gitignore -Value &quot;.env&quot; -Encoding ascii</code> (também o <code>-Encoding utf8</code>, que no 5.1 grava com BOM e o Git aceitou), ou criar o arquivo pelo Git Bash com <code>echo .env &gt; .gitignore</code>. Depois de criar, <b>sempre</b> rode <code>git check-ignore -v .env</code> para confirmar. Fonte do <code>.gitignore</code>: documentação oficial do Git (não é da IBM; a IBM não tem tutorial de .gitignore nas páginas que li).</p>
+  <div class="ponte rv"><div class="t">Para onde vamos agora</div><div class="q">Meu repositório está só no meu computador. Como levo isso para o GitHub e trabalho com outras pessoas?</div><p>Com remotos, push e pull request, no capítulo 6.</p></div>
+</section><section class="sec" id="fechamento">
+  <h2><span class="sn">4</span>Fechamento do capítulo</h2>
+  <div class="resumo rv"><h3>Cola da prova</h3><ul><li>Três lugares: <b>pasta de trabalho</b> → (<code>git add</code>) → <b>staging</b> → (<code>git commit</code>) → <b>repositório</b>. Use <code>git status</code> antes e depois de cada passo.</li><li><b>Commit</b> = registro com hash, autor, mensagem e ponteiro para o anterior. <code>git log --oneline</code> lista; <code>git diff</code> mostra o que mudou.</li><li><b>Branch</b> é uma etiqueta num commit, não uma cópia. <b>HEAD</b> é onde você está. <code>git switch -c nome</code> cria e entra.</li><li><b>Merge</b>: fast-forward (sem commit novo, a atual não andou) ou merge commit (dois pais, as duas andaram). Cenário A = 3 commits; cenário B = 5 commits.</li><li>Conflito: os dois lados mudaram a mesma linha. Edite, <code>git add</code>, <code>git commit</code>.</li><li><code>.gitignore</code> só vale para o que ainda não é acompanhado. Se já foi commitado: <code>git rm --cached</code> tira só dos commits futuros; se era segredo, <b>revogue ou troque a credencial</b>, porque ele continua no histórico.</li></ul></div>
+  <h3>Teste rápido</h3>
+  <div class="quiz" data-ans="b"><span class="qt">Pergunta 1</span><p class="qq">A <code>main</code> não recebeu nenhum commit desde que a <code>feature</code> saiu dela. O que faz <code>git merge feature</code> na main?</p>
+    <div class="opts"><button data-k="a">Cria sempre um commit de merge com dois pais.</button><button data-k="b">Fast-forward: só move a etiqueta da main, sem commit novo.</button><button data-k="c">Apaga a branch feature.</button></div>
+    <div class="fb">Se a atual não andou, o histórico da feature é continuação direta dela. O Git só avança a etiqueta (fast-forward). O commit de merge com dois pais só nasce quando as duas andaram.</div></div><div class="quiz" data-ans="c"><span class="qt">Pergunta 2</span><p class="qq">Você adicionou <code>.env</code> ao <code>.gitignore</code>, mas ele já tinha sido commitado e continua aparecendo como modificado. O que resolve?</p>
+    <div class="opts"><button data-k="a">Nada: o .gitignore vale para qualquer arquivo.</button><button data-k="b">Reiniciar o computador.</button><button data-k="c"><code>git rm --cached .env</code> (vale daqui para a frente; se era segredo, troque-o também).</button></div>
+    <div class="fb">O .gitignore só vale para arquivos que ainda não são acompanhados. O <code>--cached</code> tira o arquivo do Git sem apagá-lo da pasta, mas o conteúdo antigo continua no histórico.</div></div><div class="quiz" data-ans="a"><span class="qt">Pergunta 3</span><p class="qq">Criar uma branch copia todos os arquivos do projeto?</p>
+    <div class="opts"><button data-k="a">Não: cria uma etiqueta apontando para um commit, o que é quase instantâneo.</button><button data-k="b">Sim, por isso branches grandes demoram.</button><button data-k="c">Só copia os arquivos que você modificou.</button></div>
+    <div class="fb">A branch é um ponteiro. Os arquivos só mudam de verdade quando você troca de branch e os commits são diferentes.</div></div><h3>Flashcards (clique para virar)</h3>
+  <div class="flash"><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Quais são os três lugares do Git?</b></span><span class="bk">Pasta de trabalho, área de preparação (staging) e repositório (.git). O add leva ao staging, o commit leva ao repositório.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>O que é uma branch?</b></span><span class="bk">Uma etiqueta que aponta para um commit. Criar outra é instantâneo, não é uma cópia da pasta.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Fast-forward x merge commit?</b></span><span class="bk">Fast-forward: a branch atual não andou, o Git só move a etiqueta. Merge commit: as duas andaram, nasce um commit com dois pais.</span></button><button class="fc" type="button"><span class="fr"><small>Pergunta</small><b>Como parar de acompanhar um arquivo já commitado?</b></span><span class="bk">Colocar no .gitignore E rodar git rm --cached arquivo. Só o .gitignore não basta. Isso vale daqui para a frente: o histórico antigo continua com o arquivo.</span></button></div><details class="cola"><summary>Fontes deste capítulo (complemento)</summary><div class="in-body"><p>Algumas fontes da IBM são de <b>2011 a 2022</b>. Os conceitos seguem valendo, mas flags, versões e detalhes de segurança (por exemplo, o tipo de chave de SSH) podem estar desatualizados. Confira no manual da sua versão.</p><ul><li><a href="https://developer.ibm.com/tutorials/d-learn-workings-git/" target="_blank" rel="noopener">IBM Developer: How Git works, branches, merges e colaboração</a> <span class="muted">(IBM, 2021)</span></li><li><a href="https://git-scm.com/docs/gitignore" target="_blank" rel="noopener">Git: documentação oficial do gitignore</a> <span class="muted">(fora da IBM, documentação atual)</span></li></ul><p class="muted">Nada aqui foi copiado: o texto é meu, a partir da leitura. Onde um comando está marcado como <b>não testado aqui</b>, eu não consegui rodar no meu ambiente.</p></div></details><div class="ponte rv"><div class="t">Para onde vamos agora · Capítulo 6</div><div class="q">Meu histórico está só no meu computador. Como levo isso para o GitHub e trabalho com outras pessoas?</div><p>Com remotos, push e pull request.</p></div>
+</section>
+
+</article>
+</body>
+</html>
