@@ -2,9 +2,11 @@
 
 Estado em 10/11/2026. Tudo o que está listado como publicado abaixo está no GitHub. O GitHub Pages **ainda não foi ligado**: é preciso ligar em Settings > Pages (Deploy from a branch, main, / root). O endereço esperado é https://guhlrezende.github.io/apostilas-fiap/ (confirmar abrindo).
 
-## Publicadas (12)
+## Publicadas (11)
 
-Machine Learning, Bancos de Dados e SQL, Python e Pensamento Computacional, Cibersegurança (com a Kill Chain), Cloud e AWS, Redes Neurais e Deep Learning, Estatística com R e Python, Gestão Ágil e Pitch, Sistemas Embarcados com ESP32, **Terminal e Git** (6 cap.), **Deploy e Hospedagem** (7 cap.) e **GitHub: como usar do jeito certo** (9 cap., `github-uso/`, geradores `scripts/construtor/gh*.py`, base `docs/referencias/github.md`, teste das demos em `scripts/testar_demos_github.js`). As três últimas passaram por revisão adversarial e correção antes do commit. Tudo que depende do site do GitHub (PR real, proteção de branch, Actions rodando, Pages) está marcado "não testado aqui" nos capítulos.
+Machine Learning, Bancos de Dados e SQL, Python e Pensamento Computacional, Cibersegurança (com a Kill Chain), Cloud e AWS, Redes Neurais e Deep Learning, Estatística com R e Python, Sistemas Embarcados com ESP32, **Terminal e Git** (6 cap.), **Deploy e Hospedagem** (7 cap.) e **GitHub: como usar do jeito certo** (9 cap., `github-uso/`, geradores `scripts/construtor/gh*.py`, base `docs/referencias/github.md`, teste das demos em `scripts/testar_demos_github.js`). As três últimas passaram por revisão adversarial e correção antes do commit. Tudo que depende do site do GitHub (PR real, proteção de branch, Actions rodando, Pages) está marcado "não testado aqui" nos capítulos.
+
+**Retirada em 10/11/2026:** a apostila "Gestão Ágil e Pitch" saiu das apostilas gerais, por ser matéria específica da faculdade ligada ao Challenge. Os arquivos estão no Vault (`areas/educacao/aulas/1TIAPR-2026/AI-challenges/anexos/apostila-gestao-agil-e-pitch/`), com os geradores. Não recriar aqui. Se o Scrum, o Kanban e o UML voltarem como apostila geral, escrever sem pitch e sem referência ao Challenge.
 
 ## Em andamento
 - **Temas visuais por apostila** (decisão: manter o fio comum do caderno e vestir cada tema por cima). Arquivos novos esperados: `assets/temas.css`, `scripts/construtor/temas.py`, `scripts/contraste_temas.py`, `docs/TEMAS.md`. **Integração ainda não feita**: pôr `data-tema` no `<html>` e o link das fontes nos geradores (`bld.py`), cartões do hub com a identidade de cada apostila, regenerar tudo, rodar `checar.py` e a `design-review` (celular 390px e tema escuro). Exige contraste mínimo 4,5:1.

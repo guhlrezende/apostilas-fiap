@@ -13,7 +13,6 @@ Apostilas interativas feitas a partir das aulas da faculdade. Cada aula vira um 
 | [Cloud e AWS](cloud-aws/index.html) | 7 | pronta localmente: modelos de nuvem, IAM, EC2, S3, RDS e Lambda, com custos e limites |
 | [Redes Neurais e Deep Learning](redes-neurais/index.html) | 8 | pronta localmente: do neurônio ao MLP, com redes treinando no navegador, mais deep learning e algoritmos genéticos |
 | [Estatística com R e Python](estatistica/index.html) | 6 | pronta localmente: pesquisa e amostra, variáveis, Python e R, descritiva e correlação (código em R não rodado aqui) |
-| [Gestão Ágil e Pitch](gestao-agil/index.html) | 6 | pronta localmente: Scrum, user story, Kanban e WIP, pitch e UML |
 | [Sistemas Embarcados com ESP32](embarcados/index.html) | 7 | pronta localmente: GPIO, LED, Serial, C++, botão e DHT22 (código C++ não compilado aqui) |
 
 ## Como cada capítulo é montado

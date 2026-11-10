@@ -250,7 +250,7 @@ def main():
                 card = t["cardD"]
                 base_hub = base_escuro
             ps = pares(tk, t["chip"])
-            decos = ["deco"] + (["c1"] if tid in ("gestao-agil", "python") else [])
+            decos = ["deco"] + (["c1"] if tid in ("python",) else [])
             ps += pares_decoracao(tk, decos)
             # cartao no hub: texto padrao do caderno sobre o cartao com a decoracao do tema
             if "deco" in card:

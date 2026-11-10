@@ -36,7 +36,6 @@ TEMAS = {
     "machine-learning": _t("Machine Learning", "#f9f7fd", "#12101e", "Space Grotesk", "🤖"),
     "redes-neurais": _t("Redes Neurais e Deep Learning", "#fbf6fb", "#140c1a", "Syne", "🧠"),
     "estatistica": _t("Estatística", "#fcfdff", "#10151f", "Fraunces", "📊"),
-    "gestao-agil": _t("Gestão Ágil e Pitch", "#fdfcf8", "#17171f", "Rubik", "🧭"),
     "embarcados": _t("Sistemas Embarcados com ESP32", "#f1f7f1", "#0a1710", "Oxanium", "🔌"),
     "python": _t("Python e Pensamento Computacional", "#fbfcfe", "#0f1a2a", "Fredoka", "🐍"),
 }
