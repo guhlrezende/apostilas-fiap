@@ -1,37 +1,31 @@
 # Próximos passos (retomar daqui)
 
-Estado em 19/10/2026. Nada foi enviado ao GitHub depois do primeiro commit (só a apostila de Machine Learning está publicada). Tudo o que está abaixo existe só no disco.
+Estado em 10/11/2026. Tudo o que está listado como publicado abaixo está no GitHub. O GitHub Pages **ainda não foi ligado**: é preciso ligar em Settings > Pages (Deploy from a branch, main, / root). O endereço esperado é https://guhlrezende.github.io/apostilas-fiap/ (confirmar abrindo).
 
-## Pronto, testado no navegador e ainda sem commit
+## Publicadas (12)
 
-| Apostila | Pasta | Capítulos | Observações |
-|---|---|---|---|
-| Bancos de Dados e SQL | `banco-de-dados/` | 8 | SQL real via sql.js (CDN). Bases em `bases.js`. Cap. 8 é complemento. |
-| Python e Pensamento Computacional | `python/` | 9 | Código rastreado (`trace`) gerado com `scripts/trace_python.py`. Cap. 9 é complemento. |
-| Cibersegurança | `ciberseguranca/` | 6 (+1 adiado) | Cap. 6 é complemento. O **cap. 7 (Kill Chain) está desligado** até o CP03 de Cyber vencer (26/10 23:59): depois disso, ponha `PUBLICAR_KILL_CHAIN = True` em `scripts/construtor/cy_manifest.py`, rode `cy_manifest.py` e `cy3.py` e ajuste `caps` em `data/apostilas.js`. Reusa a demo `inject` de `banco-de-dados/`. |
-| Cloud e AWS | `cloud-aws/` | 7 | Preços e limites hedged ("mudam"). |
-| Redes Neurais e Deep Learning | `redes-neurais/` | 8 | Resultados reais do scikit-learn em `rn-data.js`. Cap. 6 a 8 são complemento (backprop, deep learning, algoritmos genéticos). |
-| Estatística com R e Python | `estatistica/` | 6 | Cap. 3, 5 e 6 são complemento. O código em R foi **rodado no R 4.6.1** em 19/10 (resultados batem com o texto); os exemplos estão em `estatistica/exemplos/exemplos.R`, linkado no cap. 4. |
-| Gestão Ágil e Pitch | `gestao-agil/` | 6 | Sem nome de empresa parceira, professor ou colega. Limites de tempo dos eventos vêm do Guia do Scrum (complemento). |
-| Sistemas Embarcados com ESP32 | `embarcados/` | 7 | Código C++ **compilado** em 19/10 com PlatformIO (esp32dev, Arduino, DHT sensor library 1.4.6), sem erro; não testado em placa. Sem a solução do CP3 aberto (só os conceitos do DHT22). |
+Machine Learning, Bancos de Dados e SQL, Python e Pensamento Computacional, Cibersegurança (com a Kill Chain), Cloud e AWS, Redes Neurais e Deep Learning, Estatística com R e Python, Gestão Ágil e Pitch, Sistemas Embarcados com ESP32, **Terminal e Git** (6 cap.), **Deploy e Hospedagem** (7 cap.) e **GitHub: como usar do jeito certo** (9 cap., `github-uso/`, geradores `scripts/construtor/gh*.py`, base `docs/referencias/github.md`, teste das demos em `scripts/testar_demos_github.js`). As três últimas passaram por revisão adversarial e correção antes do commit. Tudo que depende do site do GitHub (PR real, proteção de branch, Actions rodando, Pages) está marcado "não testado aqui" nos capítulos.
 
-Antes de subir: `python scripts/checar.py` (passa hoje), `python scripts/serve.py`, conferir celular e tema escuro, e a revisão independente (feita em 19/10 por quatro subagentes; os achados confirmados de fato, regra e bug foram corrigidos). O README e o `data/apostilas.js` já listam todas como prontas.
+## Em andamento
+- **Temas visuais por apostila** (decisão: manter o fio comum do caderno e vestir cada tema por cima). Arquivos novos esperados: `assets/temas.css`, `scripts/construtor/temas.py`, `scripts/contraste_temas.py`, `docs/TEMAS.md`. **Integração ainda não feita**: pôr `data-tema` no `<html>` e o link das fontes nos geradores (`bld.py`), cartões do hub com a identidade de cada apostila, regenerar tudo, rodar `checar.py` e a `design-review` (celular 390px e tema escuro). Exige contraste mínimo 4,5:1.
+
+## Fila (nesta ordem)
+
+1. Integrar os temas e regenerar (acima).
+2. **Docker**: base em `docs/referencias/ibm-docker-containers.md`. Precisa do Docker Desktop aberto para rodar build, run, volume e compose de verdade. Sem isso, nenhum exemplo pode aparecer como testado.
+3. **Angular e Front-end**: base em `docs/referencias/ibm-frontend-angular.md` (angular.dev, versão 22). Criar projeto de teste em pasta temporária e rodar os exemplos; atenção ao espaço em disco (`node_modules`).
+4. **Capítulos de complemento nas apostilas existentes**, a partir de `docs/referencias/ibm-complementos-existentes.md` e `kdnuggets-complementos.md`. Usar só o conceito dos artigos de blog e refazer exemplo e código rodando antes. Itens mais valiosos: ML (vazamento por engenharia de atributos, validação cruzada estratificada/por grupo/temporal, métricas de classificação, regularização, MLOps), BD (funções de janela, OLTP x OLAP, modelagem dimensional, NoSQL e CAP), Cloud (serverless, multicloud), Cyber (zero trust, NIST CSF, resposta a incidentes), Estatística (pressupostos da regressão, multicolinearidade), Embarcados (UART/SPI/I2C, ADC).
+5. Pendências de baixa prioridade da revisão de 19/10: quizzes de Cyber e Cloud em que a opção certa é a mais longa; `aria-live` nas áreas de resposta das demos; teclado nas linhas da demo "ponte" do BD; Tab capturado no editor de SQL.
 
 ## Regras que valem para todas
 
-- Repositório **público**: sem nome completo, RM, e-mail pessoal, nome de professor ou de colega, nem a empresa do Challenge. Sem solução de trabalho com prazo aberto (CP03 de Python, CP03 de Cyber, CP3 do AICSS, entre outros).
+- Repositório **público**: sem nome completo, RM, e-mail pessoal, nome de professor ou de colega, nem a empresa do Challenge. Sem solução de trabalho com prazo aberto (Sprint 2 do Challenge até 30/11, CP3 de ML e de Redes Neurais, Sprint Retrô).
 - Sem travessão no texto. Fio condutor em todo capítulo (`recap`, `gancho`, `ponte`). Todo número do texto tem de bater com o que a demo mostra.
-- Os capítulos são gerados por scripts em `scripts/construtor/` (um `bld.py` com as funções `chapter`, `hub` e `manifest`, mais um arquivo por apostila). Depois de gerados, **dá para editar o HTML direto**. Para rodar um gerador: `cd scripts/construtor && python py1.py` (use `python` e não `python -I`, por causa dos imports locais).
-- `scripts/trace_python.py` executa um trecho de Python e produz o passo a passo do componente `trace`.
-- Um hook do projeto bloqueia a escrita de travessão pela ferramenta de edição.
+- **Fatos sobre produto e plataforma só com fonte lida e data.** Preço, plano gratuito e limite sem página oficial lida viram "confira na página oficial". Comando mostrado como saída real tem de ter sido rodado; o resto fica "não testado aqui", visível no texto.
+- Lições das revisões: no PowerShell 5.1 limpo o `>` grava UTF-16 (quebra `.gitignore`; use `Set-Content -Encoding ascii`); `git rm --cached` não tira segredo do histórico (revogar a credencial primeiro); `git revert` de merge exige `-m 1`.
+- Geradores em `scripts/construtor/` (um `bld.py` com `chapter`, `hub` e `manifest`, mais arquivos por apostila). Edite o gerador e rode de novo, não só o HTML. Rode com `python` (não `-I`). Verificar sempre: `python scripts/checar.py`.
+- Commit e push só quando o dono do repo mandar.
 
-## Pendências já conhecidas
+## Ferramentas e ambiente
 
-- **Prazos abertos** que a apostila não pode antecipar: CP03 de Python (20/10), CP3 de AICSS (21/10), CP03 de Cyber (26/10). `scripts/checar.py` já barra alguns termos.
-- Da revisão de 19/10, **não** corrigido (baixa prioridade): quizzes de Cyber e Cloud em que a opção certa é a mais longa; `.ponte` só no fim de cada capítulo (e não de cada seção); `aria-live` nas áreas de resposta das demos; teclado nas linhas da demo "ponte" do BD; Tab capturado no editor de SQL.
-- Os exercícios dos slides de BD (cap. 4 seção 5 e cap. 7) trazem solução: conferir se algum vale como entrega com prazo aberto.
-- Código **R** e **C++** foram verificados em 19/10 (R 4.6.1 + readxl, PlatformIO 6.2.0). Ferramentas instaladas no PC: R, RStudio, PlatformIO Core (`python -m platformio`). O C++ só foi compilado; falta rodar na placa/Wokwi.
-
-- Os testes automáticos do painel de preview só disparam as demos depois de um quadro renderizado. Para testar, chame `Estudo.demos.x(el)` à mão.
-- Quando chegar a próxima aula de uma disciplina, a nota vira capítulo novo: copie o último gerador de `scripts/construtor/` como base.
-- Ativar o GitHub Pages só se o Gustavo pedir.
+R 4.6.1, RStudio, PlatformIO (`python -m platformio`), Node 24, Python 3.13, Git 2.56 e `gh` 2.101. O disco C: está com pouco espaço livre (cerca de 12 GB): cuidado com Docker e `node_modules`.
