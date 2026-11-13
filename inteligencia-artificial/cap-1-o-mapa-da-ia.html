@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O mapa da IA | Inteligência Artificial</title>
+<script>
+  /* Aplica o tema salvo antes de pintar, para não piscar */
+  try { var t = localStorage.getItem("ia:tema"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) { }
+</script>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/ia.css">
+<link rel="preload" href="assets/fontes/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fontes/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="com-mapa" data-cap="1">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <button class="btn-icone so-celular" id="btnMapa" type="button" aria-label="Abrir o mapa da trilha" aria-expanded="false" aria-controls="mapa">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="marca" href="index.html"><b>Inteligência Artificial</b><span>Trilha completa</span></a>
+  <div class="espaco"></div>
+  <button class="btn-icone" id="btnTema" type="button" aria-label="Mudar para o tema escuro" aria-pressed="false">
+    <svg class="ico-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+  <div class="progresso" aria-hidden="true"><i></i></div>
+</header>
+
+<nav id="mapa" aria-label="Mapa da trilha"></nav>
+<div id="mapaFundo" aria-hidden="true"></div>
+
+<main class="pagina" id="conteudo">
+  <article class="leitura">
+    <header class="cabeca">
+      <div class="rotulo"><span class="parte">Parte 1: entender</span><span>Capítulo 1</span><span>30 min</span></div>
+      <h1>O mapa da IA</h1>
+      <p class="lide">Antes de treinar qualquer coisa, vale saber o que existe no território: duas formas de construir um sistema inteligente, alguns marcos da história, o que se chama hoje de IA generativa e de agente, e onde esse tipo de programa costuma acertar ou errar.</p>
+      <div class="meta"><span class="rotulo">Complemento, não foi dado em aula</span><span class="rotulo">Python no navegador</span></div>
+    </header>
+
+    <div class="recap"><p>Este é o primeiro capítulo da trilha, então não há nada para retomar. O que você precisa trazer é Python básico: listas, dicionários, laços e funções. O resto a gente monta aqui, com um experimento que roda no próprio navegador.</p></div>
+
+    <h2 id="s1"><span class="nsec">1.1</span>Duas ideias de inteligência artificial</h2>
+    <p class="gancho">Dá para fazer um programa decidir bem escrevendo todas as regras, ou mostrando exemplos e deixando que ele descubra as regras?</p>
+
+    <h3>Intuição</h3>
+    <p>Imagine que você precisa separar mensagens de clientes em elogios e reclamações. A primeira saída é sentar e escrever a regra: se aparecer “péssimo”, é reclamação; se aparecer “ótimo”, é elogio. Funciona até o dia em que alguém escreve “não achei ótimo” ou usa uma palavra que você não previu. A segunda saída é separar um monte de mensagens já classificadas por pessoas e pedir que o programa descubra sozinho quais palavras costumam vir com cada lado. Você não escreve a regra, você escolhe os exemplos.</p>
+
+    <h3>Definição</h3>
+    <p>Na primeira ideia, a regra é escrita à mão por uma pessoa e o programa só a executa. Na segunda, o programa recebe exemplos já com a resposta certa, que se chama <button type="button" class="termo" data-def="Rótulo: a resposta certa que acompanha um exemplo, como a classe &quot;elogio&quot; ou &quot;reclamação&quot; escrita ao lado de uma frase.">rótulo</button>, e produz a regra por conta própria. Essa regra descoberta é o que se chama de modelo, e o processo de descobri-la é o treino. Boa parte dos sistemas de que mais se fala hoje pertence à segunda família. A primeira não sumiu: continua sendo a melhor escolha quando a regra é clara, curta e não muda.</p>
+
+    <figure class="fig" aria-labelledby="fig1">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 170" role="img" aria-label="Duas linhas de fluxo. Em cima: entrada, regras escritas à mão, saída. Embaixo: exemplos com rótulo, modelo que aprende, saída.">
+        <defs><marker id="ponta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--color-text-secondary)"/></marker></defs>
+        <text class="t2" x="8" y="18">Regras escritas à mão</text>
+        <rect class="caixa" x="8" y="28" width="120" height="44" rx="6"/><text class="t" x="68" y="55" text-anchor="middle">entrada</text>
+        <rect class="caixa dest" x="260" y="28" width="120" height="44" rx="6"/><text class="t" x="320" y="55" text-anchor="middle">regras</text>
+        <rect class="caixa" x="512" y="28" width="120" height="44" rx="6"/><text class="t" x="572" y="55" text-anchor="middle">saída</text>
+        <path class="seta" d="M130 50H256"/><path class="seta" d="M382 50H508"/>
+        <text class="t2" x="8" y="104">Aprender com exemplos</text>
+        <rect class="caixa" x="8" y="114" width="120" height="44" rx="6"/><text class="t" x="68" y="141" text-anchor="middle">exemplos</text>
+        <rect class="caixa dest" x="260" y="114" width="120" height="44" rx="6"/><text class="t" x="320" y="141" text-anchor="middle">modelo</text>
+        <rect class="caixa" x="512" y="114" width="120" height="44" rx="6"/><text class="t" x="572" y="141" text-anchor="middle">saída</text>
+        <path class="seta" d="M130 136H256"/><path class="seta" d="M382 136H508"/>
+      </svg></div>
+      <figcaption id="fig1"><b>Fig. 1</b>Em cima, uma pessoa escreve a regra que leva da entrada à saída. Embaixo, os exemplos rotulados produzem o modelo, e é o modelo que passa a fazer o papel da regra.</figcaption>
+    </figure>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Vamos aprender com oito frases curtas inventadas, quatro de elogio e quatro de reclamação. A ideia mais simples possível é contar: para cada palavra, quantas vezes ela apareceu em frases de cada classe. Para classificar uma frase nova, somamos as contagens de cada palavra, uma soma por classe, e escolhemos a classe com mais pontos. Se der empate, ficamos com “elogio”, uma escolha nossa, só para o programa ser previsível.</p>
+<pre class="codigo" tabindex="0" aria-label="As oito frases de exemplo e seus rótulos">exemplos = [
+    ("adorei o produto", "elogio"),
+    ("atendimento ótimo e rápido", "elogio"),
+    ("muito bom recomendo", "elogio"),
+    ("entrega rápida produto ótimo", "elogio"),
+    ("produto chegou quebrado", "reclamacao"),
+    ("atendimento péssimo e lento", "reclamacao"),
+    ("muito ruim não recomendo", "reclamacao"),
+    ("entrega lenta produto ruim", "reclamacao"),
+]</pre>
+    <p>Teste com “atendimento rápido”. A palavra “atendimento” aparece uma vez em cada classe: 1 ponto para elogio e 1 para reclamação. A palavra “rápido” aparece uma vez entre os elogios e nenhuma entre as reclamações: mais 1 para elogio e 0 para reclamação. Total: 2 pontos de elogio contra 1 de reclamação, então a frase é um elogio. Esse é o mecanismo inteiro. O que chamamos de modelo aqui é a tabela de contagens, e ela saiu dos exemplos, não da nossa cabeça.</p>
+
+    <h3>Código comentado</h3>
+    <p>Primeiro a etapa de aprender, em cima de uma lista chamada <code>exemplos</code> com pares de frase e rótulo. As duas últimas linhas conferem os números do parágrafo anterior.</p>
+<pre class="codigo"><span class="c"># 1) Aprender: contar quantas vezes cada palavra aparece em cada classe</span>
+contagens = {<span class="s">"elogio"</span>: {}, <span class="s">"reclamacao"</span>: {}}
+<span class="k">for</span> frase, classe <span class="k">in</span> exemplos:
+    <span class="k">for</span> palavra <span class="k">in</span> frase.split():
+        contagens[classe][palavra] = contagens[classe].get(palavra, <span class="n">0</span>) + <span class="n">1</span>
+
+<span class="c"># Conferindo a mão: "atendimento" e "rápido" nas duas classes</span>
+<span class="k">print</span>(contagens[<span class="s">"elogio"</span>][<span class="s">"atendimento"</span>], contagens[<span class="s">"reclamacao"</span>][<span class="s">"atendimento"</span>])
+<span class="k">print</span>(contagens[<span class="s">"elogio"</span>].get(<span class="s">"rápido"</span>, <span class="n">0</span>), contagens[<span class="s">"reclamacao"</span>].get(<span class="s">"rápido"</span>, <span class="n">0</span>))</pre>
+<div class="saida" aria-label="Saída do código">1 1
+1 0</div>
+    <p>Agora a etapa de classificar. Note que a função só consulta a tabela e soma: o “conhecimento” está nas contagens, não no código da função.</p>
+<pre class="codigo"><span class="c"># 2) Classificar: somar os pontos de cada classe e escolher a maior</span>
+<span class="k">def</span> classificar(frase, contagens):
+    pontos = {<span class="s">"elogio"</span>: <span class="n">0</span>, <span class="s">"reclamacao"</span>: <span class="n">0</span>}
+    <span class="k">for</span> palavra <span class="k">in</span> frase.split():
+        <span class="k">for</span> classe <span class="k">in</span> pontos:
+            pontos[classe] += contagens[classe].get(palavra, <span class="n">0</span>)
+    <span class="k">if</span> pontos[<span class="s">"reclamacao"</span>] &gt; pontos[<span class="s">"elogio"</span>]:
+        <span class="k">return</span> <span class="s">"reclamacao"</span>
+    <span class="k">return</span> <span class="s">"elogio"</span>   <span class="c"># empate vai para "elogio"</span>
+
+<span class="k">print</span>(classificar(<span class="s">"atendimento rápido"</span>, contagens))
+<span class="k">print</span>(classificar(<span class="s">"entrega lenta e quebrado"</span>, contagens))
+<span class="k">print</span>(classificar(<span class="s">"produto"</span>, contagens))</pre>
+<div class="saida" aria-label="Saída do código">elogio
+reclamacao
+elogio</div>
+    <p>Os três resultados batem com a conta feita à mão. “Produto” aparece duas vezes em cada classe, daí o empate e o desempate para elogio.</p>
+
+    <h3>Erro comum</h3>
+    <p>Chamar isso de “entender” a frase. O programa só conta palavras e não enxerga ordem nem negação. Veja o que ele faz com uma frase que qualquer pessoa leria como reclamação:</p>
+<pre class="codigo"><span class="k">print</span>(classificar(<span class="s">"não é bom"</span>, contagens))</pre>
+<div class="saida" aria-label="Saída do código">elogio</div>
+    <p>“Não” puxou um ponto para reclamação, “bom” puxou um ponto para elogio, deu empate e o empate foi para elogio. O modelo não está “errando de propósito”: ele só tem contagens de palavras. Isso vale para modelos muito maiores, em escala diferente: eles acertam quando o padrão apareceu muito nos exemplos e falham de formas que surpreendem quando o caso foge do que viram. E acertar nas frases usadas para aprender não prova nada, o teste honesto é com frases novas.</p>
+
+    <aside class="nota margem" aria-label="Nota de margem">
+      <span class="rotulo">Nota</span>
+      <p>Este contador de palavras é uma versão enxuta de uma família de métodos de classificação de texto que o Capítulo 3 vai tratar com cuidado, incluindo como medir se acertam.</p>
+    </aside>
+
+    <section class="experimento" data-ex="ia-1-1" aria-labelledby="exp1">
+      <header>
+        <div class="rotulo">Experimento 1.1</div>
+        <h3 id="exp1">Classificar frases com a tabela de contagens</h3>
+      </header>
+      <div class="enunciado"><p>A função <code>aprender</code> já está pronta e monta a tabela a partir da lista <code>exemplos</code> (as oito frases acima, já carregadas). Complete <code>classificar</code>: some os pontos de cada classe e devolva a que tiver mais. Em caso de empate, devolva <code>"elogio"</code>. Use os rótulos sem acento, <code>"elogio"</code> e <code>"reclamacao"</code>.</p></div>
+      <script type="text/plain" class="py-preparo">
+exemplos = [
+    ("adorei o produto", "elogio"),
+    ("atendimento ótimo e rápido", "elogio"),
+    ("muito bom recomendo", "elogio"),
+    ("entrega rápida produto ótimo", "elogio"),
+    ("produto chegou quebrado", "reclamacao"),
+    ("atendimento péssimo e lento", "reclamacao"),
+    ("muito ruim não recomendo", "reclamacao"),
+    ("entrega lenta produto ruim", "reclamacao"),
+]
+</script>
+      <script type="text/plain" class="py-inicial">
+def aprender(exemplos):
+    contagens = {"elogio": {}, "reclamacao": {}}
+    for frase, classe in exemplos:
+        for palavra in frase.split():
+            contagens[classe][palavra] = contagens[classe].get(palavra, 0) + 1
+    return contagens
+
+
+def classificar(frase, contagens):
+    pontos = {"elogio": 0, "reclamacao": 0}
+    for palavra in frase.split():
+        # escreva aqui: some, em pontos, quantas vezes a palavra
+        # apareceu em cada classe (use .get(palavra, 0))
+        pass
+    # devolva a classe com mais pontos; no empate, "elogio"
+    return "elogio"
+
+
+contagens = aprender(exemplos)
+print(classificar("entrega lenta e quebrado", contagens))
+</script>
+      <script type="text/plain" class="py-teste">
+c = aprender(exemplos)
+verificar(classificar("atendimento rápido", c) == "elogio", "'atendimento rápido' tem 2 pontos de elogio contra 1 de reclamação: o esperado é elogio.")
+verificar(classificar("entrega lenta e quebrado", c) == "reclamacao", "'entrega lenta e quebrado' deveria ser reclamacao (escreva sem acento, igual aos rótulos).")
+verificar(classificar("péssimo e lento", c) == "reclamacao", "'péssimo e lento' só aparece em reclamações.")
+verificar(classificar("produto", c) == "elogio", "'produto' aparece 2 vezes em cada classe: empate, e o empate vai para elogio.")
+verificar(classificar("banana", c) == "elogio", "Palavra que nunca apareceu vale 0 para as duas classes: empate, vai para elogio. Use .get(palavra, 0).")
+verificar(classificar("", c) == "elogio", "Frase vazia não deve dar erro: empate em zero, vai para elogio.")
+verificar(saida.strip() == "reclamacao", "Imprima o resultado de classificar('entrega lenta e quebrado', contagens): deve aparecer reclamacao.")
+</script>
+      <script type="text/plain" class="py-solucao">
+def aprender(exemplos):
+    contagens = {"elogio": {}, "reclamacao": {}}
+    for frase, classe in exemplos:
+        for palavra in frase.split():
+            contagens[classe][palavra] = contagens[classe].get(palavra, 0) + 1
+    return contagens
+
+
+def classificar(frase, contagens):
+    pontos = {"elogio": 0, "reclamacao": 0}
+    for palavra in frase.split():
+        for classe in pontos:
+            pontos[classe] += contagens[classe].get(palavra, 0)
+    if pontos["reclamacao"] > pontos["elogio"]:
+        return "reclamacao"
+    return "elogio"
+
+
+contagens = aprender(exemplos)
+print(classificar("entrega lenta e quebrado", contagens))
+</script>
+      <template class="dica"><p>Dentro do laço, para cada palavra, você precisa olhar as duas classes. Um segundo laço sobre <code>pontos</code> resolve.</p></template>
+      <template class="dica"><p>Palavra que nunca apareceu não pode dar erro. Em vez de <code>contagens[classe][palavra]</code>, use <code>contagens[classe].get(palavra, 0)</code>.</p></template>
+      <template class="dica"><p>Depois do laço, compare <code>pontos["reclamacao"]</code> com <code>pontos["elogio"]</code>. Só devolva reclamação se ela for estritamente maior.</p></template>
+    </section>
+
+    <h2 id="s2"><span class="nsec">1.2</span>Uma linha do tempo curta e honesta</h2>
+    <p class="gancho">De onde veio tudo isso, e quais datas dá para afirmar sem chute?</p>
+    <p>O que segue é um recorte de sete marcos, escolhidos porque dá para conferir cada um numa fonte aberta. Não é a história completa da área, e muita coisa importante ficou de fora de propósito.</p>
+
+    <figure class="fig larga" aria-labelledby="fig2">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 940 210" role="img" aria-label="Linha do tempo com sete marcos: 1950, artigo de Turing sobre o jogo da imitação; 1955 e 1956, proposta e verão de Dartmouth; 1958, perceptron de Rosenblatt; 1997, Deep Blue contra Kasparov; 2012, rede convolucional no ImageNet; 2016, AlphaGo contra Lee Sedol; 2017, artigo do Transformer.">
+        <path class="seta" d="M20 100H920"/>
+        <circle class="caixa dest" cx="70" cy="100" r="7"/>
+        <circle class="caixa dest" cx="203" cy="100" r="7"/>
+        <circle class="caixa dest" cx="336" cy="100" r="7"/>
+        <circle class="caixa dest" cx="469" cy="100" r="7"/>
+        <circle class="caixa dest" cx="602" cy="100" r="7"/>
+        <circle class="caixa dest" cx="735" cy="100" r="7"/>
+        <circle class="caixa dest" cx="868" cy="100" r="7"/>
+        <text class="t" x="70" y="76" text-anchor="middle">1950</text>
+        <text class="t2" x="70" y="132" text-anchor="middle">Turing e o</text><text class="t2" x="70" y="148" text-anchor="middle">jogo da imitação</text>
+        <text class="t" x="203" y="76" text-anchor="middle">1955 e 1956</text>
+        <text class="t2" x="203" y="132" text-anchor="middle">proposta e verão</text><text class="t2" x="203" y="148" text-anchor="middle">de Dartmouth</text>
+        <text class="t" x="336" y="76" text-anchor="middle">1958</text>
+        <text class="t2" x="336" y="132" text-anchor="middle">perceptron de</text><text class="t2" x="336" y="148" text-anchor="middle">Rosenblatt</text>
+        <text class="t" x="469" y="76" text-anchor="middle">1997</text>
+        <text class="t2" x="469" y="132" text-anchor="middle">Deep Blue</text><text class="t2" x="469" y="148" text-anchor="middle">contra Kasparov</text>
+        <text class="t" x="602" y="76" text-anchor="middle">2012</text>
+        <text class="t2" x="602" y="132" text-anchor="middle">rede convolucional</text><text class="t2" x="602" y="148" text-anchor="middle">no ImageNet</text>
+        <text class="t" x="735" y="76" text-anchor="middle">2016</text>
+        <text class="t2" x="735" y="132" text-anchor="middle">AlphaGo contra</text><text class="t2" x="735" y="148" text-anchor="middle">Lee Sedol</text>
+        <text class="t" x="868" y="76" text-anchor="middle">2017</text>
+        <text class="t2" x="868" y="132" text-anchor="middle">artigo do</text><text class="t2" x="868" y="148" text-anchor="middle">Transformer</text>
+        <text class="t2" x="470" y="190" text-anchor="middle">Espaçamento igual entre marcos: a escala de tempo não é proporcional.</text>
+      </svg></div>
+      <figcaption id="fig2"><b>Fig. 2</b>Sete marcos conferidos em fontes abertas. O espaço entre os pontos é igual só para caber na figura, não representa a distância real em anos.</figcaption>
+    </figure>
+
+    <p>Em outubro de 1950, Alan Turing publicou na revista <i>Mind</i> o artigo “Computing Machinery and Intelligence”, que propõe o chamado jogo da imitação. A proposta de um projeto de verão no Dartmouth College, assinada por McCarthy, Minsky, Rochester (da IBM) e Shannon (da Bell Telephone Laboratories), é datada de 31 de agosto de 1955 e prevê dois meses de estudo no verão de 1956. As palavras “artificial intelligence” estão no título dela. Um cuidado: a página que li não permite afirmar que foi ali a primeira vez que o termo apareceu, então não vou afirmar.</p>
+    <p>Em julho de 1958, segundo uma matéria da Cornell, a Office of Naval Research dos Estados Unidos apresentou o perceptron, de Frank Rosenblatt, psicólogo e engenheiro de projeto no Cornell Aeronautical Laboratory, em Buffalo. A demonstração usou um computador IBM 704 alimentado com cartões perfurados: depois de 50 tentativas, a máquina aprendeu a distinguir cartões marcados à esquerda dos marcados à direita. É um exemplo pequeno do que a seção 1.1 mostrou, aprender uma regra a partir de exemplos em vez de recebê-la pronta. A matéria que li não cita o título nem a revista do artigo de 1958, então não vou citá-los.</p>
+    <p>Em maio de 1997, em Nova York, o computador Deep Blue, da IBM, venceu Garry Kasparov por 3,5 a 2,5 em seis partidas. Não confunda com o encontro do ano anterior, em 1996, que Kasparov tinha vencido por 4 a 2. Em 2012, um artigo de Krizhevsky, Sutskever e Hinton, apresentado na conferência NIPS, descreveu uma rede neural convolucional profunda para classificar imagens do ImageNet, com erro de 18,9% nas cinco melhores respostas (top-5) e 39,7% na melhor resposta (top-1). Não vou comparar com o segundo colocado da competição porque não consegui conferir essa margem. Em março de 2016, em Seul, o AlphaGo, sistema da DeepMind (Google), venceu o jogador Lee Sedol por 4 a 1, segundo a página da própria DeepMind. E em 12 de junho de 2017 foi submetido ao arXiv o artigo “Attention Is All You Need”, tendo Ashish Vaswani como primeiro autor e mais sete coautores, que apresenta a arquitetura chamada Transformer.</p>
+    <p>Repare que são marcos de tipos bem diferentes: uma pergunta filosófica, uma proposta de estudo com “artificial intelligence” no título, uma máquina que aprende a separar cartões, vitórias em confrontos contra campeões, um resultado em reconhecimento de imagens e uma arquitetura de rede. Foi um recorte, e outros marcos ficam para quem quiser pesquisar. O Transformer, o último da lista, volta no Capítulo 8, onde ele deixa de ser um nome e vira código.</p>
+
+    <h2 id="s3"><span class="nsec">1.3</span>IA generativa</h2>
+    <p class="gancho">Se aprender com exemplos serve para dizer “elogio” ou “reclamação”, o que muda quando o programa passa a produzir o texto?</p>
+    <p>Uma definição citada com frequência vem da IBM, e vale lembrar que é a definição de uma empresa, não de um órgão de normalização. Em resumo, ela diz que IA generativa é um tipo de inteligência artificial capaz de criar conteúdo original, como texto, imagem, vídeo, áudio ou código, em resposta a um pedido da pessoa. Para isso, usa modelos de <button type="button" class="termo" data-def="Aprendizado profundo: família de modelos formada por muitas camadas de cálculo em sequência, que aprende padrões diretamente de grandes volumes de dados.">aprendizado profundo</button> que identificam padrões em grandes volumes de dados e os usam para gerar conteúdo novo. A página que li foi publicada em 22/03/2024 e atualizada em 02/10/2026.</p>
+    <p>A ideia de fundo é a mesma da seção 1.1, só que a saída deixou de ser uma etiqueta. Em vez de um dentre dois rótulos, o modelo produz uma sequência: uma palavra depois da outra, ou uma imagem inteira. Em geral ele faz isso com base em padrões que aprendeu nos exemplos, e não consultando uma base de fatos. Essa diferença explica por que o resultado costuma soar convincente e, ao mesmo tempo, pode estar errado. A IA generativa chegou ao grande público, mas não vou dar data nem nome de produto, porque não conferi nenhum numa fonte oficial.</p>
+    <p>Esta seção é só o mapa. Os capítulos 7 a 10 abrem essa caixa: como o texto vira números, como a atenção funciona, como um modelo desses é treinado e ajustado, e por que ele erra com segurança.</p>
+
+    <h2 id="s4"><span class="nsec">1.4</span>Agentes</h2>
+    <p class="gancho">Agente é só um nome da moda para um programa com vários passos, ou existe uma diferença de verdade?</p>
+    <p>Existe, e uma distinção bem útil vem de um texto da Anthropic publicado em 19/12/2024. Ambos os casos são chamados de <button type="button" class="termo" data-def="Sistema agêntico: termo que a fonte usa para abranger tanto workflows (caminho definido antes no código) quanto agentes (o próprio modelo decide o caminho).">sistemas agênticos</button>. Num workflow, modelos e ferramentas são orquestrados por caminhos de código definidos antes: a ordem dos passos está escrita no programa. Num agente, é o próprio modelo que decide, passo a passo, como seguir e quais ferramentas usar, mantendo o controle de como cumpre a tarefa.</p>
+    <p>A parte mais valiosa do texto é a recomendação: busque a solução mais simples possível e só aumente a complexidade quando for necessário, o que pode significar não construir sistema agêntico nenhum. Agentes tendem a trocar latência e custo por desempenho, e em muitos casos uma única chamada ao modelo, com informação recuperada e alguns exemplos no contexto, já resolve. Então a pergunta antes de montar um agente é: o caminho dos passos é conhecido de antemão? Se for, um workflow, ou até uma chamada só, costuma ser mais barato e mais rápido, porque agentes tendem a trocar latência e custo por desempenho. Agente faz sentido quando o caminho não dá para prever, e quando você aceita pagar mais por isso.</p>
+
+    <aside class="nota margem" aria-label="Nota de margem">
+      <span class="rotulo">Ressalva</span>
+      <p>O próprio texto avisa que parte do ferramental descrito mudou desde dezembro de 2024. A distinção entre workflow e agente é a parte que envelhece mais devagar. Detalhes de produto, não.</p>
+    </aside>
+
+    <p>Esse tema volta no Capítulo 14, com ferramentas e permissões, e no Capítulo 15, com segurança. Por enquanto fica a regra de bolso: comece pelo mais simples.</p>
+
+    <h2 id="s5"><span class="nsec">1.5</span>Panorama das áreas</h2>
+    <p class="gancho">Classificar texto e gerar texto são só duas das coisas que se faz com aprendizado; quais são as outras grandes frentes?</p>
+    <p>Esta seção é um mapa, em um parágrafo por área, com exemplos do dia a dia. Sem número nem marca, porque o objetivo é só reconhecer o tipo de problema.</p>
+    <p><b>Visão computacional</b> cuida de tirar informação de imagens e vídeos: reconhecer se uma foto tem um gato, ler um texto num documento escaneado, separar o fundo do objeto. O ImageNet da linha do tempo pertence a essa área.</p>
+    <p><b>Sistemas de recomendação</b> sugerem coisas a pessoas: o próximo vídeo, uma música parecida com as que você ouve, um produto que costuma ser comprado junto com outro. O ingrediente é o histórico de escolhas de muita gente.</p>
+    <p><b>Séries temporais</b> são dados medidos em sequência no tempo, como a temperatura de hora em hora ou as vendas de cada dia. A pergunta típica é prever o que vem a seguir, e a ordem dos dados importa, o que muda como se avalia o modelo.</p>
+    <p><b>Aprendizado por reforço</b> é um jeito de aprender <button type="button" class="termo" data-def="Aprendizado por reforço: o programa tenta ações, recebe uma recompensa ou punição e vai ajustando o que faz para acumular mais recompensa ao longo do tempo.">por tentativa e recompensa</button>, e não por exemplos rotulados. Um programa que joga, por exemplo, testa jogadas, vê se ganhou ou perdeu e ajusta a estratégia.</p>
+    <p><b>Detecção de anomalias</b> procura o que foge do normal: uma compra muito diferente do hábito de quem a fez, um sensor que passa a medir algo estranho. O difícil é que o anormal costuma ser raro e variado, então quase nunca há muitos exemplos rotulados dele. Essa área volta no Capítulo 6.</p>
+
+    <h2 id="s6"><span class="nsec">1.6</span>O que a IA faz bem e o que faz mal</h2>
+    <p class="gancho">Com o mapa na mão, falta uma régua: para qual tipo de tarefa vale tentar, e onde é melhor desconfiar?</p>
+    <p>Sistemas que aprendem com exemplos costumam ir bem quando existe um padrão que se repete em muitos exemplos: reconhecer o assunto de um texto, sugerir a continuação de uma frase, achar fotos parecidas, classificar mensagens como na seção 1.1. Quanto mais exemplos variados e bem rotulados, melhor tende a ser o resultado.</p>
+    <p>Vão pior em três situações. A primeira são os fatos raros: o que apareceu poucas vezes nos exemplos fica mal aprendido, e o sistema pode preencher a lacuna com algo que soa certo. A segunda são as contas exatas feitas sem ajuda de uma ferramenta, porque um modelo que gera texto, em geral, não calcula como uma calculadora; o mais seguro é deixar a conta para um código, que você pode rodar e conferir. A terceira é saber que errou: em geral o modelo não avisa de forma confiável quando errou, então uma resposta errada pode chegar no mesmo tom de uma certa.</p>
+    <p>Por isso a regra prática desta trilha é medir. Separe exemplos que o sistema nunca viu, rode, confira os acertos e os erros. É isso que os próximos capítulos ensinam a fazer, começando pelos dados, que quase nunca chegam limpos.</p>
+
+    <h2 id="s7"><span class="nsec">1.7</span>Verifique o que entendeu</h2>
+    <p class="gancho">Um cenário vale mais do que uma definição decorada.</p>
+
+    <fieldset class="quiz" data-quiz="ia-1-q1">
+      <legend>Cenário 1</legend>
+      <p class="pergunta">Uma loja tem milhares de e-mails de clientes já classificados por pessoas como “elogio” ou “reclamação” e quer separar os e-mails novos automaticamente. Qual abordagem aproveita melhor o que ela tem?</p>
+      <label class="opcao"><input type="radio" name="ia-1-q1"><span>Escrever à mão uma lista de palavras negativas e contar quantas aparecem em cada e-mail.</span><template class="fb"><p>Funciona para casos simples, mas joga fora os exemplos que a loja já tem e quebra com negação, ironia e palavras que a lista não previu.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-1-q1"><span>Treinar um modelo com os e-mails já classificados e testar com e-mails que ele não viu no treino.</span><template class="fb"><p>É isso: os rótulos viram exemplos de onde o modelo extrai padrões, e o teste com e-mails novos mostra se ele funciona fora do que decorou.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-1-q1"><span>Usar um modelo pronto e confiar na resposta, sem conferir nada com os e-mails da loja.</span><template class="fb"><p>Um modelo pronto pode ajudar, mas sem medir nos e-mails desta loja ninguém sabe se ele acerta no caso dela.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-1-q2">
+      <legend>Cenário 2</legend>
+      <p class="pergunta">Um sistema de atendimento sempre faz as mesmas etapas, nesta ordem: extrair o número do pedido da mensagem, consultar o status numa base e escrever a resposta ao cliente. Pelo que vimos, como classificar esse sistema?</p>
+      <label class="opcao" data-certa><input type="radio" name="ia-1-q2"><span>Um workflow, porque o caminho dos passos está definido antes no código.</span><template class="fb"><p>Isso mesmo. O modelo entra em alguns passos, mas a ordem é fixa e escrita pelo programador. Quando o caminho é conhecido, é a opção mais simples, e a recomendação é justamente começar pela mais simples.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-1-q2"><span>Um agente, porque usa um modelo de linguagem.</span><template class="fb"><p>Usar um modelo não basta para ser agente. No agente, é o próprio modelo que decide o processo e o uso das ferramentas. Aqui quem decide é o código.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-1-q2"><span>Nenhum dos dois, porque só existe agente quando há várias ferramentas.</span><template class="fb"><p>Não é pela quantidade de ferramentas. Os dois são sistemas agênticos, e a diferença é quem controla o caminho: o código (workflow) ou o modelo (agente).</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <div class="lacuna" data-lacuna="ia-1-l1">
+      <span class="rotulo">Complete</span>
+      <p>Na primeira ideia de IA, as regras são escritas por uma <input data-resp="pessoa|humano|programador|programadora" aria-label="Quem escreve as regras na primeira ideia"> e o programa só as executa. Na segunda, o modelo aprende a partir de <input data-resp="exemplos|exemplo|dados" aria-label="O que o modelo recebe na segunda ideia"> com rótulo. No nosso contador de palavras, uma palavra que nunca apareceu nos exemplos vale <input data-resp="0|zero" aria-label="Pontos de uma palavra desconhecida"> ponto.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <h2 id="s8">Fontes e avisos</h2>
+    <p>IA muda rápido. Tudo o que tem data, nome ou número neste capítulo foi conferido em páginas abertas em 13/11/2026, e as palavras são minhas, não cópia. Se você ler isto bem depois, reconfira o que for sensível ao tempo, principalmente a parte de agentes, em que o ferramental muda com frequência. Este capítulo é um complemento, não foi dado em aula.</p>
+    <ul>
+      <li>Turing, 1950, artigo na revista <i>Mind</i>: https://academic.oup.com/mind/article/LIX/236/433/986238 (lido em 13/11/2026)</li>
+      <li>Proposta do projeto de verão de Dartmouth: http://www-formal.stanford.edu/jmc/history/dartmouth/dartmouth.html (lido em 13/11/2026)</li>
+      <li>Perceptron, matéria da Cornell (2019): https://news.cornell.edu/stories/2019/09/professors-perceptron-paved-way-ai-60-years-too-soon (lido em 13/11/2026)</li>
+      <li>Deep Blue, IBM: https://www.ibm.com/history/deep-blue (lido em 13/11/2026)</li>
+      <li>Artigo do ImageNet, NIPS 2012: https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html (lido em 13/11/2026)</li>
+      <li>AlphaGo, página da DeepMind: https://deepmind.google/research/alphago/ (lido em 13/11/2026)</li>
+      <li>“Attention Is All You Need”, arXiv: https://arxiv.org/abs/1706.03762 (lido em 13/11/2026)</li>
+      <li>Workflow e agente, Anthropic (19/12/2024): https://www.anthropic.com/engineering/building-effective-agents (lido em 13/11/2026)</li>
+      <li>IA generativa, IBM (publicada em 22/03/2024, atualizada em 02/10/2026): https://www.ibm.com/think/topics/generative-ai (lido em 13/11/2026)</li>
+    </ul>
+    <p>Ficou de fora a data em que a IA generativa chegou ao grande público, porque a página oficial do anúncio não abriu para mim nesta leitura. Prefiro uma linha do tempo menor a uma maior com datas que eu repetiria de memória.</p>
+
+    <div class="ponte"><p>Agora você tem o mapa e já rodou um modelo de verdade, mesmo que minúsculo. O próximo capítulo, “Dados reais”, mostra o que acontece antes do modelo: datas em formatos diferentes, texto com codificação estranha, valores ausentes. Quase todo o trabalho começa ali.</p></div>
+
+  </article>
+
+  <footer class="rodape">
+    <span>Capítulo 1 de 20</span>
+    <button class="btn btn-concluir" id="btnConcluir" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="txt">Marcar capítulo como concluído</span></button>
+    <span>Próximo: Dados reais</span>
+  </footer>
+</main>
+
+<script src="assets/trilha.js"></script>
+<script src="assets/mapa.js"></script>
+<script src="assets/exercicio.js"></script>
+<script src="assets/leitura.js"></script>
+<script src="assets/ia.js"></script>
+</body>
+</html>

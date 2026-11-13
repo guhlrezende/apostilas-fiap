@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo da casca | Inteligência Artificial</title>
+<meta name="robots" content="noindex">
+<script>
+  /* Aplica o tema salvo antes de pintar, para não piscar */
+  try { var t = localStorage.getItem("ia:tema"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) { }
+</script>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/ia.css">
+<link rel="preload" href="assets/fontes/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fontes/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="com-mapa" data-cap="1">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <button class="btn-icone so-celular" id="btnMapa" type="button" aria-label="Abrir o mapa da trilha" aria-expanded="false" aria-controls="mapa">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="marca" href="index.html"><b>Inteligência Artificial</b><span>Trilha completa</span></a>
+  <div class="espaco"></div>
+  <button class="btn-icone" id="btnTema" type="button" aria-label="Mudar para o tema escuro" aria-pressed="false">
+    <svg class="ico-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+  <div class="progresso" aria-hidden="true"><i></i></div>
+</header>
+
+<nav id="mapa" aria-label="Mapa da trilha"></nav>
+<div id="mapaFundo" aria-hidden="true"></div>
+
+<main class="pagina" id="conteudo">
+  <article class="leitura">
+
+    <header class="cabeca">
+      <div class="rotulo"><span class="parte">Parte 1: entender</span><span>Capítulo 1</span><span>30 min</span></div>
+      <h1>O mapa da IA</h1>
+      <p class="lide">Antes de mexer com modelos, vale saber o que existe no território e o que cada coisa faz bem ou mal. Esta página é só o modelo visual da casca, com texto de teste.</p>
+      <div class="meta"><span class="rotulo">Complemento</span><span class="rotulo">Python no navegador</span></div>
+    </header>
+
+    <div class="recap"><p>Este é o bloco “até aqui”. Ele abre o capítulo lembrando o que veio antes, para o leitor não chegar frio.</p></div>
+
+    <h2 id="s1"><span class="nsec">1.1</span>Duas ideias de inteligência artificial</h2>
+    <p class="gancho">Dá para ensinar um computador escrevendo todas as regras, ou mostrando exemplos?</p>
+    <p>Na primeira ideia, uma pessoa escreve as regras à mão: se a temperatura passa de um limite, avise. Na segunda, o programa recebe muitos exemplos e descobre sozinho o que separa uma coisa da outra. A maior parte do que se chama de IA hoje vem da segunda, e o resultado do aprendizado se chama <button type="button" class="termo" data-def="Modelo: a função que o programa descobre a partir dos exemplos e passa a usar para responder a casos novos.">modelo</button>.</p>
+
+    <aside class="nota margem" aria-label="Nota de margem">
+      <span class="rotulo">Nota</span>
+      <p>As notas de margem ficam ao lado do texto em telas largas e descem para dentro da coluna no celular.</p>
+    </aside>
+
+    <figure class="fig" aria-labelledby="fig1">
+      <svg viewBox="0 0 640 170" role="img" aria-label="Duas linhas: regras escritas à mão levam de entrada a saída por um programa; exemplos levam a um modelo que aprende, que leva de entrada a saída.">
+        <defs><marker id="ponta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--color-text-secondary)"/></marker></defs>
+        <text class="t2" x="8" y="18">Regras escritas à mão</text>
+        <rect class="caixa" x="8" y="28" width="120" height="44" rx="6"/><text class="t" x="68" y="55" text-anchor="middle">entrada</text>
+        <rect class="caixa dest" x="260" y="28" width="120" height="44" rx="6"/><text class="t" x="320" y="55" text-anchor="middle">regras</text>
+        <rect class="caixa" x="512" y="28" width="120" height="44" rx="6"/><text class="t" x="572" y="55" text-anchor="middle">saída</text>
+        <path class="seta" d="M130 50H256"/><path class="seta" d="M382 50H508"/>
+        <text class="t2" x="8" y="104">Aprender com exemplos</text>
+        <rect class="caixa" x="8" y="114" width="120" height="44" rx="6"/><text class="t" x="68" y="141" text-anchor="middle">exemplos</text>
+        <rect class="caixa dest" x="260" y="114" width="120" height="44" rx="6"/><text class="t" x="320" y="141" text-anchor="middle">modelo</text>
+        <rect class="caixa" x="512" y="114" width="120" height="44" rx="6"/><text class="t" x="572" y="141" text-anchor="middle">saída</text>
+        <path class="seta" d="M130 136H256"/><path class="seta" d="M382 136H508"/>
+      </svg>
+      <figcaption id="fig1"><b>Fig. 1</b>Em cima, a pessoa escreve a regra. Embaixo, os exemplos produzem o modelo, que passa a fazer o papel da regra.</figcaption>
+    </figure>
+
+    <h2 id="s2"><span class="nsec">1.2</span>Um experimento pequeno</h2>
+    <p class="gancho">Como é um exercício de código nesta apostila?</p>
+    <p>Cada seção importante tem um experimento: você muda o código, roda e o teste confere. Abaixo, o visual da célula. O botão ainda não executa nada, porque o motor chega na próxima etapa.</p>
+
+    <section class="experimento" data-ex="modelo-1-1" aria-labelledby="exp1">
+      <header>
+        <div class="rotulo">Experimento 1.1</div>
+        <h3 id="exp1">Contar as palavras de uma frase</h3>
+      </header>
+      <div class="enunciado"><p>Complete a função para devolver quantas palavras há na frase. Depois imprima o resultado para a frase de exemplo.</p></div>
+      <script type="text/plain" class="py-inicial">
+def contar_palavras(frase):
+    # escreva aqui
+    return 0
+
+print(contar_palavras("aprender com exemplos"))
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(contar_palavras("aprender com exemplos") == 3, "Para 'aprender com exemplos' o esperado é 3.")
+verificar(contar_palavras("oi") == 1, "Uma palavra só deve dar 1.")
+verificar(contar_palavras("") == 0, "Frase vazia deve dar 0.")
+verificar(saida.strip() == "3", "Imprima o resultado de contar_palavras('aprender com exemplos'): deve aparecer 3.")
+</script>
+      <script type="text/plain" class="py-solucao">
+def contar_palavras(frase):
+    return len(frase.split())
+
+print(contar_palavras("aprender com exemplos"))
+</script>
+      <template class="dica"><p>Uma frase é um texto. Que método de texto separa em pedaços nos espaços?</p></template>
+      <template class="dica"><p>O método <code>split()</code> devolve uma lista com as palavras.</p></template>
+      <template class="dica"><p>Quantos itens tem a lista? Use <code>len(...)</code>.</p></template>
+    </section>
+
+
+    <section class="experimento" data-ex="modelo-pandas" data-pacotes="pandas" aria-labelledby="exp2">
+      <header>
+        <div class="rotulo">Experimento 1.2 (teste de pacote)</div>
+        <h3 id="exp2">Média ignorando valores ausentes</h3>
+      </header>
+      <div class="enunciado"><p>A coluna tem um valor ausente. Calcule a média das notas e guarde em <code>media</code>.</p></div>
+      <script type="text/plain" class="py-inicial">
+import pandas as pd
+
+df = pd.DataFrame({"nota": [7, None, 9]})
+media = 0
+print(media)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(abs(media - 8.0) < 1e-9, "A média de 7 e 9, ignorando o ausente, é 8.")
+</script>
+      <script type="text/plain" class="py-solucao">
+import pandas as pd
+
+df = pd.DataFrame({"nota": [7, None, 9]})
+media = df["nota"].mean()
+print(media)
+</script>
+    </section>
+
+    <p>E um bloco com a saída real colada, como o texto deve sempre mostrar:</p>
+<pre class="codigo"><span class="k">print</span>(<span class="s">"aprender com exemplos"</span>.split())</pre>
+<div class="saida" aria-label="Saída do código">['aprender', 'com', 'exemplos']</div>
+
+
+    <h2 id="s3"><span class="nsec">1.3</span>Verifique o que entendeu</h2>
+    <p class="gancho">Um cenário vale mais do que uma definição decorada.</p>
+
+    <fieldset class="quiz" data-quiz="modelo-q1">
+      <legend>Cenário</legend>
+      <p class="pergunta">Uma loja quer separar e-mails de clientes entre “elogio” e “reclamação”. Ela tem 10 mil e-mails já classificados por pessoas. Qual abordagem usa melhor o que ela tem?</p>
+      <label class="opcao"><input type="radio" name="modelo-q1"><span>Escrever à mão uma lista de palavras proibidas e contar quantas aparecem.</span><template class="fb"><p>Funciona para casos simples, mas ignora os 10 mil exemplos que a loja já tem e quebra com qualquer frase que fuja da lista.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="modelo-q1"><span>Treinar um modelo com os e-mails já classificados e testar em e-mails novos.</span><template class="fb"><p>Isso aproveita os exemplos: o modelo descobre padrões que separam as duas classes, e o teste com e-mails novos mostra se ele generaliza.</p></template></label>
+      <label class="opcao"><input type="radio" name="modelo-q1"><span>Esperar um modelo pronto e confiar na resposta sem testar com os dados da loja.</span><template class="fb"><p>Um modelo pronto pode ajudar, mas sem testar nos e-mails da loja ninguém sabe se ele acerta no caso dela.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <div class="lacuna" data-lacuna="modelo-l1">
+      <span class="rotulo">Complete</span>
+      <p>No Python, o método <input data-resp="split" aria-label="Método que separa o texto"> separa um texto em uma lista de palavras, e a função <input data-resp="len"> conta os itens dessa lista.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="ponte"><p>Agora que o mapa geral está desenhado, o próximo capítulo entra nos dados reais, que quase nunca chegam limpos.</p></div>
+
+  </article>
+
+  <footer class="rodape">
+    <span>Capítulo 1 de 20</span>
+    <button class="btn btn-concluir" id="btnConcluir" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="txt">Marcar capítulo como concluído</span></button>
+    <span>Próximo: Dados reais</span>
+  </footer>
+</main>
+
+<script src="assets/trilha.js"></script>
+<script src="assets/mapa.js"></script>
+<script src="assets/exercicio.js"></script>
+<script src="assets/leitura.js"></script>
+<script src="assets/ia.js"></script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+/* Tokens da apostila "Inteligência Artificial". Direção: Laboratório (relatório científico editorial).
+   Independente de assets/estudo.css. Componentes usam SÓ estas variáveis, nunca cor fixa.
+   Contraste conferido (WCAG): todo texto e marcador >= 4,5:1 sobre bg, card e well, nos dois temas.
+   Fontes: pilhas com fallback de sistema. Os arquivos .woff2 locais entram em assets/fontes/ (sem CDN);
+   até lá a página já fica legível com Georgia / system-ui / Consolas. */
+
+:root {
+  color-scheme: light;
+
+  /* Cor: superfícies */
+  --color-bg-primary:   #F5F8F6;   /* branco-gelo */
+  --color-bg-secondary: #FFFFFF;   /* cartões, células */
+  --color-bg-tertiary:  #E9EFEC;   /* poços: entrada de código, citações */
+  --color-bg-inverse:   #14201C;
+  --color-grid:         rgba(20, 32, 28, .055);   /* grade de papel milimetrado */
+
+  /* Cor: texto */
+  --color-text-primary:   #14201C;
+  --color-text-secondary: #475650;
+  --color-text-tertiary:  #5E6D67;
+  --color-text-inverse:   #F5F8F6;
+  --color-text-link:      #0B6B52;
+
+  /* Cor: bordas */
+  --color-border-primary:   #C5D1CC;
+  --color-border-secondary: #DCE5E1;
+  --color-border-focus:     #0B7A5C;
+
+  /* Cor: acento (verde-laboratório) */
+  --color-accent-primary:        #0B7A5C;
+  --color-accent-primary-hover:  #096650;
+  --color-accent-primary-active: #07523F;
+  --color-accent-secondary:      #E1F1EB;   /* fundo suave de destaque */
+  --color-on-accent:             #FFFFFF;
+
+  /* Cor: estado (sempre com ícone e texto, nunca só cor) */
+  --color-status-success: #0B7A5C;
+  --color-status-warning: #8A5A00;
+  --color-status-error:   #B3261E;
+  --color-status-info:    #2F5DC4;
+  --color-status-success-bg: #E1F1EB;
+  --color-status-warning-bg: #FBEFD3;
+  --color-status-error-bg:   #FBE3E0;
+  --color-status-info-bg:    #E3EAFB;
+
+  --color-surface-overlay: rgba(20, 32, 28, .55);
+
+  /* Cor por parte da trilha: SÓ no mapa de navegação (marcador, trilha, rótulo da parte) */
+  --parte-1: #2F5DC4;   /* entender */
+  --parte-2: #8A5A00;   /* dados e modelos clássicos */
+  --parte-3: #7A3FB0;   /* como os LLMs funcionam */
+  --parte-4: #00697A;   /* usar IA na prática */
+  --parte-5: #B23A5A;   /* responsabilidade */
+
+  /* Código */
+  --color-code-bg:      #EEF3F0;
+  --color-code-text:    #14201C;
+  --color-code-comment: #5E6D67;
+  --color-code-keyword: #7A3FB0;
+  --color-code-string:  #0B6B52;
+  --color-code-number:  #2F5DC4;
+
+  /* Espaçamento (base 4px, tendência editorial: respiro generoso) */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* Tipografia */
+  --font-family-display: "Fraunces", "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-family-body:    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono:    "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --font-size-xs:   .8125rem;   /* 13px: só rótulos e legendas */
+  --font-size-sm:   .9375rem;   /* 15px */
+  --font-size-base: 1rem;       /* 16px: mínimo do corpo */
+  --font-size-md:   1.125rem;   /* 18px: texto de leitura */
+  --font-size-lg:   1.375rem;
+  --font-size-xl:   1.75rem;
+  --font-size-2xl:  2.25rem;
+  --font-size-3xl:  3rem;
+  --font-size-4xl:  clamp(2.5rem, 6vw, 4rem);
+
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --line-height-tight:   1.2;
+  --line-height-normal:  1.55;
+  --line-height-relaxed: 1.75;   /* texto de leitura */
+
+  --letter-spacing-tight:  -.015em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide:   .08em;   /* rótulos em caixa alta, "Fig." e "Exp." */
+
+  /* Layout */
+  --max-width-content: 68ch;    /* coluna de leitura */
+  --max-width-wide:    1080px;
+  --max-width-page:    1360px;
+  --sidebar-width:     300px;   /* mapa da trilha */
+
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 14px;
+  --border-radius-full: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(20, 32, 28, .08);
+  --shadow-md: 0 4px 14px rgba(20, 32, 28, .10);
+  --shadow-lg: 0 14px 40px rgba(20, 32, 28, .16);
+  --shadow-focus: 0 0 0 3px var(--color-bg-primary), 0 0 0 5px var(--color-border-focus);
+
+  /* Movimento */
+  --duration-instant: 50ms;
+  --duration-fast:    150ms;
+  --duration-normal:  250ms;
+  --duration-slow:    400ms;
+  --duration-slower:  600ms;
+  --easing-default: cubic-bezier(.4, 0, .2, 1);
+  --easing-in:      cubic-bezier(.4, 0, 1, 1);
+  --easing-out:     cubic-bezier(0, 0, .2, 1);
+
+  /* Breakpoints (referência para @media; variáveis CSS não funcionam dentro de @media) */
+  --breakpoint-sm:  375px;
+  --breakpoint-md:  768px;
+  --breakpoint-lg:  1024px;
+  --breakpoint-xl:  1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Tokens de componente */
+  --exercicio-bg:        var(--color-bg-secondary);
+  --exercicio-borda:     var(--color-accent-primary);   /* barra lateral do "experimento" */
+  --exercicio-editor-bg: var(--color-code-bg);
+  --resultado-pass-bg:   var(--color-status-success-bg);
+  --resultado-fail-bg:   var(--color-status-warning-bg);
+  --resultado-error-bg:  var(--color-status-error-bg);
+  --figura-legenda:      var(--color-text-secondary);
+  --nota-margem-bg:      var(--color-bg-tertiary);
+  --mapa-trilha-largura: 3px;
+}
+
+/* Tema escuro: grafite esverdeado frio, contraste um pouco menor que o branco puro; não é inversão */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg-primary:   #0E1412;
+  --color-bg-secondary: #151D1A;
+  --color-bg-tertiary:  #1C2723;
+  --color-bg-inverse:   #E7EEEB;
+  --color-grid:         rgba(231, 238, 235, .045);
+
+  --color-text-primary:   #E7EEEB;
+  --color-text-secondary: #A9B8B2;
+  --color-text-tertiary:  #8C9C96;
+  --color-text-inverse:   #0E1412;
+  --color-text-link:      #5ED8B3;
+
+  --color-border-primary:   #34443E;
+  --color-border-secondary: #26332E;
+  --color-border-focus:     #3DCBA0;
+
+  --color-accent-primary:        #3DCBA0;
+  --color-accent-primary-hover:  #5ED8B3;
+  --color-accent-primary-active: #7FE3C4;
+  --color-accent-secondary:      #16302A;
+  --color-on-accent:             #06231B;
+
+  --color-status-success: #3DCBA0;
+  --color-status-warning: #E3A93A;
+  --color-status-error:   #FF8A80;
+  --color-status-info:    #7FA2F5;
+  --color-status-success-bg: #12302A;
+  --color-status-warning-bg: #33280F;
+  --color-status-error-bg:   #3A1B19;
+  --color-status-info-bg:    #1A2745;
+
+  --color-surface-overlay: rgba(0, 0, 0, .65);
+
+  --parte-1: #7FA2F5;
+  --parte-2: #E3A93A;
+  --parte-3: #C39BF0;
+  --parte-4: #4FC3D6;
+  --parte-5: #F08AA5;
+
+  --color-code-bg:      #111A17;
+  --color-code-text:    #E7EEEB;
+  --color-code-comment: #8C9C96;
+  --color-code-keyword: #C39BF0;
+  --color-code-string:  #5ED8B3;
+  --color-code-number:  #7FA2F5;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, .5);
+  --shadow-lg: 0 14px 40px rgba(0, 0, 0, .6);
+}
+
+/* Preferência do sistema, a menos que o leitor tenha escolhido claro no botão */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-bg-primary:   #0E1412;
+    --color-bg-secondary: #151D1A;
+    --color-bg-tertiary:  #1C2723;
+    --color-bg-inverse:   #E7EEEB;
+    --color-grid:         rgba(231, 238, 235, .045);
+
+    --color-text-primary:   #E7EEEB;
+    --color-text-secondary: #A9B8B2;
+    --color-text-tertiary:  #8C9C96;
+    --color-text-inverse:   #0E1412;
+    --color-text-link:      #5ED8B3;
+
+    --color-border-primary:   #34443E;
+    --color-border-secondary: #26332E;
+    --color-border-focus:     #3DCBA0;
+
+    --color-accent-primary:        #3DCBA0;
+    --color-accent-primary-hover:  #5ED8B3;
+    --color-accent-primary-active: #7FE3C4;
+    --color-accent-secondary:      #16302A;
+    --color-on-accent:             #06231B;
+
+    --color-status-success: #3DCBA0;
+    --color-status-warning: #E3A93A;
+    --color-status-error:   #FF8A80;
+    --color-status-info:    #7FA2F5;
+    --color-status-success-bg: #12302A;
+    --color-status-warning-bg: #33280F;
+    --color-status-error-bg:   #3A1B19;
+    --color-status-info-bg:    #1A2745;
+
+    --color-surface-overlay: rgba(0, 0, 0, .65);
+
+    --parte-1: #7FA2F5;
+    --parte-2: #E3A93A;
+    --parte-3: #C39BF0;
+    --parte-4: #4FC3D6;
+    --parte-5: #F08AA5;
+
+    --color-code-bg:      #111A17;
+    --color-code-text:    #E7EEEB;
+    --color-code-comment: #8C9C96;
+    --color-code-keyword: #C39BF0;
+    --color-code-string:  #5ED8B3;
+    --color-code-number:  #7FA2F5;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, .5);
+    --shadow-lg: 0 14px 40px rgba(0, 0, 0, .6);
+  }
+}
+
+/* Movimento reduzido: remove transições e animações */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+  }
+}

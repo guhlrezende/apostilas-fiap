@@ -27,3 +27,9 @@ Site estático (HTML, CSS e JS puro, sem build) com apostilas interativas das au
 - O `IntersectionObserver` do painel de preview só dispara quando há quadro renderizado. Em teste automático, chame `Estudo.demos.x(el)` à mão se a demo não aparecer.
 - Botão dentro de botão não funciona em HTML (o parser fecha o externo). Use `div role="button"`.
 - Verificação visual: tela de celular (390px), tema escuro e console sem erro.
+
+## Apostila de Inteligência Artificial (`inteligencia-artificial/`)
+- Identidade própria (Laboratório), separada das outras: `assets/tokens.css`, `ia.css`, `ia.js`, `mapa.js`, `exercicio.js`, `leitura.js`. NÃO usa `estudo.css`/`estudo.js` das outras apostilas. Plano em `docs/PLANO-IA.md`, decisões de design em `.design/inteligencia-artificial/`.
+- Capítulo novo: copiar a estrutura de `inteligencia-artificial/modelo.html`, preencher `file` em `assets/trilha.js`. Fatos com data, número ou nome só de página aberta lida, anotada com a data (as notas ficam em `docs/referencias/`, que o Git ignora de propósito).
+- Exercícios rodam Python no navegador (Pyodide 314.0.7 local em `assets/pyodide/`, sem CDN). Contrato dos blocos no comentário de abertura de `assets/exercicio.js`. Pacotes: `data-pacotes="pandas"`.
+- Saídas coladas no texto vêm do MESMO motor: `node scripts/rodar_pyodide.mjs --html <capitulo>` (confere solução, código inicial e imprime a saída real) ou `--py`/`--codigo` com `--pacotes`. Não use o Python do computador: o pandas dele é outro (2.x) e o do navegador é o 3.x.
