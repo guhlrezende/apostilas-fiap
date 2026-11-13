@@ -10,7 +10,7 @@ window.IA_TRILHA = {
   ],
   caps: [
     { n: 1, titulo: "O mapa da IA", file: "cap-1-o-mapa-da-ia.html" },
-    { n: 2, titulo: "Dados reais", file: null },
+    { n: 2, titulo: "Dados reais", file: "cap-2-dados-reais.html" },
     { n: 3, titulo: "Classificação e métricas", file: null },
     { n: 4, titulo: "Árvores, florestas e boosting", file: null },
     { n: 5, titulo: "Desbalanceamento e explicabilidade", file: null },

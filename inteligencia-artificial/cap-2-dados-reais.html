@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dados reais | Inteligência Artificial</title>
+<script>
+  /* Aplica o tema salvo antes de pintar, para não piscar */
+  try { var t = localStorage.getItem("ia:tema"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) { }
+</script>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/ia.css">
+<link rel="preload" href="assets/fontes/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fontes/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="com-mapa" data-cap="2">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <button class="btn-icone so-celular" id="btnMapa" type="button" aria-label="Abrir o mapa da trilha" aria-expanded="false" aria-controls="mapa">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="marca" href="index.html"><b>Inteligência Artificial</b><span>Trilha completa</span></a>
+  <div class="espaco"></div>
+  <button class="btn-icone" id="btnTema" type="button" aria-label="Mudar para o tema escuro" aria-pressed="false">
+    <svg class="ico-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+  <div class="progresso" aria-hidden="true"><i></i></div>
+</header>
+
+<nav id="mapa" aria-label="Mapa da trilha"></nav>
+<div id="mapaFundo" aria-hidden="true"></div>
+
+<main class="pagina" id="conteudo">
+  <article class="leitura">
+    <header class="cabeca">
+      <div class="rotulo"><span class="parte">Parte 2: dados e modelos clássicos</span><span>Capítulo 2</span><span>35 min</span></div>
+      <h1>Dados reais</h1>
+      <p class="lide">Tabela de verdade chega com datas em dia/mês/ano, números com vírgula, a mesma categoria escrita de até três jeitos e buracos no meio. Este capítulo mostra como olhar esse material antes de mexer nele, como arrumar texto, datas, números e ausentes, e como criar colunas novas que ajudam um modelo a enxergar o que importa.</p>
+      <div class="meta"><span class="rotulo">Complemento, não foi dado em aula</span><span class="rotulo">Python no navegador</span></div>
+    </header>
+
+    <div class="recap"><p>No capítulo 1 o contador de palavras funcionou porque as oito frases eram curtas, limpas e bem rotuladas. A conclusão ficou no ar: aprender com exemplos só dá certo se os exemplos forem bons. Aqui a gente encara o outro lado, o exemplo ruim. Você precisa de Python básico e da ideia de tabela, com linhas e colunas. A biblioteca <b>pandas</b>, que trabalha com tabelas em Python, é apresentada à medida que aparece.</p></div>
+
+    <figure class="fig" aria-labelledby="fig1">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 112" role="img" aria-label="Quatro caixas em sequência ligadas por setas: olhar (info, isna, describe), limpar (texto, datas, números, ausentes), criar atributos (data, razão, faixa) e o modelo, que é o assunto do Capítulo 3.">
+        <defs><marker id="ponta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--color-text-secondary)"/></marker></defs>
+        <rect class="caixa dest" x="8" y="14" width="128" height="44" rx="6"/><text class="t" x="72" y="41" text-anchor="middle">olhar</text>
+        <rect class="caixa" x="168" y="14" width="128" height="44" rx="6"/><text class="t" x="232" y="41" text-anchor="middle">limpar</text>
+        <rect class="caixa" x="328" y="14" width="128" height="44" rx="6"/><text class="t" x="392" y="41" text-anchor="middle">criar atributos</text>
+        <rect class="caixa" x="488" y="14" width="128" height="44" rx="6"/><text class="t" x="552" y="41" text-anchor="middle">modelo</text>
+        <path class="seta" d="M138 36H164"/><path class="seta" d="M298 36H324"/><path class="seta" d="M458 36H484"/>
+        <text class="t2" x="72" y="82" text-anchor="middle">info, isna,</text><text class="t2" x="72" y="98" text-anchor="middle">describe</text>
+        <text class="t2" x="232" y="82" text-anchor="middle">texto, datas,</text><text class="t2" x="232" y="98" text-anchor="middle">números, ausentes</text>
+        <text class="t2" x="392" y="82" text-anchor="middle">data, razão,</text><text class="t2" x="392" y="98" text-anchor="middle">faixa</text>
+        <text class="t2" x="552" y="82" text-anchor="middle">Capítulo 3</text>
+      </svg></div>
+      <figcaption id="fig1"><b>Fig. 1</b>O caminho deste capítulo. A primeira caixa é a que mais gente pula, e é a que impede de consertar o problema errado.</figcaption>
+    </figure>
+
+    <h2 id="s1"><span class="nsec">2.1</span>Por que dado real é sujo</h2>
+    <p class="gancho">Se qualquer linha da tabela pode esconder um problema, por onde começar?</p>
+
+    <h3>Intuição</h3>
+    <p>Quase nenhuma sujeira vem de um programa com defeito. Ela nasce porque cada fonte seguiu a sua regra. Uma pessoa digitando no balcão escreve “Calçados”, outra escreve “calcados ” com um espaço no final, e as duas estão certas para elas. Um sistema grava a data como dia/mês/ano, outro como mês/dia/ano. Uma planilha exportada em outro país usa ponto onde o seu usa vírgula. Um campo que não foi preenchido sai em branco num sistema e como “N/D” em outro. Quando as tabelas se encontram, todas essas regras convivem na mesma coluna.</p>
+    <p>A regra de ouro é <b>olhar antes de limpar</b>. Quem limpa sem olhar conserta o problema que imaginou e deixa passar o que existe de verdade. O primeiro passo é sempre pedir à tabela que se descreva: quantas linhas, quais tipos, quantos buracos, que valores mínimos e máximos.</p>
+
+    <h3>Definição</h3>
+    <p>Neste capítulo, <b>inspecionar</b> é rodar comandos que mostram o estado atual da tabela sem alterar nada. <b>Limpar</b> é deixar cada coluna com um único formato e um único significado para cada valor. Em pandas, a tabela inteira se chama <button type="button" class="termo" data-def="DataFrame: a tabela do pandas, com linhas e colunas. Cada coluna é uma Series, que guarda valores de um mesmo tipo.">DataFrame</button> e costuma ser guardada numa variável chamada <code>df</code>. Para ler um CSV (texto em que as colunas são separadas por vírgula) usamos <code>pd.read_csv</code>.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Vamos trabalhar o capítulo inteiro com uma loja fictícia: 12 pedidos inventados, sem relação com ninguém. Os dados cabem num texto e estão logo abaixo, completos, para você conferir cada número que aparecer depois. Repare que eles já nascem com defeitos de propósito: espaços nas pontas, maiúsculas misturadas, “Acessorios” com e sem acento, uma data em branco, um valor “N/D”, uma quantidade vazia, uma cidade vazia, valores como “1.234,56”.</p>
+<pre class="codigo" tabindex="0" aria-label="Os 12 pedidos da loja fictícia, em formato CSV dentro de um texto"><span class="k">import</span> io
+<span class="k">import</span> pandas <span class="k">as</span> pd
+
+csv = <span class="s">'''pedido,data,produto,categoria,quantidade,valor,cidade
+1001,05/11/2026,  Camiseta basica ,Roupas,2,"119,80",Campinas
+1002,06/11/2026,TÊNIS CORRIDA,calçados,2,"1.234,56",campinas
+1003,06/11/2026,camiseta Basica,roupas,3,"179,70",Santos
+1004,07/11/2026,Mochila Urbana,Acessorios,1,"189,00",Santos
+1005,08/11/2026,Tênis corrida ,Calçados,,"617,28",Campinas
+1006,09/11/2026,Boné Aba Reta,Acessórios,2,N/D,Sorocaba
+1007,10/11/2026,Mochila urbana,acessorios,1,"189,00",
+1008,11/11/2026,Camiseta Básica,Roupas,4,"239,60",Sorocaba
+1009,12/11/2026,Tênis Corrida,Calçados,3,"1.851,84",Santos
+1010,,Boné aba reta,Acessórios,1,"39,95",Campinas
+1011,13/11/2026,Jaqueta Jeans,Roupas,1,"259,90",Campinas
+1012,13/11/2026,jaqueta jeans,Roupas ,2,"519,80",Sorocaba
+'''</span></pre>
+    <p>Agora a tabela entra no pandas e a gente a inspeciona, sem alterar nada. O <code>io.StringIO</code> faz o texto se passar por um arquivo, para o <code>read_csv</code> ler. As duas primeiras linhas só deixam a tela larga o bastante para a tabela caber inteira.</p>
+<pre class="codigo" tabindex="0" aria-label="Leitura do CSV e primeiras três linhas">pd.set_option(<span class="s">"display.width"</span>, <span class="n">120</span>)       <span class="c"># tabela larga cabe na tela</span>
+pd.set_option(<span class="s">"display.max_columns"</span>, <span class="n">20</span>)  <span class="c"># sem reticências no meio</span>
+
+df = pd.read_csv(io.StringIO(csv))        <span class="c"># io.StringIO faz o texto se passar por arquivo</span>
+<span class="k">print</span>(df.head(<span class="n">3</span>))                         <span class="c"># as 3 primeiras linhas</span></pre>
+<div class="saida" aria-label="Saída do código">   pedido        data             produto categoria  quantidade     valor    cidade
+0    1001  05/11/2026    Camiseta basica     Roupas         2.0    119,80  Campinas
+1    1002  06/11/2026       TÊNIS CORRIDA  calçados         2.0  1.234,56  campinas
+2    1003  06/11/2026     camiseta Basica    roupas         3.0    179,70    Santos</div>
+    <p>O <code>info()</code> mostra o tipo de cada coluna e quantas células não estão vazias.</p>
+<pre class="codigo" tabindex="0" aria-label="Resumo dos tipos e do que não está vazio">df.info()</pre>
+<div class="saida" aria-label="Saída do código">&lt;class 'pandas.DataFrame'&gt;
+RangeIndex: 12 entries, 0 to 11
+Data columns (total 7 columns):
+ #   Column      Non-Null Count  Dtype  
+---  ------      --------------  -----  
+ 0   pedido      12 non-null     int64  
+ 1   data        11 non-null     str    
+ 2   produto     12 non-null     str    
+ 3   categoria   12 non-null     str    
+ 4   quantidade  11 non-null     float64
+ 5   valor       12 non-null     str    
+ 6   cidade      11 non-null     str    
+dtypes: float64(1), int64(1), str(5)
+memory usage: 504.0 bytes</div>
+    <p>São 12 linhas e 7 colunas. Na coluna <code>data</code> há 11 células preenchidas, ou seja, uma está vazia. Mesma conta em <code>quantidade</code> e em <code>cidade</code>: 11 de 12. A coluna <code>valor</code> chega com 12 de 12, mas o tipo dela é <code>str</code> (texto), não número. Guarde essa pista: a vírgula decimal e o “N/D” têm cara de texto. Para contar os buracos direto:</p>
+<pre class="codigo" tabindex="0" aria-label="Contagem de células vazias por coluna"><span class="k">print</span>(df.isna().sum())</pre>
+<div class="saida" aria-label="Saída do código">pedido        0
+data          1
+produto       0
+categoria     0
+quantidade    1
+valor         0
+cidade        1
+dtype: int64</div>
+    <p>Três colunas com um ausente cada. E o resumo estatístico:</p>
+<pre class="codigo" tabindex="0" aria-label="Resumo estatístico das colunas numéricas"><span class="k">print</span>(df.describe())</pre>
+<div class="saida" aria-label="Saída do código">            pedido  quantidade
+count    12.000000        11.0
+mean   1006.500000         2.0
+std       3.605551         1.0
+min    1001.000000         1.0
+25%    1003.750000         1.0
+50%    1006.500000         2.0
+75%    1009.250000         2.5
+max    1012.000000         4.0</div>
+    <p>O <code>describe</code> resumiu só 2 das 7 colunas, as numéricas. Na coluna <code>pedido</code> ele calculou até uma média (1006,5), que não quer dizer nada, porque número de pedido é só um identificador. Em <code>quantidade</code> a conta é útil: 11 valores, média 2,0, mínimo 1 e máximo 4.</p>
+
+    <aside class="nota margem" aria-label="Nota de margem">
+      <span class="rotulo">Nota</span>
+      <p>Os dados desta apostila são inventados e pequenos de propósito. Em tabela com milhões de linhas você não leria cada uma, mas os mesmos comandos de inspeção mostram o formato do problema.</p>
+    </aside>
+
+    <h3>Código comentado</h3>
+    <p>O que o código acima faz, em português: <code>head(3)</code> mostra as três primeiras linhas (um olhar rápido para ver se a leitura fez sentido), <code>info()</code> responde “que tipo tem cada coluna e quanto está preenchido”, <code>isna().sum()</code> conta por coluna as células vazias e <code>describe()</code> resume as colunas numéricas. Nenhum deles muda a tabela. Rodar os quatro é rápido e não custa nada.</p>
+
+    <h3>Erro comum</h3>
+    <p>Concluir que a coluna <code>valor</code> está completa porque <code>isna().sum()</code> deu 0 para ela. O pandas só trata como ausente o que ele reconhece como ausente: célula realmente vazia entra, mas o texto “N/D” não, ele é lido como um texto qualquer. A coluna é <code>str</code> e o <code>describe</code> a ignorou. As duas pistas estavam na saída: o tipo no <code>info()</code> e a coluna faltando no <code>describe</code>. A seção 2.4 resolve isso. Antes, o texto.</p>
+
+    <h2 id="s2"><span class="nsec">2.2</span>Texto sujo e codificação</h2>
+    <p class="gancho">Para o pandas, “Calçados”, “calçados” e “calcados” são três valores diferentes; como fazer o computador enxergar uma categoria só?</p>
+    <p>O problema aparece assim que você tenta contar. Veja quantas categorias a loja parece ter:</p>
+<pre class="codigo" tabindex="0" aria-label="Contagem de pedidos por categoria, ainda suja"><span class="k">print</span>(df[<span class="s">"categoria"</span>].value_counts())</pre>
+<div class="saida" aria-label="Saída do código">categoria
+Roupas        3
+Calçados      2
+Acessórios    2
+calçados      1
+roupas        1
+Acessorios    1
+acessorios    1
+Roupas        1
+Name: count, dtype: int64</div>
+    <p>São 8 linhas na contagem para o que deveriam ser 3 categorias. Até “Roupas” aparece duas vezes: uma das duas é a que ficou com um espaço no final (pedido 1012), invisível a olho nu. O mesmo acontece com o nome do produto: os 12 pedidos têm 12 textos diferentes.</p>
+<pre class="codigo" tabindex="0" aria-label="Quantidade de textos diferentes na coluna produto"><span class="k">print</span>(df[<span class="s">"produto"</span>].nunique())</pre>
+<div class="saida" aria-label="Saída do código">12</div>
+    <p>O conserto tem três passos, nesta ordem: tirar espaços das pontas (<code>.str.strip()</code>), pôr tudo em minúsculas (<code>.str.lower()</code>) e remover os acentos. Para o último passo, o Python tem a normalização Unicode, que separa a letra da marca do acento. Um teste pequeno mostra isso:</p>
+<pre class="codigo" tabindex="0" aria-label="Um caractere vira dois depois de normalizar"><span class="k">import</span> unicodedata
+
+<span class="k">print</span>(len(<span class="s">"ç"</span>), len(unicodedata.normalize(<span class="s">"NFKD"</span>, <span class="s">"ç"</span>)))   <span class="c"># 1 caractere vira 2: letra + marca</span></pre>
+<div class="saida" aria-label="Saída do código">1 2</div>
+    <p>O “ç” tinha 1 caractere e passou a ter 2: um “c” e a marca da cedilha. Se a gente converter para ASCII ignorando o que não cabe, a marca some e sobra o “c”. Juntando tudo numa função, e aplicando também a <code>cidade</code> (que só precisa de espaço e maiúscula no começo, com <code>.str.title()</code>):</p>
+<pre class="codigo" tabindex="0" aria-label="Função que padroniza texto e aplicação às colunas"><span class="k">def</span> limpar_texto(serie):
+    serie = serie.str.strip().str.lower()   <span class="c"># tira espaços das pontas e põe tudo em minúsculas</span>
+    serie = serie.str.normalize(<span class="s">"NFKD"</span>)     <span class="c"># separa a letra do acento: "ç" vira "c" + marca</span>
+    serie = serie.str.encode(<span class="s">"ascii"</span>, errors=<span class="s">"ignore"</span>).str.decode(<span class="s">"ascii"</span>)  <span class="c"># joga a marca fora</span>
+    <span class="k">return</span> serie
+
+df[<span class="s">"categoria"</span>] = limpar_texto(df[<span class="s">"categoria"</span>])
+df[<span class="s">"produto"</span>] = limpar_texto(df[<span class="s">"produto"</span>])
+df[<span class="s">"cidade"</span>] = df[<span class="s">"cidade"</span>].str.strip().str.title()   <span class="c"># "campinas" vira "Campinas"</span>
+
+<span class="k">print</span>(df[<span class="s">"categoria"</span>].value_counts())
+<span class="k">print</span>(df[<span class="s">"produto"</span>].nunique())
+<span class="k">print</span>(df[<span class="s">"cidade"</span>].value_counts(dropna=<span class="k">False</span>))</pre>
+<div class="saida" aria-label="Saída do código">categoria
+roupas        5
+acessorios    4
+calcados      3
+Name: count, dtype: int64
+5
+cidade
+Campinas    5
+Santos      3
+Sorocaba    3
+NaN         1
+Name: count, dtype: int64</div>
+    <p>Agora são 3 categorias (roupas 5, acessorios 4, calcados 3), os 12 pedidos são de 5 produtos e a cidade tem três nomes mais um ausente, mostrado como <code>NaN</code> por causa do <code>dropna=False</code>. Sem esse argumento a contagem esconderia o buraco.</p>
+
+    <p>Quando o problema não é maiúscula nem acento, e sim duas grafias que só uma pessoa sabe que são a mesma coisa (“sp” e “s. paulo”), o caminho é um dicionário que diz quem vira quem, usando <code>.replace</code>:</p>
+<pre class="codigo" tabindex="0" aria-label="Dicionário de equivalências com replace">s = pd.Series([<span class="s">"sp"</span>, <span class="s">"SP"</span>, <span class="s">"sao paulo"</span>, <span class="s">"s. paulo"</span>])
+s = s.str.lower().replace({<span class="s">"sp"</span>: <span class="s">"sao paulo"</span>, <span class="s">"s. paulo"</span>: <span class="s">"sao paulo"</span>})
+<span class="k">print</span>(s.tolist())</pre>
+<div class="saida" aria-label="Saída do código">['sao paulo', 'sao paulo', 'sao paulo', 'sao paulo']</div>
+
+    <h3>Codificação: quando a letra vira outra coisa</h3>
+    <p>Existe outra fonte de texto estragado que não depende de ninguém ter digitado errado. Todo arquivo de texto guarda letras como números, e a <button type="button" class="termo" data-def="Codificação: a tabela que diz qual sequência de bytes representa cada letra. UTF-8 e latin-1 são duas codificações comuns; o mesmo arquivo lido com a errada fica com letras trocadas.">codificação</button> é a tabela que diz qual número é qual letra. Se o arquivo foi gravado com uma tabela e lido com outra, as letras com acento viram sequências estranhas. Dá para provocar isso de propósito e ver o fenômeno de perto:</p>
+<pre class="codigo" tabindex="0" aria-label="Texto gravado em UTF-8 e lido como latin-1, e a volta">texto = <span class="s">"ação"</span>
+quebrado = texto.encode(<span class="s">"utf-8"</span>).decode(<span class="s">"latin-1"</span>)   <span class="c"># bytes de UTF-8 lidos como latin-1</span>
+<span class="k">print</span>(quebrado, len(quebrado))
+<span class="k">print</span>(quebrado.encode(<span class="s">"latin-1"</span>).decode(<span class="s">"utf-8"</span>))    <span class="c"># o caminho de volta</span></pre>
+<div class="saida" aria-label="Saída do código">aÃ§Ã£o 6
+ação</div>
+    <p>“ação” tem 4 letras; depois de passar pela tabela errada ficou com 6 (“aÃ§Ã£o”), e o caminho de volta, na tabela certa, devolve o original. Esse padrão de “Ã” seguido de um símbolo é o rastro típico de UTF-8 lido como se fosse latin-1. Agora com arquivos de verdade, em bytes:</p>
+<pre class="codigo" tabindex="0" aria-label="Mesmo conteúdo em duas codificações, lido de formas diferentes">dados = <span class="s">"produto,preço\nBoné,10\n"</span>.encode(<span class="s">"latin-1"</span>)   <span class="c"># arquivo gravado em latin-1</span>
+<span class="k">print</span>(dados)
+<span class="k">try</span>:
+    pd.read_csv(io.BytesIO(dados))
+<span class="k">except</span> UnicodeDecodeError <span class="k">as</span> erro:
+    <span class="k">print</span>(<span class="s">"erro:"</span>, erro)
+<span class="k">print</span>(pd.read_csv(io.BytesIO(dados), encoding=<span class="s">"latin-1"</span>))
+
+dados_utf8 = <span class="s">"produto,preço\nBoné,10\n"</span>.encode(<span class="s">"utf-8"</span>)  <span class="c"># arquivo gravado em UTF-8</span>
+<span class="k">print</span>(pd.read_csv(io.BytesIO(dados_utf8)))
+<span class="k">print</span>(pd.read_csv(io.BytesIO(dados_utf8), encoding=<span class="s">"latin-1"</span>))</pre>
+<div class="saida" aria-label="Saída do código">b'produto,pre\xe7o\nBon\xe9,10\n'
+erro: 'utf-8' codec can't decode byte 0xe7 in position 11: invalid continuation byte
+  produto  preço
+0    Boné     10
+  produto  preço
+0    Boné     10
+  produto  preÃ§o
+0   BonÃ©      10</div>
+    <p>Quatro leituras, quatro lições. (1) O arquivo em latin-1, lido sem eu dizer nada, quebrou: a mensagem cita o codec <code>utf-8</code>, que foi a tabela que o pandas tentou usar por eu não ter pedido outra. (2) Com <code>encoding="latin-1"</code> a leitura saiu certa. (3) O arquivo em UTF-8 foi lido certo sem eu pedir nada. (4) O mesmo arquivo em UTF-8 lido como latin-1 não deu erro nenhum e entregou “preÃ§o” e “BonÃ©”. Ou seja, codificação errada nem sempre avisa: às vezes só estraga em silêncio.</p>
+    <p>A regra é descobrir a codificação antes de ler: pergunte a quem exportou o arquivo e, se não der, leia com a candidata mais provável e confira o resultado procurando justamente esse “Ã” suspeito. O CSV da loja, neste capítulo, mora dentro de um texto do Python e por isso já está “decodificado”: o <code>encoding</code> só entra quando você lê bytes de um arquivo.</p>
+
+    <aside class="nota margem" aria-label="Nota de margem">
+      <span class="rotulo">Cuidado</span>
+      <p>Remover acento convertendo para ASCII apaga qualquer símbolo que não seja ASCII, e não só acentos. Teste com a função acima:</p>
+<pre class="codigo" tabindex="0" aria-label="Teste da função com símbolos">simbolos = pd.Series(["5 € e 3 ½"])
+print(limpar_texto(simbolos).tolist())</pre>
+<div class="saida" aria-label="Saída do código">['5  e 3 12']</div>
+    <p>O “€” sumiu, e o “½” deixou para trás um “1” e um “2”, que agora parecem números de verdade no meio do texto. Aplique a função só em colunas de categoria e nome, nunca em texto em que os símbolos importam.</p>
+    </aside>
+
+    <section class="experimento" data-ex="ia-2-1" data-pacotes="pandas" aria-labelledby="exp1">
+      <header>
+        <div class="rotulo">Experimento 2.1</div>
+        <h3 id="exp1">Padronizar categorias e nomes de produto</h3>
+      </header>
+      <div class="enunciado"><p>A tabela <code>df</code> já está carregada, com 7 pedidos e duas colunas de texto sujo: <code>categoria</code> e <code>produto</code>. Padronize as duas, na própria coluna: sem espaços nas pontas, em minúsculas e sem acento. Depois imprima o que quiser para conferir. Há 3 categorias de verdade e 3 produtos de verdade escondidos nas grafias diferentes.</p></div>
+      <script type="text/plain" class="py-preparo">
+import io
+import pandas as pd
+
+csv = """categoria,produto
+ Roupas ,Camiseta Básica
+roupas,CAMISETA BASICA
+Calçados,Tênis Corrida
+calcados ,tênis corrida
+CALÇADOS,Tenis corrida
+Acessórios,Boné
+acessorios,BONE
+"""
+df = pd.read_csv(io.StringIO(csv))
+</script>
+      <script type="text/plain" class="py-inicial">
+# Padronize "categoria" e "produto": sem espaços nas pontas,
+# em minúsculas e sem acento. Guarde o resultado nas próprias colunas.
+
+# escreva aqui
+
+print(df["categoria"].value_counts())
+print(df["produto"].nunique())
+</script>
+      <script type="text/plain" class="py-teste">
+cats = set(df["categoria"])
+verificar(len(cats) == 3, "Depois de padronizar, a coluna 'categoria' deveria ter 3 valores diferentes. Hoje tem " + str(len(cats)) + ".")
+verificar(cats == {"roupas", "calcados", "acessorios"}, "Os 3 valores de 'categoria' deveriam estar em minúsculas, sem espaço nas pontas e sem acento.")
+contagem = df["categoria"].value_counts().to_dict()
+verificar(contagem == {"roupas": 2, "calcados": 3, "acessorios": 2}, "A contagem esperada por categoria é 2 pedidos de roupas, 3 de calçados e 2 de acessórios (todos já padronizados).")
+verificar(df["produto"].nunique() == 3, "Os 7 pedidos são de 3 produtos só. Hoje a coluna 'produto' tem " + str(df["produto"].nunique()) + " textos diferentes.")
+verificar(set(df["produto"]) == {"camiseta basica", "tenis corrida", "bone"}, "Os 3 produtos deveriam estar em minúsculas e sem acento: confira se aplicou a limpeza também em 'produto'.")
+</script>
+      <script type="text/plain" class="py-solucao">
+def limpar(serie):
+    serie = serie.str.strip().str.lower()
+    serie = serie.str.normalize("NFKD")
+    serie = serie.str.encode("ascii", errors="ignore").str.decode("ascii")
+    return serie
+
+
+df["categoria"] = limpar(df["categoria"])
+df["produto"] = limpar(df["produto"])
+
+print(df["categoria"].value_counts())
+print(df["produto"].nunique())
+</script>
+      <template class="dica"><p>Comece pelo mais simples: <code>.str.strip()</code> tira os espaços das pontas e <code>.str.lower()</code> põe tudo em minúsculas. Dá para encadear os dois.</p></template>
+      <template class="dica"><p>Para os acentos, use a receita da seção 2.2: <code>.str.normalize("NFKD")</code>, depois <code>.str.encode("ascii", errors="ignore")</code> e por fim <code>.str.decode("ascii")</code>.</p></template>
+      <template class="dica"><p>Escreva uma função que recebe uma coluna e devolve a coluna limpa, e aplique nas duas: <code>df["categoria"] = limpar(df["categoria"])</code>. Depois do ajuste, <code>value_counts()</code> deve mostrar 3 linhas.</p></template>
+    </section>
+
+    <h2 id="s3"><span class="nsec">2.3</span>Datas e números em formato brasileiro</h2>
+    <p class="gancho">“05/11/2026” é cinco de novembro ou onze de maio, e “1.234,56” é mil duzentos e trinta e quatro vírgula cinquenta e seis ou outra coisa?</p>
+
+    <h3>Intuição</h3>
+    <p>Para uma pessoa brasileira a resposta é imediata, porque ela sabe a convenção: dia, mês e ano, ponto separando milhares, vírgula separando os centavos. O computador não adivinha convenção. Um texto que parece uma data não é uma data enquanto ninguém disser em que ordem estão o dia, o mês e o ano, e um texto com vírgula decimal não é um número para o Python, que só entende o ponto.</p>
+
+    <h3>Definição</h3>
+    <p>Converter é transformar texto em um tipo que o computador consegue comparar e calcular. Para datas usamos <code>pd.to_datetime(coluna, format="%d/%m/%Y")</code>, em que <code>%d</code> é o dia, <code>%m</code> o mês e <code>%Y</code> o ano com quatro dígitos. Para números usamos <code>pd.to_numeric</code>, depois de tirar o ponto de milhar e trocar a vírgula por ponto. Nos dois, o argumento <code>errors="coerce"</code> manda o que não converter virar <b>NaT</b> (data ausente) ou <b>NaN</b> (número ausente), em vez de interromper o programa com erro. O <button type="button" class="termo" data-def="NaN: &quot;not a number&quot;, o marcador de valor ausente em colunas numéricas. Nas colunas de data o equivalente é NaT, &quot;not a time&quot;.">NaN</button> é um marcador, não um número comum, e as contas do pandas pulam esse marcador.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Primeiro as datas. Convertemos a coluna de texto duas vezes: com o formato certo (<code>%d/%m/%Y</code>) e com o formato trocado (<code>%m/%d/%Y</code>), como faria quem copiou um exemplo de um tutorial americano. Depois comparamos o que saiu.</p>
+<pre class="codigo" tabindex="0" aria-label="Mesma coluna convertida com dia/mês e com mês/dia">datas_texto = pd.read_csv(io.StringIO(csv))[<span class="s">"data"</span>]   <span class="c"># a coluna original, ainda em texto</span>
+
+certo = pd.to_datetime(datas_texto, format=<span class="s">"%d/%m/%Y"</span>, errors=<span class="s">"coerce"</span>)
+errado = pd.to_datetime(datas_texto, format=<span class="s">"%m/%d/%Y"</span>, errors=<span class="s">"coerce"</span>)
+
+<span class="k">print</span>(certo.dtype)
+<span class="k">print</span>(<span class="s">"válidas:"</span>, certo.notna().sum(), <span class="s">"| NaT:"</span>, certo.isna().sum())
+<span class="k">print</span>(<span class="s">"mais antiga:"</span>, certo.min().date(), <span class="s">"| mais recente:"</span>, certo.max().date())
+<span class="k">print</span>(<span class="s">"intervalo:"</span>, (certo.max() - certo.min()).days, <span class="s">"dias"</span>)
+<span class="k">print</span>()
+<span class="k">print</span>(<span class="s">"válidas:"</span>, errado.notna().sum(), <span class="s">"| NaT:"</span>, errado.isna().sum())
+<span class="k">print</span>(<span class="s">"mais antiga:"</span>, errado.min().date(), <span class="s">"| mais recente:"</span>, errado.max().date())
+<span class="k">print</span>(<span class="s">"intervalo:"</span>, (errado.max() - errado.min()).days, <span class="s">"dias"</span>)
+<span class="k">print</span>(<span class="s">"iguais às corretas:"</span>, (errado == certo).sum())
+<span class="k">print</span>(<span class="s">"válidas e diferentes das corretas:"</span>, (errado.notna() &amp; (errado != certo)).sum())</pre>
+<div class="saida" aria-label="Saída do código">datetime64[us]
+válidas: 11 | NaT: 1
+mais antiga: 2026-11-05 | mais recente: 2026-11-13
+intervalo: 8 dias
+
+válidas: 9 | NaT: 3
+mais antiga: 2026-05-11 | mais recente: 2026-12-11
+intervalo: 214 dias
+iguais às corretas: 1
+válidas e diferentes das corretas: 8</div>
+    <p>Com o formato certo: 11 datas válidas e 1 NaT (a que já estava em branco), indo de 5 a 13 de novembro, um intervalo de 8 dias. Com o formato trocado: 9 válidas e 3 NaT, indo de 11 de maio a 11 de dezembro, um intervalo de 214 dias. Das 9 válidas, só 1 coincide com a leitura certa, a de “11/11/2026”, que é igual dos dois jeitos por acaso. As outras 8 são datas válidas e <b>erradas</b>: “05/11/2026” virou 11 de maio. Os 2 NaT novos são os dois “13/11/2026”, já que não existe mês 13.</p>
+    <p>É por isso que a conversão com o formato errado é perigosa: nada quebra, a coluna vira data de verdade, e os números seguem a partir daí. Um intervalo de 214 dias numa loja em que todos os pedidos cabem em 8 dias é o sinal que você teria de notar. Para o <code>coerce</code>, vale ver as duas maneiras de lidar com uma data impossível:</p>
+<pre class="codigo" tabindex="0" aria-label="Uma data que não existe, com e sem coerce"><span class="k">print</span>(pd.to_datetime(pd.Series([<span class="s">"31/02/2026"</span>, <span class="s">"13/11/2026"</span>]), format=<span class="s">"%d/%m/%Y"</span>, errors=<span class="s">"coerce"</span>).tolist())
+<span class="k">try</span>:
+    pd.to_datetime(pd.Series([<span class="s">"31/02/2026"</span>]), format=<span class="s">"%d/%m/%Y"</span>)
+<span class="k">except</span> ValueError <span class="k">as</span> erro:
+    <span class="k">print</span>(<span class="s">"sem coerce:"</span>, str(erro).split(<span class="s">". "</span>)[<span class="n">0</span>])</pre>
+<div class="saida" aria-label="Saída do código">[NaT, Timestamp('2026-11-13 00:00:00')]
+sem coerce: day 31 must be in range 1..28 for month 2 in year 2026</div>
+    <p>Com <code>coerce</code>, “31/02/2026” vira NaT e o programa segue. Sem ele, aparece um <code>ValueError</code>. Os dois comportamentos têm uso: o erro obriga você a olhar o problema, o <code>coerce</code> deixa a limpeza andar mas pede que você conte o que virou NaT depois.</p>
+
+    <p>Agora os números. Tentar converter direto não funciona:</p>
+<pre class="codigo" tabindex="0" aria-label="Tentativa de converter o texto com vírgula direto para número">valores = df[<span class="s">"valor"</span>]
+<span class="k">print</span>(valores.tolist())
+<span class="k">try</span>:
+    valores.astype(float)
+<span class="k">except</span> ValueError <span class="k">as</span> erro:
+    <span class="k">print</span>(<span class="s">"erro:"</span>, erro)</pre>
+<div class="saida" aria-label="Saída do código">['119,80', '1.234,56', '179,70', '189,00', '617,28', 'N/D', '189,00', '239,60', '1.851,84', '39,95', '259,90', '519,80']
+erro: could not convert string to float: '119,80'</div>
+    <p>O Python recusa “119,80”. A receita é em duas trocas: tirar o ponto de milhar e então trocar a vírgula por ponto. A ordem importa, porque se trocarmos a vírgula primeiro o texto fica com dois pontos.</p>
+<pre class="codigo" tabindex="0" aria-label="Conversão em duas trocas e soma conferida">sem_ponto = valores.str.replace(<span class="s">"."</span>, <span class="s">""</span>, regex=<span class="k">False</span>)          <span class="c"># tira o ponto de milhar</span>
+com_ponto = sem_ponto.str.replace(<span class="s">","</span>, <span class="s">"."</span>, regex=<span class="k">False</span>)       <span class="c"># vírgula decimal vira ponto</span>
+<span class="k">print</span>(com_ponto.tolist())
+numeros = pd.to_numeric(com_ponto, errors=<span class="s">"coerce"</span>)            <span class="c"># "N/D" não converte: vira NaN</span>
+<span class="k">print</span>(numeros.tolist())
+<span class="k">print</span>(<span class="s">"ausentes:"</span>, numeros.isna().sum(), <span class="s">"| soma:"</span>, round(numeros.sum(), <span class="n">2</span>))</pre>
+<div class="saida" aria-label="Saída do código">['119.80', '1234.56', '179.70', '189.00', '617.28', 'N/D', '189.00', '239.60', '1851.84', '39.95', '259.90', '519.80']
+[119.8, 1234.56, 179.7, 189.0, 617.28, nan, 189.0, 239.6, 1851.84, 39.95, 259.9, 519.8]
+ausentes: 1 | soma: 5440.43</div>
+    <p>Os 11 valores que existiam viraram número, o “N/D” virou NaN (1 ausente) e a soma dos 11 é 5440,43. Para sentir o risco de fazer diferente, veja duas receitas que parecem razoáveis:</p>
+<pre class="codigo" tabindex="0" aria-label="Duas conversões erradas">so_virgula_fora = pd.to_numeric(valores.str.replace(<span class="s">","</span>, <span class="s">""</span>, regex=<span class="k">False</span>), errors=<span class="s">"coerce"</span>)
+so_virgula_ponto = pd.to_numeric(valores.str.replace(<span class="s">","</span>, <span class="s">"."</span>, regex=<span class="k">False</span>), errors=<span class="s">"coerce"</span>)
+<span class="k">print</span>(so_virgula_fora.tolist())
+<span class="k">print</span>(so_virgula_ponto.tolist())
+<span class="k">print</span>(<span class="s">"ausentes no segundo:"</span>, so_virgula_ponto.isna().sum())</pre>
+<div class="saida" aria-label="Saída do código">[11980.0, 1.23456, 17970.0, 18900.0, 61728.0, nan, 18900.0, 23960.0, 1.85184, 3995.0, 25990.0, 51980.0]
+[119.8, nan, 179.7, 189.0, 617.28, nan, 189.0, 239.6, nan, 39.95, 259.9, 519.8]
+ausentes no segundo: 3</div>
+    <p>Na primeira, só tirei a vírgula: “119,80” virou 11980.0 e “1.234,56” virou 1.23456. Os valores ficaram na casa dos milhares ou dos centavos, e nenhum erro apareceu. Na segunda, troquei a vírgula por ponto sem tirar o ponto de milhar: “1.234,56” virou “1.234.56”, que não é número, e o <code>coerce</code> o transformou em NaN. O número de ausentes subiu de 1 para 3, e esse é o alarme: <b>depois de um coerce, compare quantos ausentes havia antes e depois</b>. Se subiu mais do que você esperava, olhe as linhas que viraram NaN.</p>
+    <p>Com a receita certa, aplicamos a conversão na tabela:</p>
+<pre class="codigo" tabindex="0" aria-label="Colunas data e valor já convertidas">df[<span class="s">"data"</span>] = certo
+df[<span class="s">"valor"</span>] = numeros
+<span class="k">print</span>(df[[<span class="s">"pedido"</span>, <span class="s">"data"</span>, <span class="s">"valor"</span>]].head(<span class="n">4</span>))</pre>
+<div class="saida" aria-label="Saída do código">   pedido       data    valor
+0    1001 2026-11-05   119.80
+1    1002 2026-11-06  1234.56
+2    1003 2026-11-06   179.70
+3    1004 2026-11-07   189.00</div>
+
+    <h3>Erro comum</h3>
+    <p>Usar <code>errors="coerce"</code> e nunca mais olhar. Ele é útil porque a limpeza continua, e perigoso porque esconde o problema: o erro vira um NaN silencioso e você só descobre quando a média sair estranha. Conte os ausentes antes e depois de cada conversão. E diga sempre o <code>format=</code> da data: sem ele você está deixando o pandas decidir por você, e em datas como “05/11/2026” a decisão certa depende de uma convenção que só você conhece.</p>
+
+    <section class="experimento" data-ex="ia-2-2" data-pacotes="pandas" aria-labelledby="exp2">
+      <header>
+        <div class="rotulo">Experimento 2.2</div>
+        <h3 id="exp2">Converter datas e valores em formato brasileiro</h3>
+      </header>
+      <div class="enunciado"><p>A tabela <code>df</code> tem 5 pedidos com <code>data</code> em dia/mês/ano e <code>valor</code> como “1.050,00”. Converta as duas colunas, na própria coluna, para data e para número. O que não converter deve virar NaT ou NaN, sem derrubar o programa. Uma das datas não existe e um dos valores é “N/D”.</p></div>
+      <script type="text/plain" class="py-preparo">
+import io
+import pandas as pd
+
+csv = """pedido,data,valor
+1,02/03/2026,"1.050,00"
+2,15/03/2026,"89,90"
+3,20/03/2026,N/D
+4,07/04/2026,"2.300,50"
+5,31/02/2026,"45,00"
+"""
+df = pd.read_csv(io.StringIO(csv))
+</script>
+      <script type="text/plain" class="py-inicial">
+# 1) converta "data" (dia/mês/ano) para data de verdade
+# 2) converta "valor" (ponto de milhar, vírgula decimal) para número
+# O que não converter deve virar NaT/NaN, sem erro.
+
+# escreva aqui
+
+print(df.dtypes)
+print(df)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(str(df["data"].dtype).startswith("datetime64"), "A coluna 'data' deveria ter virado data de verdade (tipo datetime64). Hoje o tipo é " + str(df["data"].dtype) + ".")
+verificar(df["data"].isna().sum() == 1, "Só uma data é impossível (a que não existe no calendário), então deveria haver exatamente 1 NaT. Hoje há " + str(int(df["data"].isna().sum())) + ".")
+verificar(df["data"].iloc[0] == pd.Timestamp(2026, 3, 2), "O primeiro pedido, '02/03/2026', no formato dia/mês/ano é 2 de março de 2026. Confira a ordem do dia e do mês no format.")
+verificar(df["data"].iloc[3].month == 4, "O quarto pedido, '07/04/2026', deveria cair em abril.")
+verificar(pd.api.types.is_float_dtype(df["valor"]), "A coluna 'valor' deveria ter virado número decimal. Hoje o tipo é " + str(df["valor"].dtype) + ".")
+verificar(df["valor"].isna().sum() == 1, "Só o 'N/D' não é número, então deveria haver 1 NaN em 'valor'. Hoje há " + str(int(df["valor"].isna().sum())) + ".")
+verificar(abs(df["valor"].sum() - 3485.40) < 0.01, "A soma dos 4 valores que existem deveria ser 3485,40. Confira se tirou o ponto de milhar antes de trocar a vírgula.")
+</script>
+      <script type="text/plain" class="py-solucao">
+df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y", errors="coerce")
+
+limpo = df["valor"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+df["valor"] = pd.to_numeric(limpo, errors="coerce")
+
+print(df.dtypes)
+print(df)
+print(round(df["valor"].sum(), 2))
+</script>
+      <template class="dica"><p>Para a data, o formato é <code>"%d/%m/%Y"</code> (dia, mês, ano de quatro dígitos), e o argumento <code>errors="coerce"</code> transforma a data impossível em NaT.</p></template>
+      <template class="dica"><p>Para o valor, são duas trocas em texto, com <code>.str.replace(..., regex=False)</code>: primeiro tire o ponto de milhar, depois troque a vírgula por ponto.</p></template>
+      <template class="dica"><p>Só depois das trocas chame <code>pd.to_numeric(limpo, errors="coerce")</code>. O “N/D” vira NaN, e a soma dos outros quatro valores é 3485,40.</p></template>
+    </section>
+
+    <h2 id="s4"><span class="nsec">2.4</span>Valores ausentes</h2>
+    <p class="gancho">Uma linha com um buraco no meio: jogar fora, tapar com algum número ou avisar que havia um buraco?</p>
+
+    <h3>Intuição</h3>
+    <p>Um <button type="button" class="termo" data-def="Valor ausente: célula sem informação, como uma quantidade que ninguém digitou. No pandas aparece como NaN (número), NaT (data) ou &lt;NA&gt;.">valor ausente</button> é uma informação que não chegou: o cliente não informou a cidade, o sistema falhou ao gravar o valor. Existem três saídas e nenhuma é de graça. Jogar a linha fora perde o que a linha tinha de bom. Tapar o buraco com um número inventa informação. Só avisar, sem tapar, deixa o problema para quem usar a tabela. Muitas vezes o melhor é combinar: tampar com um valor razoável e deixar uma coluna avisando que ali havia um buraco.</p>
+
+    <h3>Definição</h3>
+    <p>O pandas reconhece como ausente a célula realmente vazia no CSV, que vira NaN (ou NaT, em datas). Na leitura de um CSV ele também reconhece uma lista fixa de grafias, como “NA”, “N/A” e “null”. Veja, com cinco linhas, quais viram ausente:</p>
+<pre class="codigo" tabindex="0" aria-label="Quais grafias o read_csv reconhece como ausente">import io
+csv = "a\nNA\nnull\nN/A\nN/D\n-\n"
+print(pd.read_csv(io.StringIO(csv), dtype=str)["a"].isna().tolist())</pre>
+<div class="saida" aria-label="Saída do código">[True, True, True, False, False]</div>
+    <p>Os três primeiros (“NA”, “null” e “N/A”) viraram ausentes. O que ele <b>não</b> reconhece sozinho é texto que significa “vazio” fora dessa lista: “N/D” e “-” deram False, e o mesmo vale para um campo só com espaços. Veja a diferença com um exemplo pequeno, em que o último item é <code>None</code>:</p>
+<pre class="codigo" tabindex="0" aria-label="O que o pandas considera ausente num texto">s = pd.Series([<span class="s">"ok"</span>, <span class="s">""</span>, <span class="s">"   "</span>, <span class="k">None</span>])
+<span class="k">print</span>(s.isna().tolist())
+<span class="k">print</span>(s.str.strip().replace(<span class="s">""</span>, pd.NA).isna().tolist())</pre>
+<div class="saida" aria-label="Saída do código">[False, False, False, True]
+[False, True, True, True]</div>
+    <p>Só o <code>None</code> é ausente. O texto vazio <code>""</code> e o texto de espaços <code>"   "</code> são textos comuns. Na segunda linha eu tirei os espaços com <code>.str.strip()</code> e troquei o texto vazio por <code>pd.NA</code> (o marcador de ausente do pandas), e então os três viraram ausentes. Para o “N/D”, o jeito mais limpo é avisar o <code>read_csv</code> na leitura, com o parâmetro <code>na_values</code>.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Vamos recomeçar da leitura, desta vez já com <code>na_values</code>, e repetir em seguida as arrumações das seções 2.2 e 2.3 (a função <code>limpar_texto</code> continua definida do passo anterior). Assim o capítulo fica com uma tabela limpa de ponta a ponta, que é o que o próximo passo precisa.</p>
+<pre class="codigo" tabindex="0" aria-label="Leitura com na_values e todas as conversões, de novo">df = pd.read_csv(io.StringIO(csv), na_values=[<span class="s">"N/D"</span>])
+<span class="k">print</span>(df[<span class="s">"valor"</span>].isna().sum(), <span class="s">"ausente em valor"</span>)
+df[<span class="s">"valor"</span>] = pd.to_numeric(df[<span class="s">"valor"</span>].str.replace(<span class="s">"."</span>, <span class="s">""</span>, regex=<span class="k">False</span>).str.replace(<span class="s">","</span>, <span class="s">"."</span>, regex=<span class="k">False</span>))
+df[<span class="s">"data"</span>] = pd.to_datetime(df[<span class="s">"data"</span>], format=<span class="s">"%d/%m/%Y"</span>)
+df[<span class="s">"categoria"</span>] = limpar_texto(df[<span class="s">"categoria"</span>])
+df[<span class="s">"produto"</span>] = limpar_texto(df[<span class="s">"produto"</span>])
+df[<span class="s">"cidade"</span>] = df[<span class="s">"cidade"</span>].str.strip().str.title()
+<span class="k">print</span>(df.isna().sum())</pre>
+<div class="saida" aria-label="Saída do código">1 ausente em valor
+pedido        0
+data          1
+produto       0
+categoria     0
+quantidade    1
+valor         1
+cidade        1
+dtype: int64</div>
+    <p>Agora o “N/D” é um ausente de verdade: <code>valor</code> tem 1 ausente, e <code>data</code>, <code>quantidade</code> e <code>cidade</code> também têm 1 cada. São 4 colunas com um buraco. Sobre cada saída possível, as contas:</p>
+<pre class="codigo" tabindex="0" aria-label="Efeito de cada escolha na coluna valor"><span class="k">print</span>(<span class="s">"linhas:"</span>, len(df), <span class="s">"| sem nenhum ausente:"</span>, len(df.dropna()))
+<span class="k">print</span>()
+v = df[<span class="s">"valor"</span>]
+<span class="k">print</span>(<span class="s">"média ignorando o ausente: "</span>, round(v.mean(), <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"média com 0 no lugar:      "</span>, round(v.fillna(<span class="n">0</span>).mean(), <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"média com a mediana no lugar:"</span>, round(v.fillna(v.median()).mean(), <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"média com a média no lugar:  "</span>, round(v.fillna(v.mean()).mean(), <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"queda causada pelo 0:"</span>, round(v.mean() - v.fillna(<span class="n">0</span>).mean(), <span class="n">2</span>))
+<span class="k">print</span>()
+<span class="k">print</span>(<span class="s">"mediana:"</span>, round(v.median(), <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"mediana com a mediana no lugar:"</span>, round(v.fillna(v.median()).median(), <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"mediana com 0 no lugar:"</span>, round(v.fillna(<span class="n">0</span>).median(), <span class="n">2</span>))</pre>
+<div class="saida" aria-label="Saída do código">linhas: 12 | sem nenhum ausente: 8
+
+média ignorando o ausente:  494.58
+média com 0 no lugar:       453.37
+média com a mediana no lugar: 473.34
+média com a média no lugar:   494.58
+queda causada pelo 0: 41.22
+
+mediana: 239.6
+mediana com a mediana no lugar: 239.6
+mediana com 0 no lugar: 214.3</div>
+    <p><b>Remover linhas.</b> Das 12 linhas, só 8 não têm nenhum ausente: jogar fora tudo que tem buraco custaria 4 pedidos, um terço da tabela, mesmo que cada um tenha só uma célula faltando. <b>Preencher com zero.</b> A média de <code>valor</code>, que ignorando o ausente é 494,58, cai para 453,37, porque o pandas passa a contar uma venda de zero reais que nunca existiu (a queda, calculada antes de arredondar, é de 41,22). <b>Preencher com a mediana.</b> A média fica em 473,34 e a mediana não se mexe (239,6). <b>Preencher com a média.</b> A média nem se mexe (494,58), o que parece bom, mas a média é puxada pelos valores grandes: ela está em 494,58 enquanto a mediana é 239,6, porque há pedidos de 1.234,56 e 1.851,84. A mediana é o valor do meio da fila ordenada, então os pedidos grandes não a puxam. Com zero no lugar, até a mediana muda, para 214,3.</p>
+    <p>A mediana nos serve melhor aqui: não deixa o pedido de 1.851,84 mandar na escolha. Mas qualquer um desses números é uma <b>invenção</b>, e a invenção precisa ficar registrada. Por isso a última técnica entra junto com a que preenche: uma coluna nova de verdadeiro ou falso dizendo “esta linha estava ausente”.</p>
+<pre class="codigo" tabindex="0" aria-label="Marcar e preencher">df[<span class="s">"data_ausente"</span>] = df[<span class="s">"data"</span>].isna()                   <span class="c"># marca ANTES de preencher</span>
+df[<span class="s">"valor_ausente"</span>] = df[<span class="s">"valor"</span>].isna()
+df[<span class="s">"quantidade_ausente"</span>] = df[<span class="s">"quantidade"</span>].isna()
+
+df[<span class="s">"valor"</span>] = df[<span class="s">"valor"</span>].fillna(df[<span class="s">"valor"</span>].median())   <span class="c"># mediana</span>
+df[<span class="s">"quantidade"</span>] = df[<span class="s">"quantidade"</span>].fillna(df[<span class="s">"quantidade"</span>].median())
+df[<span class="s">"cidade"</span>] = df[<span class="s">"cidade"</span>].fillna(<span class="s">"desconhecida"</span>)       <span class="c"># valor fixo para texto</span>
+
+<span class="k">print</span>(df.loc[[<span class="n">4</span>, <span class="n">5</span>, <span class="n">6</span>], [<span class="s">"pedido"</span>, <span class="s">"quantidade"</span>, <span class="s">"valor"</span>, <span class="s">"cidade"</span>]])
+<span class="k">print</span>()
+<span class="k">print</span>(df[[<span class="s">"data_ausente"</span>, <span class="s">"valor_ausente"</span>, <span class="s">"quantidade_ausente"</span>]].sum())
+<span class="k">print</span>(df.isna().sum()[[<span class="s">"data"</span>, <span class="s">"valor"</span>, <span class="s">"quantidade"</span>, <span class="s">"cidade"</span>]])</pre>
+<div class="saida" aria-label="Saída do código">   pedido  quantidade   valor        cidade
+4    1005         2.0  617.28      Campinas
+5    1006         2.0  239.60      Sorocaba
+6    1007         1.0  189.00  desconhecida
+
+data_ausente          1
+valor_ausente         1
+quantidade_ausente    1
+dtype: int64
+data          1
+valor         0
+quantidade    0
+cidade        0
+dtype: int64</div>
+    <p>As três linhas mostradas são as dos pedidos 1005 (quantidade vazia, preenchida com 2,0), 1006 (valor “N/D”, preenchido com 239,6, a mediana) e 1007 (cidade vazia, preenchida com um valor fixo, “desconhecida”). As colunas de aviso contam 1 verdadeiro cada, e depois do preenchimento sobra 1 ausente em <code>data</code>: a data eu deixo como está, porque não existe um valor razoável para inventar numa data, e a coluna <code>data_ausente</code> já avisa que ela falta.</p>
+
+    <h3>Código comentado</h3>
+    <p>A ordem das linhas importa: primeiro as colunas de aviso (<code>isna()</code>), depois o preenchimento (<code>fillna()</code>). Se invertermos, o aviso nasce vazio, porque já não há mais nada ausente para marcar. Uma das linhas preenche com uma estatística da própria coluna (a mediana), outra com um valor fixo (a palavra “desconhecida”). Em coluna de texto, valor fixo costuma ser a opção mais honesta.</p>
+
+    <h3>Erro comum</h3>
+    <p>Preencher com 0 porque “vazio parece zero”. Zero é um valor, e as contas o tratam como tal: a média de 494,58 virou 453,37 sem nenhum aviso. E não é só a média: numa coluna como idade, preço ou quantidade, o zero pode virar um extremo que o resto do trabalho nem conseguirá distinguir de um valor verdadeiro. Se for usar uma estatística, olhe antes se a coluna tem valores extremos, e prefira a mediana nesse caso.</p>
+
+    <section class="experimento" data-ex="ia-2-3" data-pacotes="pandas" aria-labelledby="exp3">
+      <header>
+        <div class="rotulo">Experimento 2.3</div>
+        <h3 id="exp3">Ausentes: ler, medir o estrago e preencher</h3>
+      </header>
+      <div class="enunciado"><p>O texto <code>csv</code> tem 8 pedidos. Dois têm <code>valor</code> “N/D” e um tem <code>quantidade</code> vazia. Faça quatro coisas: (1) leia a tabela tratando “N/D” como ausente; (2) guarde em <code>media_real</code> a média de <code>valor</code> ignorando os ausentes e em <code>media_com_zero</code> a média se os ausentes fossem 0 (sem alterar a coluna); (3) crie a coluna booleana <code>valor_ausente</code>; (4) preencha <code>valor</code> com a mediana.</p></div>
+      <script type="text/plain" class="py-preparo">
+import io
+import pandas as pd
+
+csv = """pedido,quantidade,valor
+1,2,119.80
+2,1,N/D
+3,3,179.70
+4,,189.00
+5,1,189.00
+6,2,N/D
+7,4,239.60
+8,1,259.90
+"""
+</script>
+      <script type="text/plain" class="py-inicial">
+# 1) Leia o csv tratando "N/D" como ausente
+df = pd.read_csv(io.StringIO(csv))   # ajuste esta linha
+
+# 2) Média de "valor" ignorando os ausentes, e média se eles fossem 0
+media_real = None
+media_com_zero = None
+
+# 3) Crie a coluna booleana "valor_ausente"
+# 4) Preencha "valor" com a mediana
+
+print(df.isna().sum())
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(media_real is not None and abs(media_real - 196.17) < 0.01, "A média de 'valor' ignorando os 2 ausentes deveria ser cerca de 196,17. Confira se o 'N/D' virou ausente já na leitura.")
+verificar(media_com_zero is not None and abs(media_com_zero - 147.125) < 0.01, "Com os 2 ausentes contando como 0, a média de 'valor' (dividida por 8 pedidos) deveria ser 147,125.")
+verificar("valor_ausente" in df.columns, "Crie a coluna 'valor_ausente' antes de preencher.")
+verificar(int(df["valor_ausente"].sum()) == 2, "A coluna 'valor_ausente' deveria ter 2 verdadeiros (os dois 'N/D'). Se você preencheu 'valor' antes de criá-la, ela nasceu toda falsa.")
+verificar(df["valor"].isna().sum() == 0, "Depois do preenchimento, 'valor' não deveria ter mais nenhum ausente.")
+verificar(df.loc[df["valor_ausente"], "valor"].tolist() == [189.0, 189.0], "As linhas que estavam ausentes deveriam ter recebido a mediana dos 6 valores que existiam.")
+verificar(abs(df["valor"].sum() - 1555.0) < 0.01, "Os 6 valores originais não podem mudar: a soma de 'valor' no fim deveria ser 1555,00 (os 6 originais mais 2 vezes a mediana).")
+</script>
+      <script type="text/plain" class="py-solucao">
+df = pd.read_csv(io.StringIO(csv), na_values=["N/D"])
+
+media_real = df["valor"].mean()
+media_com_zero = df["valor"].fillna(0).mean()
+
+df["valor_ausente"] = df["valor"].isna()
+df["valor"] = df["valor"].fillna(df["valor"].median())
+
+print(df.isna().sum())
+print(round(media_real, 2), round(media_com_zero, 2))
+print(df["valor"].median(), round(df["valor"].sum(), 2))
+</script>
+      <template class="dica"><p>Na leitura, passe <code>na_values=["N/D"]</code> para <code>pd.read_csv</code>. Sem isso a coluna <code>valor</code> continua como texto.</p></template>
+      <template class="dica"><p>A média ignorando ausentes é <code>df["valor"].mean()</code> (o pandas já pula os NaN). Para a outra, use <code>df["valor"].fillna(0).mean()</code>, sem guardar o resultado na coluna.</p></template>
+      <template class="dica"><p>Crie <code>valor_ausente</code> com <code>df["valor"].isna()</code> <b>antes</b> do <code>fillna</code>. A mediana vem de <code>df["valor"].median()</code>, que também ignora os NaN.</p></template>
+    </section>
+
+    <h2 id="s5"><span class="nsec">2.5</span>Engenharia de atributos</h2>
+    <p class="gancho">O modelo não sabe o que é um sábado; como entregar a ele uma informação que está escondida dentro de uma data?</p>
+
+    <h3>Intuição</h3>
+    <p>Um modelo só enxerga números. Uma coluna de data inteira, “2026-11-07”, não diz nada a ele, mas “é fim de semana” pode dizer muito: lojas vendem de outro jeito aos sábados. A informação estava na tabela o tempo todo, só não estava na forma que ajuda. <b>Engenharia de atributos</b> é criar colunas novas a partir das que já existem, para que o que importa fique à mostra. Cada coluna que descreve uma linha é um <button type="button" class="termo" data-def="Atributo (em inglês, feature): uma coluna que descreve cada exemplo para o modelo, como o preço unitário ou se o pedido foi num fim de semana.">atributo</button>.</p>
+
+    <h3>Definição</h3>
+    <p>Quatro famílias resolvem muita coisa. <b>Partes da data</b>: mês, dia da semana, fim de semana ou não. <b>Razões</b>: uma coluna dividida por outra, como valor por unidade. <b>Faixas</b>: transformar números em grupos, com <code>pd.cut</code> e limites que você escolhe de forma explícita. <b>Tamanho de texto</b>: quantas letras tem um nome ou uma mensagem.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Pense na camiseta básica. O pedido 1001 teve valor total de 119,80 com 2 unidades, o 1003 teve 179,70 com 3, o 1008 teve 239,60 com 4. Os três totais são diferentes, e olhando só o total parece que são pedidos de naturezas diferentes. Divididos pela quantidade, o preço de cada unidade é o mesmo nos três: 59,90. A razão revelou o que o total escondia. Antes de criar os atributos, uma regra do <code>pd.cut</code> que é bom conhecer:</p>
+<pre class="codigo" tabindex="0" aria-label="Onde cai um valor exatamente no limite da faixa"><span class="k">print</span>(pd.cut(pd.Series([<span class="n">100</span>, <span class="n">100.01</span>]), bins=[<span class="n">0</span>, <span class="n">100</span>, <span class="n">300</span>], labels=[<span class="s">"baixa"</span>, <span class="s">"media"</span>]).tolist())</pre>
+<div class="saida" aria-label="Saída do código">['baixa', 'media']</div>
+    <p>O valor 100 caiu em “baixa” e 100,01 em “media”. Ou seja, o limite pertence à faixa de baixo. Com isso em mente, os cinco atributos de uma vez:</p>
+<pre class="codigo" tabindex="0" aria-label="Cinco atributos novos a partir de data, valor, quantidade e produto">df[<span class="s">"dia_semana"</span>] = df[<span class="s">"data"</span>].dt.dayofweek                 <span class="c"># 0 = segunda, 6 = domingo</span>
+df[<span class="s">"fim_de_semana"</span>] = df[<span class="s">"dia_semana"</span>] &gt;= <span class="n">5</span>                <span class="c"># sábado ou domingo</span>
+df[<span class="s">"preco_unitario"</span>] = (df[<span class="s">"valor"</span>] / df[<span class="s">"quantidade"</span>]).round(<span class="n">2</span>)
+df[<span class="s">"faixa_preco"</span>] = pd.cut(df[<span class="s">"preco_unitario"</span>], bins=[<span class="n">0</span>, <span class="n">100</span>, <span class="n">300</span>, <span class="n">1000</span>], labels=[<span class="s">"baixa"</span>, <span class="s">"media"</span>, <span class="s">"alta"</span>])
+df[<span class="s">"tam_produto"</span>] = df[<span class="s">"produto"</span>].str.len()                <span class="c"># quantas letras tem o nome</span>
+
+<span class="k">print</span>(df[[<span class="s">"pedido"</span>, <span class="s">"data"</span>, <span class="s">"dia_semana"</span>, <span class="s">"fim_de_semana"</span>, <span class="s">"preco_unitario"</span>, <span class="s">"faixa_preco"</span>, <span class="s">"tam_produto"</span>]])</pre>
+<div class="saida" aria-label="Saída do código">    pedido       data  dia_semana  fim_de_semana  preco_unitario faixa_preco  tam_produto
+0     1001 2026-11-05         3.0          False           59.90       baixa           15
+1     1002 2026-11-06         4.0          False          617.28        alta           13
+2     1003 2026-11-06         4.0          False           59.90       baixa           15
+3     1004 2026-11-07         5.0           True          189.00       media           14
+4     1005 2026-11-08         6.0           True          308.64        alta           13
+5     1006 2026-11-09         0.0          False          119.80       media           13
+6     1007 2026-11-10         1.0          False          189.00       media           14
+7     1008 2026-11-11         2.0          False           59.90       baixa           15
+8     1009 2026-11-12         3.0          False          617.28        alta           13
+9     1010        NaT         NaN          False           39.95       baixa           13
+10    1011 2026-11-13         4.0          False          259.90       media           13
+11    1012 2026-11-13         4.0          False          259.90       media           13</div>
+    <p>As três camisetas (1001, 1003, 1008) têm preço unitário 59,90 em todas, como a conta à mão. O <code>dia_semana</code> segue a convenção 0 = segunda: o pedido 1004 (7 de novembro) tem 5 e é fim de semana, assim como o 1005 (8 de novembro, <code>dia_semana</code> 6). A coluna veio com decimais (3.0, 4.0) e um NaN na linha 1010, a da data ausente. As faixas partem dos limites 0, 100, 300 e 1000. Para ver o saldo:</p>
+<pre class="codigo" tabindex="0" aria-label="Contagens dos novos atributos"><span class="k">print</span>(df[<span class="s">"fim_de_semana"</span>].sum(), <span class="s">"pedidos em fim de semana"</span>)
+<span class="k">print</span>(df[<span class="s">"faixa_preco"</span>].value_counts().sort_index())</pre>
+<div class="saida" aria-label="Saída do código">2 pedidos em fim de semana
+faixa_preco
+baixa    4
+media    5
+alta     3
+Name: count, dtype: int64</div>
+    <p>São 2 pedidos de fim de semana e a contagem por faixa dá 4, 5 e 3, somando os 12 pedidos. O atributo <code>tam_produto</code> está ali para mostrar a ideia de tamanho de texto, mas não tenho motivo para achar que o tamanho do nome explique algo numa loja: nem todo atributo ajuda. Quem decide, de verdade, é o teste com um modelo, que é assunto do próximo capítulo.</p>
+
+    <h3>Erro comum</h3>
+    <p>Criar atributo a partir de uma coluna que foi preenchida ou que estava ausente, e esquecer. Olhe as três linhas que tiveram buraco:</p>
+<pre class="codigo" tabindex="0" aria-label="Atributos das linhas que tinham ausente">suspeitas = df[df[<span class="s">"data_ausente"</span>] | df[<span class="s">"valor_ausente"</span>] | df[<span class="s">"quantidade_ausente"</span>]]
+<span class="k">print</span>(suspeitas[[<span class="s">"pedido"</span>, <span class="s">"dia_semana"</span>, <span class="s">"fim_de_semana"</span>, <span class="s">"preco_unitario"</span>, <span class="s">"faixa_preco"</span>]])</pre>
+<div class="saida" aria-label="Saída do código">   pedido  dia_semana  fim_de_semana  preco_unitario faixa_preco
+4    1005         6.0           True          308.64        alta
+5    1006         0.0          False          119.80       media
+9    1010         NaN          False           39.95       baixa</div>
+    <p>O pedido 1010 não tem data, mas aparece com <code>fim_de_semana</code> igual a <code>False</code>: o NaN comparado com 5 dá falso, e o atributo diz “não foi fim de semana” sem ninguém saber. O pedido 1005 ganhou o preço unitário de 308,64 e a faixa “alta” por causa de uma quantidade que foi preenchida com 2,0, não medida, e o 1006 deve o 119,80 a um valor também preenchido. Por isso as colunas <code>data_ausente</code>, <code>valor_ausente</code> e <code>quantidade_ausente</code> da seção anterior ficam na tabela: elas dizem em quais linhas o atributo derivado merece desconfiança.</p>
+
+    <h2 id="s6"><span class="nsec">2.6</span>Verifique o que entendeu</h2>
+    <p class="gancho">Um cenário mostra se você consegue aplicar a ideia numa tabela que ainda não viu.</p>
+
+    <fieldset class="quiz" data-quiz="ia-2-q1">
+      <legend>Cenário 1</legend>
+      <p class="pergunta">Uma loja tem a coluna de valor vazia em algumas vendas, por falha do sistema de gravação. Para calcular o valor médio de uma venda, a analista preenche os vazios com 0 e tira a média. Pelo que vimos, o que acontece com a média?</p>
+      <label class="opcao"><input type="radio" name="ia-2-q1"><span>Fica correta, porque 0 representa “sem valor” e não muda a soma.</span><template class="fb"><p>A soma de fato não muda, mas o número de vendas na divisão sobe. Um zero é um valor como outro: no exemplo da loja, a média foi de 494,58 para 453,37.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-2-q1"><span>Cai, porque cada zero entra na conta como uma venda de zero reais que nunca aconteceu.</span><template class="fb"><p>É isso. A soma fica igual e o divisor aumenta. No capítulo, um único ausente preenchido com 0 derrubou a média de 494,58 para 453,37, sem erro nem aviso. Com vários ausentes o efeito é maior.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-2-q1"><span>O pandas recusa o preenchimento com 0 e avisa que pode distorcer a média.</span><template class="fb"><p>O pandas faz o que você pede, sem aviso. Foi exatamente assim no exemplo: <code>fillna(0)</code> rodou normalmente e a média mudou em silêncio.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-2-q2">
+      <legend>Cenário 2</legend>
+      <p class="pergunta">Um arquivo do Brasil tem datas em dia/mês/ano. Alguém converte a coluna com <code>format="%m/%d/%Y"</code> e <code>errors="coerce"</code>. Nenhum erro aparece, a data “05/11/2026” vira uma data válida, e só as linhas com dia acima de 12 viram NaT. O que concluir?</p>
+      <label class="opcao"><input type="radio" name="ia-2-q2"><span>Só as linhas NaT têm problema; as que viraram data válida estão certas, já que converteram.</span><template class="fb"><p>Converter sem erro não é converter certo. No exemplo da loja, 8 das 9 datas válidas estavam erradas: “05/11/2026” virou 11 de maio.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-2-q2"><span>Basta trocar o valor de <code>errors</code> e a conversão passa a funcionar.</span><template class="fb"><p>O <code>errors</code> só decide o que acontece com o que não converte. As datas trocadas converteram sem reclamar, então o problema é o formato, não o tratamento do erro.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-2-q2"><span>A conversão inteira está suspeita: as datas “válidas” foram lidas com dia e mês trocados, e os NaT são só os casos em que o “mês” passa de 12.</span><template class="fb"><p>Isso mesmo. Os NaT são o sintoma, não o problema inteiro. A forma de perceber é olhar o intervalo das datas: na loja, 214 dias em vez de 8.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <div class="lacuna" data-lacuna="ia-2-l1">
+      <span class="rotulo">Complete</span>
+      <p>Para o pandas tratar o texto “N/D” como ausente já na leitura, uso o parâmetro <input data-resp="na_values" aria-label="Parâmetro do read_csv para textos ausentes"> do <code>read_csv</code>. Na conversão de datas, o parâmetro <input data-resp="format" aria-label="Parâmetro de to_datetime que diz como a data está escrita"> recebe um texto como <code>"%d/%m/%Y"</code>, em que o dia vem primeiro. Para preencher um ausente sem deixar valores extremos mandarem na conta, uso a <input data-resp="mediana" aria-label="Estatística usada para preencher"> da coluna.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="lacuna" data-lacuna="ia-2-l2">
+      <span class="rotulo">Complete</span>
+      <p>Dividir uma coluna por outra, como o valor pela quantidade, cria uma <input data-resp="razão|razao|proporção|proporcao" aria-label="Nome do atributo criado pela divisão de duas colunas">. Já <code>pd.cut</code> transforma números em <input data-resp="faixas|faixa|intervalos|intervalo|grupos|grupo|categorias|categoria|classes|classe" aria-label="O que o pd.cut cria a partir de números"> usando limites que eu escolho. Antes de preencher um ausente, crio uma coluna nova de verdadeiro ou falso para <input data-resp="avisar|marcar|sinalizar|registrar|lembrar" aria-label="Para que serve a coluna de aviso"> que ali havia um buraco.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <h2 id="s7">Fontes e avisos</h2>
+    <p>Este capítulo não usa fatos externos com data: tudo o que está aqui é código rodado, e cada saída foi colada do motor que roda no seu navegador, em 13/11/2026. As versões foram lidas no próprio motor:</p>
+<pre class="codigo" tabindex="0" aria-label="Versões do Python, do pandas e do NumPy usadas neste capítulo"><span class="k">import</span> sys
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">print</span>(sys.version.split()[<span class="n">0</span>], pd.__version__, np.__version__)</pre>
+<div class="saida" aria-label="Saída do código">3.14.2 3.0.2 2.4.6</div>
+    <p>Python 3.14.2, pandas 3.0.2 e NumPy 2.4.6. Os dados da loja são inventados, e qualquer parecido com pedidos reais é coincidência. O comportamento do pandas pode mudar entre versões, em detalhes como o tipo que ele escolhe para texto ou o jeito de mostrar uma tabela; se você rodar o mesmo código numa versão diferente, confira as saídas antes de assumir que o erro é seu. Este capítulo é um complemento, não foi dado em aula.</p>
+
+    <div class="ponte"><p>Agora a tabela está limpa e tem colunas que dizem mais do que as originais. Falta o modelo. O próximo capítulo, “Classificação e métricas”, usa uma tabela assim para treinar um modelo que classifica e, principalmente, mostra como saber com números se ele acertou ou só pareceu acertar.</p></div>
+
+  </article>
+
+  <footer class="rodape">
+    <a href="cap-1-o-mapa-da-ia.html">Anterior: O mapa da IA</a>
+    <span>Capítulo 2 de 20</span>
+    <button class="btn btn-concluir" id="btnConcluir" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="txt">Marcar capítulo como concluído</span></button>
+    <span>Próximo: Classificação e métricas</span>
+  </footer>
+</main>
+
+<script src="assets/trilha.js"></script>
+<script src="assets/mapa.js"></script>
+<script src="assets/exercicio.js"></script>
+<script src="assets/leitura.js"></script>
+<script src="assets/ia.js"></script>
+</body>
+</html>
