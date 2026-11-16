@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Árvores, florestas e boosting | Inteligência Artificial</title>
+<script>
+  /* Aplica o tema salvo antes de pintar, para não piscar */
+  try { var t = localStorage.getItem("ia:tema"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) { }
+</script>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/ia.css">
+<link rel="preload" href="assets/fontes/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fontes/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* Só a tabela de decisão da seção 4.6; usa os tokens da trilha */
+  .tab-dec { width: 100%; min-width: 680px; border-collapse: collapse; font-size: var(--font-size-sm); line-height: 1.5; }
+  .tab-dec th, .tab-dec td { text-align: left; vertical-align: top; padding: var(--space-3); border-bottom: 1px solid var(--color-border-secondary); overflow-wrap: normal; }
+  .tab-dec thead th { font-family: var(--font-family-mono); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); letter-spacing: var(--letter-spacing-wide); text-transform: uppercase; color: var(--color-text-secondary); border-bottom: 2px solid var(--color-border-primary); }
+  .tab-dec tbody th { font-weight: var(--font-weight-semibold); color: var(--color-text-primary); width: 17%; }
+  .tab-dec td { color: var(--color-text-secondary); }
+</style>
+</head>
+<body class="com-mapa" data-cap="4">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <button class="btn-icone so-celular" id="btnMapa" type="button" aria-label="Abrir o mapa da trilha" aria-expanded="false" aria-controls="mapa">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="marca" href="index.html"><b>Inteligência Artificial</b><span>Trilha completa</span></a>
+  <div class="espaco"></div>
+  <button class="btn-icone" id="btnTema" type="button" aria-label="Mudar para o tema escuro" aria-pressed="false">
+    <svg class="ico-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+  <div class="progresso" aria-hidden="true"><i></i></div>
+</header>
+
+<nav id="mapa" aria-label="Mapa da trilha"></nav>
+<div id="mapaFundo" aria-hidden="true"></div>
+
+<main class="pagina" id="conteudo">
+  <article class="leitura">
+    <header class="cabeca">
+      <div class="rotulo"><span class="parte">Parte 2: dados e modelos clássicos</span><span>Capítulo 4</span><span>60 min</span></div>
+      <h1>Árvores, florestas e boosting</h1>
+      <p class="lide">Uma árvore de decisão classifica fazendo perguntas simples em sequência, como um jogo de vinte perguntas aprendido dos dados. Sozinha ela é fácil de ler e fácil de enganar, porque tende a decorar o treino. Este capítulo mostra por que isso acontece e como dois truques resolvem o problema de jeitos opostos: a floresta treina muitas árvores independentes e deixa que votem; o boosting treina árvores em fila, cada uma corrigindo o que a soma das anteriores ainda errou. No fim há uma tabela honesta de quando usar cada um.</p>
+      <div class="meta"><span class="rotulo">Complemento, não foi dado em aula</span><span class="rotulo">Python no navegador</span></div>
+    </header>
+
+    <div class="recap"><p>No capítulo 3 você aprendeu a medir um classificador: matriz de confusão, precisão, recall, F1, o limiar e a curva ROC com a AUC. Aqueles modelos somavam pesos ou contavam palavras. Aqui o modelo muda de natureza, porque decide por perguntas em sequência, mas as medidas do capítulo anterior continuam servindo para julgar cada um. Os exemplos pequenos ficam escritos no texto, para você conferir as contas. Os maiores usam um gerador de dados sintéticos do próprio scikit-learn, com semente fixa, então nada é baixado e tudo se repete igual. Você precisa de Python básico e de NumPy.</p></div>
+
+    <figure class="fig" aria-labelledby="fig1">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 124" role="img" aria-label="Quatro caixas em sequência ligadas por setas: impureza, árvore de decisão, floresta e boosting.">
+        <defs><marker id="ponta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--color-text-secondary)"/></marker></defs>
+        <rect class="caixa dest" x="8" y="14" width="128" height="44" rx="6"/><text class="t" x="72" y="41" text-anchor="middle">impureza</text>
+        <rect class="caixa" x="168" y="14" width="128" height="44" rx="6"/><text class="t" x="232" y="41" text-anchor="middle">árvore</text>
+        <rect class="caixa" x="328" y="14" width="128" height="44" rx="6"/><text class="t" x="392" y="41" text-anchor="middle">floresta</text>
+        <rect class="caixa" x="488" y="14" width="128" height="44" rx="6"/><text class="t" x="552" y="41" text-anchor="middle">boosting</text>
+        <path class="seta" d="M138 36H164"/><path class="seta" d="M298 36H324"/><path class="seta" d="M458 36H484"/>
+        <text class="t2" x="72" y="82" text-anchor="middle">Gini, entropia,</text><text class="t2" x="72" y="98" text-anchor="middle">ganho</text>
+        <text class="t2" x="232" y="82" text-anchor="middle">perguntas em</text><text class="t2" x="232" y="98" text-anchor="middle">sequência</text>
+        <text class="t2" x="392" y="82" text-anchor="middle">muitas árvores</text><text class="t2" x="392" y="98" text-anchor="middle">em paralelo, votam</text>
+        <text class="t2" x="552" y="82" text-anchor="middle">árvores em fila,</text><text class="t2" x="552" y="98" text-anchor="middle">uma corrige a outra</text>
+      </svg></div>
+      <figcaption id="fig1"><b>Fig. 1</b>O caminho deste capítulo. A impureza diz que pergunta fazer, a árvore repete a escolha em cada nó, a floresta junta muitas árvores independentes e o boosting junta árvores em sequência.</figcaption>
+    </figure>
+
+    <h2 id="s1"><span class="nsec">4.1</span>Impureza: como uma árvore escolhe a pergunta</h2>
+    <p class="gancho">Entre todas as perguntas possíveis sobre uma tabela, como o computador decide qual fazer primeiro?</p>
+
+    <h3>Intuição</h3>
+    <p>Imagine um grupo de clientes de uma assinatura, uns que cancelaram e outros que ficaram, e você pode fazer uma pergunta de sim ou não para separá-los. Uma boa pergunta deixa cada lado mais “limpo” que o grupo inicial: de um lado quase só quem cancelou, do outro quase só quem ficou. Uma pergunta ruim deixa os dois lados tão misturados quanto o grupo todo. A <button type="button" class="termo" data-def="Impureza: número que mede o quanto as classes estão misturadas em um grupo. É 0 quando o grupo é puro (só uma classe) e é máxima quando as classes estão meio a meio.">impureza</button> é o número que mede essa mistura, e a árvore escolhe a pergunta que mais a reduz.</p>
+
+    <h3>Definição</h3>
+    <p>Sendo <code>p</code> a fração da classe 1 dentro de um grupo, a <b>impureza de Gini</b> é <code>1 − p² − (1 − p)²</code>. Um grupo puro dá 0 e um grupo meio a meio (<code>p = 0,5</code>) dá 0,5, o máximo para duas classes. A <b>entropia</b> é outra medida da mesma coisa: <code>−p·log₂(p) − (1 − p)·log₂(1 − p)</code>, que dá 0 no grupo puro e 1 no meio a meio. Uma divisão cria dois grupos filhos, e a impureza depois da divisão é a média das impurezas dos filhos, <b>pesada pelo tamanho</b> de cada um. O <button type="button" class="termo" data-def="Ganho de informação (ou ganho de impureza): a impureza do grupo antes da divisão menos a impureza média dos filhos depois dela, pesada pelo tamanho de cada filho. Quanto maior, melhor a pergunta.">ganho</button> é a impureza de antes menos a de depois. A árvore testa todas as perguntas candidatas e fica com a de maior ganho.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Dez clientes inventados, de A a J, com o tempo de uso em meses, quantos chamados abriram no suporte e se cancelaram (1) ou ficaram (0). Cinco cancelaram e cinco ficaram:</p>
+    <p>A: 5 meses, 5 chamados, cancelou · B: 8, 3, cancelou · C: 15, 0, cancelou · D: 12, 3, cancelou · E: 2, 4, cancelou<br>F: 9, 5, ficou · G: 10, 2, ficou · H: 6, 0, ficou · I: 16, 0, ficou · J: 3, 0, ficou</p>
+    <p>Repare em dois clientes que contrariam o padrão geral de “muitos chamados, cancela”: C cancelou sem nunca ter reclamado, e F reclamou cinco vezes e ficou. Dado real quase sempre tem exceções assim. As duas funções abaixo seguem as fórmulas da definição:</p>
+<pre class="codigo" tabindex="0" aria-label="Funções de impureza de Gini e de entropia e a impureza da raiz"><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># 10 clientes de uma assinatura (inventados): A, B, C, D, E, F, G, H, I, J</span>
+meses    = np.array([<span class="n">5</span>, <span class="n">8</span>, <span class="n">15</span>, <span class="n">12</span>, <span class="n">2</span>, <span class="n">9</span>, <span class="n">10</span>, <span class="n">6</span>, <span class="n">16</span>, <span class="n">3</span>])   <span class="c"># tempo de uso, em meses</span>
+chamados = np.array([<span class="n">5</span>, <span class="n">3</span>, <span class="n">0</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">5</span>, <span class="n">2</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>])       <span class="c"># chamados ao suporte</span>
+cancelou = np.array([<span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>])       <span class="c"># 1 = cancelou</span>
+
+<span class="k">def</span> gini(y):
+    p = y.mean()                      <span class="c"># fração da classe 1 neste grupo</span>
+    <span class="k">return</span> <span class="n">1</span> - p**<span class="n">2</span> - (<span class="n">1</span> - p)**<span class="n">2</span>
+
+<span class="k">def</span> entropia(y):
+    p = y.mean()
+    <span class="k">if</span> p == <span class="n">0</span> <span class="k">or</span> p == <span class="n">1</span>:
+        <span class="k">return</span> <span class="n">0.0</span>                    <span class="c"># grupo puro: nenhuma desordem</span>
+    <span class="k">return</span> -p * np.log2(p) - (<span class="n">1</span> - p) * np.log2(<span class="n">1</span> - p)
+
+<span class="k">print</span>(<span class="s">"raiz (5 e 5): Gini"</span>, gini(cancelou), <span class="s">"| entropia"</span>, entropia(cancelou))
+puro = np.array([<span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>])
+<span class="k">print</span>(<span class="s">"grupo puro [1, 1, 1]: Gini"</span>, gini(puro), <span class="s">"| entropia"</span>, entropia(puro))</pre>
+<div class="saida" aria-label="Saída do código">raiz (5 e 5): Gini 0.5 | entropia 1.0
+grupo puro [1, 1, 1]: Gini 0.0 | entropia 0.0</div>
+    <p>O grupo inteiro tem Gini 0,5: <code>1 − 0,5² − 0,5² = 1 − 0,25 − 0,25 = 0,5</code>, e entropia 1,0. O grupo puro dá 0 nas duas medidas. Agora uma pergunta candidata, <code>chamados &lt;= 2,5</code>:</p>
+<pre class="codigo" tabindex="0" aria-label="Divisão por chamados menor ou igual a 2,5 e ganho de informação">esquerda = chamados &lt;= <span class="n">2.5</span>        <span class="c"># C, G, H, I e J: poucos chamados</span>
+direita = ~esquerda               <span class="c"># A, B, D, E e F: muitos chamados</span>
+<span class="k">for</span> nome, grupo <span class="k">in</span> [(<span class="s">"esquerda"</span>, esquerda), (<span class="s">"direita"</span>, direita)]:
+    y = cancelou[grupo]
+    <span class="k">print</span>(nome, <span class="s">"n ="</span>, grupo.sum(), <span class="s">"| cancelaram:"</span>, y.sum(), <span class="s">"| Gini"</span>, round(gini(y), <span class="n">3</span>), <span class="s">"| entropia"</span>, round(entropia(y), <span class="n">3</span>))
+
+peso = esquerda.mean()            <span class="c"># fração dos clientes que foi para a esquerda</span>
+g_depois = peso * gini(cancelou[esquerda]) + (<span class="n">1</span> - peso) * gini(cancelou[direita])
+e_depois = peso * entropia(cancelou[esquerda]) + (<span class="n">1</span> - peso) * entropia(cancelou[direita])
+<span class="k">print</span>(<span class="s">"Gini depois:"</span>, round(g_depois, <span class="n">3</span>), <span class="s">"| ganho:"</span>, round(gini(cancelou) - g_depois, <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"entropia depois:"</span>, round(e_depois, <span class="n">3</span>), <span class="s">"| ganho:"</span>, round(entropia(cancelou) - e_depois, <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">esquerda n = 5 | cancelaram: 1 | Gini 0.32 | entropia 0.722
+direita n = 5 | cancelaram: 4 | Gini 0.32 | entropia 0.722
+Gini depois: 0.32 | ganho: 0.18
+entropia depois: 0.722 | ganho: 0.278</div>
+    <p>À esquerda ficam C, G, H, I e J (5 clientes, 1 cancelou, <code>p = 0,2</code>), e à direita A, B, D, E e F (5 clientes, 4 cancelaram, <code>p = 0,8</code>). Os dois grupos têm Gini <code>1 − 0,2² − 0,8² = 1 − 0,04 − 0,64 = 0,32</code>. Como cada filho tem metade dos clientes, a média pesada é <code>0,5 · 0,32 + 0,5 · 0,32 = 0,32</code>, e o ganho é <code>0,5 − 0,32 = 0,18</code>. Com a entropia a conta é parecida: cada filho dá <code>−0,2·log₂(0,2) − 0,8·log₂(0,8) = 0,464 + 0,258 = 0,722</code>, e o ganho é <code>1 − 0,722 = 0,278</code>. As escalas são diferentes (o máximo de uma é 0,5 e o da outra é 1), mas o que importa é a ordem entre as perguntas. A árvore testa todas, e nesta tabela as perguntas candidatas são os pontos médios entre valores vizinhos de cada coluna:</p>
+<pre class="codigo" tabindex="0" aria-label="Teste de todos os cortes possíveis nos dois atributos">melhor = <span class="k">None</span>
+<span class="k">for</span> nome, col <span class="k">in</span> [(<span class="s">"meses"</span>, meses), (<span class="s">"chamados"</span>, chamados)]:
+    valores = np.unique(col)
+    cortes = (valores[:-<span class="n">1</span>] + valores[<span class="n">1</span>:]) / <span class="n">2</span>             <span class="c"># ponto médio entre valores vizinhos</span>
+    ganhos = []
+    <span class="k">for</span> corte <span class="k">in</span> cortes:
+        e = col &lt;= corte
+        g = e.mean() * gini(cancelou[e]) + (<span class="n">1</span> - e.mean()) * gini(cancelou[~e])
+        ganhos.append(round(float(gini(cancelou) - g), <span class="n">3</span>))
+        <span class="k">if</span> melhor <span class="k">is</span> <span class="k">None</span> <span class="k">or</span> gini(cancelou) - g &gt; melhor[<span class="n">0</span>] + <span class="n">1e-12</span>:
+            melhor = (gini(cancelou) - g, nome, corte)
+    <span class="k">print</span>(nome, <span class="s">"cortes"</span>, cortes.tolist())
+    <span class="k">print</span>(<span class="s">"   ganhos"</span>, ganhos)
+<span class="k">print</span>(<span class="s">"melhor:"</span>, melhor[<span class="n">1</span>], <span class="s">"&lt;="</span>, melhor[<span class="n">2</span>], <span class="s">"| ganho"</span>, round(melhor[<span class="n">0</span>], <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">meses cortes [2.5, 4.0, 5.5, 7.0, 8.5, 9.5, 11.0, 13.5, 15.5]
+   ganhos [0.056, 0.0, 0.024, 0.0, 0.02, 0.0, 0.024, 0.0, 0.056]
+chamados cortes [1.0, 2.5, 3.5, 4.5]
+   ganhos [0.083, 0.18, 0.024, 0.0]
+melhor: chamados &lt;= 2.5 | ganho 0.18</div>
+    <p>São 13 perguntas candidatas, 9 sobre os meses e 4 sobre os chamados. A de maior ganho é <code>chamados &lt;= 2,5</code>, com 0,18, bem acima da segunda colocada (0,083, em <code>chamados &lt;= 1,0</code>). As perguntas sobre os meses ficam todas em 0,056 ou menos: o tempo de uso quase não separa quem cancela de quem fica. O <code>0,0</code> aparece quando a divisão deixa cada filho exatamente tão misturado quanto o grupo todo. Agora o scikit-learn, que deve escolher a mesma pergunta:</p>
+<pre class="codigo" tabindex="0" aria-label="A mesma escolha feita pelo DecisionTreeClassifier com uma pergunta só"><span class="k">from</span> sklearn.tree <span class="k">import</span> DecisionTreeClassifier, export_text
+
+X = np.column_stack([meses, chamados])                 <span class="c"># tabela: uma linha por cliente</span>
+toco = DecisionTreeClassifier(max_depth=<span class="n">1</span>, random_state=<span class="n">0</span>).fit(X, cancelou)
+<span class="k">print</span>(export_text(toco, feature_names=[<span class="s">"meses"</span>, <span class="s">"chamados"</span>]))
+<span class="k">print</span>(<span class="s">"impureza dos 3 nós:"</span>, toco.tree_.impurity.round(<span class="n">3</span>).tolist(), <span class="s">"| clientes em cada nó:"</span>, toco.tree_.n_node_samples.tolist())
+
+ent = DecisionTreeClassifier(max_depth=<span class="n">1</span>, criterion=<span class="s">"entropy"</span>, random_state=<span class="n">0</span>).fit(X, cancelou)
+<span class="k">print</span>(<span class="s">"com entropia o corte é o mesmo:"</span>, ent.tree_.feature[<span class="n">0</span>] == toco.tree_.feature[<span class="n">0</span>] <span class="k">and</span> ent.tree_.threshold[<span class="n">0</span>] == toco.tree_.threshold[<span class="n">0</span>])</pre>
+<div class="saida" aria-label="Saída do código">|--- chamados &lt;= 2.50
+|   |--- class: 0
+|--- chamados &gt;  2.50
+|   |--- class: 1
+
+impureza dos 3 nós: [0.5, 0.32, 0.32] | clientes em cada nó: [10, 5, 5]
+com entropia o corte é o mesmo: True</div>
+    <figure class="fig" aria-labelledby="fig2">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 262" role="img" aria-label="Uma árvore de uma pergunta. A raiz tem 10 clientes, 5 que cancelaram e 5 que ficaram, impureza de Gini 0,5. A pergunta é chamados menor ou igual a 2,5. Se sim, vão C, G, H, I e J: 1 cancelou, 4 ficaram, Gini 0,32. Se não, vão A, B, D, E e F: 4 cancelaram, 1 ficou, Gini 0,32. O ganho é 0,5 menos 0,32, igual a 0,18.">
+        <rect class="caixa dest" x="190" y="10" width="260" height="60" rx="6"/><text class="t" x="320" y="35" text-anchor="middle">10 clientes: 5 cancelaram, 5 ficaram</text><text class="t2" x="320" y="55" text-anchor="middle">Gini 0,5</text>
+        <path class="seta" d="M270 70L170 134"/><path class="seta" d="M370 70L470 134"/>
+        <text class="t" x="196" y="104" text-anchor="end">chamados ≤ 2,5? sim</text><text class="t" x="446" y="104" text-anchor="start">não</text>
+        <rect class="caixa" x="30" y="140" width="280" height="70" rx="6"/><text class="t" x="170" y="165" text-anchor="middle">C, G, H, I, J</text><text class="t2" x="170" y="184" text-anchor="middle">1 cancelou, 4 ficaram</text><text class="t2" x="170" y="201" text-anchor="middle">Gini 0,32</text>
+        <rect class="caixa" x="330" y="140" width="280" height="70" rx="6"/><text class="t" x="470" y="165" text-anchor="middle">A, B, D, E, F</text><text class="t2" x="470" y="184" text-anchor="middle">4 cancelaram, 1 ficou</text><text class="t2" x="470" y="201" text-anchor="middle">Gini 0,32</text>
+        <text class="t" x="320" y="244" text-anchor="middle">ganho = 0,5 − 0,32 = 0,18</text>
+      </svg></div>
+      <figcaption id="fig2"><b>Fig. 2</b>A primeira pergunta da árvore. A divisão não separa perfeitamente: C cancelou com poucos chamados e F ficou com muitos, e cada um acaba do lado “errado”.</figcaption>
+    </figure>
+
+    <h3>Código comentado</h3>
+    <p>O <code>DecisionTreeClassifier(max_depth=1)</code> é uma árvore de uma pergunta só (um “toco”). Ele escolheu <code>chamados &lt;= 2,50</code> e guardou, em <code>tree_.impurity</code>, a impureza de cada nó: 0,5 na raiz e 0,32 nos dois filhos, exatamente as contas à mão. Com <code>criterion="entropy"</code> a escala muda, mas o corte escolhido é o mesmo. É o que acontece quase sempre: Gini e entropia dão árvores parecidas, e o Gini é o padrão do scikit-learn. O <code>export_text</code> imprime a árvore como regras; <code>X</code> é a tabela com os dois atributos lado a lado, uma linha por cliente.</p>
+
+    <h3>Erro comum</h3>
+    <p>Julgar uma pergunta pela impureza de um filho só, sem pesar pelo tamanho. A pergunta <code>meses &lt;= 2,5</code> isola o cliente E sozinho, e esse filho tem Gini 0, o melhor possível. Mas ele tem 1 cliente de 10: o outro filho (9 clientes, 4 que cancelaram) tem Gini 0,494, e a média pesada é <code>0,1 · 0 + 0,9 · 0,494 = 0,444</code>, ganho de apenas 0,056 (é o primeiro número da lista dos meses). Um filho puro e minúsculo vale pouco. É por isso que a média é pesada pelo tamanho.</p>
+
+    <section class="experimento" data-ex="ia-4-1" data-pacotes="scikit-learn" aria-labelledby="exp1">
+      <header>
+        <div class="rotulo">Experimento 4.1</div>
+        <h3 id="exp1">Gini e ganho à mão</h3>
+      </header>
+      <div class="enunciado"><p>Os mesmos 10 clientes do texto estão em <code>meses</code>, <code>chamados</code> e <code>cancelou</code>. Escreva a função <code>gini(y)</code>, que devolve a impureza de Gini de um grupo de 0 e 1. Depois calcule a impureza da raiz (<code>g_raiz</code>), a dos dois filhos da divisão <code>meses &lt;= 8,5</code> (<code>g_esq</code> e <code>g_dir</code>) e o <code>ganho</code>: a impureza da raiz menos a média das impurezas dos filhos, pesada pelo tamanho de cada um. Sem usar <code>DecisionTreeClassifier</code>.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+
+meses = np.array([5, 8, 15, 12, 2, 9, 10, 6, 16, 3])
+chamados = np.array([5, 3, 0, 3, 4, 5, 2, 0, 0, 0])
+cancelou = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
+</script>
+      <script type="text/plain" class="py-inicial">
+def gini(y):
+    # y é um array de 0 e 1; devolva a impureza de Gini do grupo
+    return None
+
+esquerda = meses <= 8.5
+direita = ~esquerda
+
+g_raiz = gini(cancelou)
+g_esq = gini(cancelou[esquerda])
+g_dir = gini(cancelou[direita])
+
+ganho = None    # g_raiz menos a média de g_esq e g_dir, pesada pelo tamanho de cada grupo
+
+print(g_raiz, g_esq, g_dir)
+print(ganho)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(g_raiz is not None, "A função gini ainda devolve None. Calcule p = y.mean() e devolva 1 - p**2 - (1 - p)**2.")
+verificar(abs(gini(np.array([1, 1, 0, 0])) - 0.5) < 1e-9, "Um grupo meio a meio (dois 1 e dois 0) deveria dar Gini 0,5.")
+verificar(abs(gini(np.array([0, 0, 0])) - 0.0) < 1e-9, "Um grupo puro (só uma classe) deveria dar Gini 0.")
+verificar(abs(g_esq - 0.48) < 0.001, "À esquerda ficam 5 clientes e 3 cancelaram, então p = 0,6 e o Gini deveria ser 0,48.")
+verificar(ganho is not None, "Calcule ganho: g_raiz menos a média pesada de g_esq e g_dir.")
+verificar(abs(ganho - 0.02) < 0.001, "O ganho deveria ser 0,02 (0,5 menos 0,48). Confira se pesou cada filho pelo tamanho: esquerda.mean() é a fração que foi para a esquerda.")
+</script>
+      <script type="text/plain" class="py-solucao">
+def gini(y):
+    p = y.mean()
+    return 1 - p**2 - (1 - p)**2
+
+esquerda = meses <= 8.5
+direita = ~esquerda
+
+g_raiz = gini(cancelou)
+g_esq = gini(cancelou[esquerda])
+g_dir = gini(cancelou[direita])
+
+peso_esq = esquerda.mean()
+ganho = g_raiz - (peso_esq * g_esq + (1 - peso_esq) * g_dir)
+
+print(g_raiz, g_esq, g_dir)
+print(ganho)
+</script>
+      <template class="dica"><p>Dentro da função, <code>p = y.mean()</code> é a fração de 1 no grupo, e o resultado é <code>1 - p**2 - (1 - p)**2</code>.</p></template>
+      <template class="dica"><p>A média pesada é <code>peso_esq * g_esq + (1 - peso_esq) * g_dir</code>, com <code>peso_esq = esquerda.mean()</code>. O ganho é <code>g_raiz</code> menos essa média.</p></template>
+    </section>
+
+    <div class="ponte"><p>Escolher uma pergunta é só o primeiro passo. Uma árvore repete a mesma escolha dentro de cada filho, e de novo dentro dos netos, até alguma coisa mandar parar. O que acontece quando nada manda parar é o assunto da próxima seção.</p></div>
+
+    <h2 id="s2"><span class="nsec">4.2</span>Árvore de decisão: perguntas em sequência e o risco de decorar</h2>
+    <p class="gancho">Se a árvore pode continuar perguntando até acertar todo mundo no treino, por que isso seria um problema?</p>
+
+    <h3>Intuição</h3>
+    <p>Pense num jogo de vinte perguntas. Cada pergunta restringe o conjunto de possibilidades, e a ordem importa: as primeiras cortam muito, as últimas só acertam detalhes. A árvore de decisão é esse jogo aprendido dos dados. Ela faz a melhor pergunta para a tabela inteira (a raiz), divide os clientes em dois grupos e repete o processo dentro de cada grupo, de forma independente, até um critério de parada. Se ninguém mandar parar, ela continua até cada grupo ficar puro, mesmo que isso signifique abrir uma folha só para um cliente esquisito. Nesse ponto ela deixou de aprender o padrão e passou a <b>decorar</b> os exemplos.</p>
+
+    <h3>Definição</h3>
+    <p>O <b>nó raiz</b> é a primeira pergunta; os nós seguintes são perguntas internas; os nós que não perguntam mais são as <b>folhas</b>. A <b>profundidade</b> é o número de perguntas no caminho mais longo, da raiz até uma folha. A previsão para um exemplo novo é a classe mais comum na folha onde ele cai. No <code>predict_proba</code>, a probabilidade é a fração de cada classe naquela folha, o que liga este capítulo ao anterior: uma folha com 1 exemplo só dá probabilidade 0 ou 1, certeza que ela não tem como justificar. Os freios mais usados são <code>max_depth</code> (profundidade máxima) e <code>min_samples_leaf</code> (mínimo de exemplos em cada folha). Quando uma árvore perde a capacidade de generalizar por causa disso, diz-se que sofreu <button type="button" class="termo" data-def="Sobreajuste (overfitting): quando o modelo se ajusta tanto aos exemplos de treino, inclusive às exceções e ao ruído, que perde a capacidade de acertar exemplos novos. Sinal típico: acurácia de treino muito maior que a de teste.">sobreajuste</button>.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Primeiro, a mesma tabela de 10 clientes, mas agora sem nenhum freio. A árvore vai abrindo perguntas até todo grupo ficar puro:</p>
+<pre class="codigo" tabindex="0" aria-label="Árvore sem limite de profundidade nos 10 clientes">arvore = DecisionTreeClassifier(random_state=<span class="n">0</span>).fit(X, cancelou)
+<span class="k">print</span>(export_text(arvore, feature_names=[<span class="s">"meses"</span>, <span class="s">"chamados"</span>]))
+<span class="k">print</span>(<span class="s">"profundidade"</span>, arvore.get_depth(), <span class="s">"| folhas"</span>, arvore.get_n_leaves(), <span class="s">"| acertos no treino:"</span>, arvore.score(X, cancelou))</pre>
+<div class="saida" aria-label="Saída do código">|--- chamados &lt;= 2.50
+|   |--- meses &lt;= 12.50
+|   |   |--- class: 0
+|   |--- meses &gt;  12.50
+|   |   |--- meses &lt;= 15.50
+|   |   |   |--- class: 1
+|   |   |--- meses &gt;  15.50
+|   |   |   |--- class: 0
+|--- chamados &gt;  2.50
+|   |--- meses &lt;= 8.50
+|   |   |--- class: 1
+|   |--- meses &gt;  8.50
+|   |   |--- meses &lt;= 10.50
+|   |   |   |--- class: 0
+|   |   |--- meses &gt;  10.50
+|   |   |   |--- class: 1
+
+profundidade 3 | folhas 6 | acertos no treino: 1.0</div>
+    <p>A árvore sem limite tem profundidade 3 e 6 folhas, e acerta os 10 clientes do treino. A primeira pergunta é a mesma de antes. O problema está nas folhas de baixo: 4 das 6 folhas têm um cliente só. A regra “poucos chamados e meses entre 12,5 e 15,5, cancela” existe para encaixar o cliente C, e a regra “muitos chamados e meses entre 8,5 e 10,5, fica” existe só para o cliente F. Não são padrões de clientes em geral, são as exceções do treino viradas em regra. Para ver o efeito de verdade, é preciso medir em exemplos que a árvore nunca viu. O gerador <code>make_moons</code> cria duas “luas” entrelaçadas de pontos, com ruído, em duas dimensões. Separo as 100 primeiras linhas para a árvore aprender e as outras 400 só para medir:</p>
+<pre class="codigo" tabindex="0" aria-label="Profundidade máxima contra acurácia de treino e de teste"><span class="k">from</span> sklearn.datasets <span class="k">import</span> make_moons
+
+X2, y2 = make_moons(n_samples=<span class="n">500</span>, noise=<span class="n">0.35</span>, random_state=<span class="n">3</span>)   <span class="c"># duas "luas" com ruído</span>
+Xtr, ytr = X2[:<span class="n">100</span>], y2[:<span class="n">100</span>]       <span class="c"># 100 exemplos para a árvore aprender</span>
+Xte, yte = X2[<span class="n">100</span>:], y2[<span class="n">100</span>:]       <span class="c"># 400 que ela nunca viu, só para medir</span>
+<span class="k">print</span>(<span class="s">"fração da classe 1: treino"</span>, ytr.mean(), <span class="s">"| teste"</span>, yte.mean())
+<span class="k">for</span> prof <span class="k">in</span> [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">6</span>, <span class="k">None</span>]:
+    m = DecisionTreeClassifier(max_depth=prof, random_state=<span class="n">0</span>).fit(Xtr, ytr)
+    <span class="k">print</span>(<span class="s">"max_depth"</span>, prof, <span class="s">"| profundidade real"</span>, m.get_depth(), <span class="s">"| folhas"</span>, m.get_n_leaves(), <span class="s">"| treino"</span>, round(m.score(Xtr, ytr), <span class="n">3</span>), <span class="s">"| teste"</span>, round(m.score(Xte, yte), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">fração da classe 1: treino 0.46 | teste 0.51
+max_depth 1 | profundidade real 1 | folhas 2 | treino 0.86 | teste 0.772
+max_depth 2 | profundidade real 2 | folhas 4 | treino 0.93 | teste 0.843
+max_depth 3 | profundidade real 3 | folhas 8 | treino 0.95 | teste 0.818
+max_depth 4 | profundidade real 4 | folhas 10 | treino 0.98 | teste 0.78
+max_depth 6 | profundidade real 6 | folhas 14 | treino 1.0 | teste 0.782
+max_depth None | profundidade real 6 | folhas 14 | treino 1.0 | teste 0.782</div>
+    <p>As duas classes estão quase meio a meio (0,46 e 0,51), então a acurácia é uma medida razoável aqui, sem a ressalva da seção 3.4 do capítulo anterior. A tabela conta a história: com <code>max_depth=1</code> a árvore acerta menos, tanto no treino quanto no teste (0,86 e 0,772), porque uma pergunta só não basta. Com profundidade 2, o teste chega ao máximo, 0,843. Depois disso o treino continua subindo, até 1,0 na profundidade 6, mas o teste cai e se estabiliza em 0,782. A árvore sem limite (<code>None</code>) é igual à de profundidade 6 porque para sozinha ao ficar pura: 14 folhas, todas acertando o treino. A diferença entre treino e teste é <code>1,0 − 0,782 = 0,218</code>: mais de 21 pontos de acurácia que existem só no treino.</p>
+
+    <figure class="fig" aria-labelledby="fig3">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 280" role="img" aria-label="Gráfico de linhas. No eixo horizontal, a profundidade máxima da árvore: 1, 2, 3, 4, 6 e sem limite. A acurácia de treino sobe de 0,86 para 1,0 e fica em 1,0 nas duas últimas. A acurácia de teste sobe até 0,843 na profundidade 2 e depois cai para 0,782."><path d="M70 230.0H590" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="234.0" text-anchor="end">0,7</text><path d="M70 163.3H590" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="167.3" text-anchor="end">0,8</text><path d="M70 96.7H590" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="100.7" text-anchor="end">0,9</text><path d="M70 30.0H590" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="34.0" text-anchor="end">1,0</text><text class="t2" x="70.0" y="250" text-anchor="middle">1</text><text class="t2" x="174.0" y="250" text-anchor="middle">2</text><text class="t2" x="278.0" y="250" text-anchor="middle">3</text><text class="t2" x="382.0" y="250" text-anchor="middle">4</text><text class="t2" x="486.0" y="250" text-anchor="middle">6</text><text class="t2" x="590.0" y="250" text-anchor="middle">sem limite</text><polyline points="70.0,123.3 174.0,76.7 278.0,63.3 382.0,43.3 486.0,30.0 590.0,30.0" fill="none" style="stroke:var(--color-accent-primary)" stroke-width="2.2" stroke-linejoin="round"/><polyline points="70.0,182.0 174.0,134.7 278.0,151.3 382.0,176.7 486.0,175.3 590.0,175.3" fill="none" style="stroke:var(--color-status-error)" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="6 4"/><circle cx="70.0" cy="123.3" r="3.8" style="fill:var(--color-accent-primary)"/><circle cx="70.0" cy="182.0" r="3.8" style="fill:var(--color-status-error)"/><circle cx="174.0" cy="76.7" r="3.8" style="fill:var(--color-accent-primary)"/><circle cx="174.0" cy="134.7" r="3.8" style="fill:var(--color-status-error)"/><circle cx="278.0" cy="63.3" r="3.8" style="fill:var(--color-accent-primary)"/><circle cx="278.0" cy="151.3" r="3.8" style="fill:var(--color-status-error)"/><circle cx="382.0" cy="43.3" r="3.8" style="fill:var(--color-accent-primary)"/><circle cx="382.0" cy="176.7" r="3.8" style="fill:var(--color-status-error)"/><circle cx="486.0" cy="30.0" r="3.8" style="fill:var(--color-accent-primary)"/><circle cx="486.0" cy="175.3" r="3.8" style="fill:var(--color-status-error)"/><circle cx="590.0" cy="30.0" r="3.8" style="fill:var(--color-accent-primary)"/><circle cx="590.0" cy="175.3" r="3.8" style="fill:var(--color-status-error)"/><text class="t" x="272.0" y="53.3" text-anchor="end" style="fill:var(--color-accent-primary)">treino</text><text class="t" x="550.0" y="197.3" text-anchor="start" style="fill:var(--color-status-error)">teste</text><text class="t" x="330" y="266" text-anchor="middle">profundidade máxima da árvore (max_depth)</text><text class="t" x="16" y="130" text-anchor="middle" transform="rotate(-90 16 130)">acurácia</text></svg></div>
+      <figcaption id="fig3"><b>Fig. 3</b>Acurácia de treino (linha cheia) e de teste (tracejada) por profundidade, com os números da tabela acima. O treino só sobe; o teste sobe até a profundidade 2 e depois cai.</figcaption>
+    </figure>
+
+    <p>A profundidade não é o único freio. O <code>min_samples_leaf</code> impede folhas minúsculas:</p>
+<pre class="codigo" tabindex="0" aria-label="Folha mínima como outro freio"><span class="k">for</span> folha <span class="k">in</span> [<span class="n">1</span>, <span class="n">3</span>, <span class="n">5</span>, <span class="n">10</span>]:
+    m = DecisionTreeClassifier(min_samples_leaf=folha, random_state=<span class="n">0</span>).fit(Xtr, ytr)
+    <span class="k">print</span>(<span class="s">"min_samples_leaf"</span>, folha, <span class="s">"| folhas"</span>, m.get_n_leaves(), <span class="s">"| treino"</span>, round(m.score(Xtr, ytr), <span class="n">3</span>), <span class="s">"| teste"</span>, round(m.score(Xte, yte), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">min_samples_leaf 1 | folhas 14 | treino 1.0 | teste 0.782
+min_samples_leaf 3 | folhas 11 | treino 0.94 | teste 0.805
+min_samples_leaf 5 | folhas 10 | treino 0.93 | teste 0.843
+min_samples_leaf 10 | folhas 6 | treino 0.92 | teste 0.825</div>
+    <p>Exigir pelo menos 5 exemplos por folha deixa a árvore com 10 folhas em vez de 14, o treino em 0,93 e o teste em 0,843, igual ao melhor da tabela anterior. Com 10 por folha as folhas caem para 6 e o teste vai a 0,825. Os dois freios mostram a mesma ideia: abrir mão de um pouco de acerto no treino para ganhar acerto fora dele.</p>
+
+    <h3>Código comentado</h3>
+    <p><code>m.score(Xtr, ytr)</code> é a acurácia do modelo nos dados de treino e <code>m.score(Xte, yte)</code> a acurácia nos dados de teste. <code>get_depth()</code> e <code>get_n_leaves()</code> mostram o tamanho real da árvore, que pode ser menor que o <code>max_depth</code> pedido se ela ficar pura antes. O <code>random_state=0</code> existe porque, quando duas perguntas empatam no ganho, o scikit-learn desempata sorteando a ordem dos atributos; fixar a semente faz o resultado se repetir.</p>
+
+    <h3>Erro comum</h3>
+    <p>Duas armadilhas. A primeira é confiar na acurácia de treino de uma árvore sem limite: 100% no treino não diz nada, porque a árvore é capaz de decorar qualquer tabela sem linhas repetidas com rótulos diferentes. A segunda é mais sutil: escolher a profundidade olhando a acurácia de teste, como fiz acima ao dizer que a profundidade 2 é a melhor. Esse 0,843 foi escolhido entre seis candidatas justamente por ser o maior no teste, então ele é otimista. Na prática, a profundidade se escolhe com um conjunto de validação separado e o teste final fica guardado para uma única medida, o mesmo cuidado que o limiar pedia no capítulo 3.</p>
+
+    <section class="experimento" data-ex="ia-4-2" data-pacotes="scikit-learn" aria-labelledby="exp2">
+      <header>
+        <div class="rotulo">Experimento 4.2</div>
+        <h3 id="exp2">Variando a profundidade</h3>
+      </header>
+      <div class="enunciado"><p>Um conjunto novo de duas luas, já separado em <code>Xtr</code>, <code>ytr</code> (100 linhas para treinar) e <code>Xte</code>, <code>yte</code> (400 para medir). Para cada valor de <code>profundidades</code>, treine uma <code>DecisionTreeClassifier(max_depth=..., random_state=0)</code> e guarde a acurácia de treino em <code>treino</code> e a de teste em <code>teste</code> (listas, na mesma ordem). Depois guarde em <code>melhor_prof</code> a profundidade de maior acurácia de teste e em <code>folga_sem_limite</code> o treino menos o teste da última árvore, a sem limite.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.datasets import make_moons
+from sklearn.tree import DecisionTreeClassifier
+
+X2, y2 = make_moons(n_samples=500, noise=0.35, random_state=5)
+Xtr, ytr = X2[:100], y2[:100]
+Xte, yte = X2[100:], y2[100:]
+</script>
+      <script type="text/plain" class="py-inicial">
+profundidades = [1, 2, 3, 4, 6, None]
+treino = []
+teste = []
+
+# escreva aqui: para cada profundidade, treine uma árvore e guarde as duas acurácias
+
+melhor_prof = None         # a profundidade de maior acurácia de teste
+folga_sem_limite = None    # treino menos teste da última árvore (a sem limite)
+
+print(treino)
+print(teste)
+print(melhor_prof, folga_sem_limite)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(len(treino) == 6 and len(teste) == 6, "Guarde uma acurácia de treino e uma de teste para cada uma das 6 profundidades, na mesma ordem de profundidades.")
+verificar(treino[-1] == 1.0, "A árvore sem limite deveria acertar 100% do treino. Confira se a última profundidade é None.")
+verificar(abs(teste[1] - 0.805) < 0.001, "A acurácia de teste da profundidade 2 deveria ser 0,805. Use m.score(Xte, yte).")
+verificar(melhor_prof is not None, "Guarde em melhor_prof a profundidade de maior acurácia de teste.")
+verificar(melhor_prof == 3, "A maior acurácia de teste (0,81) acontece na profundidade 3. Use np.argmax(teste) como posição na lista profundidades.")
+verificar(folga_sem_limite is not None and abs(folga_sem_limite - 0.22) < 0.01, "A folga da árvore sem limite deveria ser cerca de 0,22: treino[-1] - teste[-1].")
+</script>
+      <script type="text/plain" class="py-solucao">
+profundidades = [1, 2, 3, 4, 6, None]
+treino = []
+teste = []
+
+for p in profundidades:
+    m = DecisionTreeClassifier(max_depth=p, random_state=0).fit(Xtr, ytr)
+    treino.append(m.score(Xtr, ytr))
+    teste.append(m.score(Xte, yte))
+
+melhor_prof = profundidades[int(np.argmax(teste))]
+folga_sem_limite = treino[-1] - teste[-1]
+
+print(treino)
+print(teste)
+print(melhor_prof, folga_sem_limite)
+</script>
+      <template class="dica"><p>Para cada <code>p</code>: <code>m = DecisionTreeClassifier(max_depth=p, random_state=0).fit(Xtr, ytr)</code>. As acurácias são <code>m.score(Xtr, ytr)</code> e <code>m.score(Xte, yte)</code>, e cada uma entra no <code>append</code> da sua lista.</p></template>
+      <template class="dica"><p><code>np.argmax(teste)</code> devolve a posição do maior valor. Use essa posição para pegar o item correspondente de <code>profundidades</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Uma árvore sem freio decora, e um freio escolhido à mão é um palpite. Há outra saída: em vez de domar uma árvore, treinar muitas, cada uma vendo um pedaço diferente dos dados, e deixar que votem.</p></div>
+
+    <h2 id="s3"><span class="nsec">4.3</span>Bagging e floresta aleatória: muitas árvores votando</h2>
+    <p class="gancho">Se uma árvore sozinha é instável, o que acontece quando se pergunta a vinte e cinco delas e se fica com a opinião da maioria?</p>
+
+    <h3>Intuição</h3>
+    <p>Uma árvore sem limite é instável: troque algumas linhas do treino e a árvore inteira muda, porque as primeiras perguntas mudam e tudo abaixo muda junto. Os estatísticos chamam isso de alta <button type="button" class="termo" data-def="Variância: o quanto as previsões de um modelo mudam quando os dados de treino mudam um pouco. Modelo de alta variância acerta bem num sorteio de dados e mal em outro.">variância</button>. Pense em pedir a vinte e cinco pessoas, cada uma com informação ligeiramente diferente, que estimem a mesma coisa. Cada uma erra do seu jeito, mas os erros que não são iguais tendem a se cancelar na média. A floresta faz isso com árvores: cada uma vê um sorteio diferente dos dados e a resposta final é a votação.</p>
+
+    <h3>Definição</h3>
+    <p>O <b>bagging</b> (de “bootstrap aggregating”) tem dois passos. Primeiro, cada árvore treina numa <button type="button" class="termo" data-def="Amostra com reposição (bootstrap): sorteia-se uma linha, anota-se, devolve-se ao conjunto e sorteia-se de novo, até ter o mesmo número de linhas do original. Uma mesma linha pode sair várias vezes e outras nem sair.">amostra com reposição</button> das linhas do treino, do mesmo tamanho do original: algumas linhas aparecem duas ou três vezes, outras nenhuma. Segundo, a previsão final é a <b>votação</b> das árvores (ou a média, se for regressão). A <b>floresta aleatória</b> acrescenta um sorteio: em cada pergunta, a árvore só considera um subconjunto sorteado dos atributos (no scikit-learn, por padrão, a raiz quadrada do número de atributos), o que impede que todas as árvores comecem com a mesma pergunta forte e fiquem parecidas demais. Árvores diferentes entre si erram em lugares diferentes, e é essa diferença que a votação aproveita.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Primeiro a amostra com reposição, numa tabela de 10 linhas numeradas de 0 a 9. Quantas linhas entram, quantas ficam de fora e que fração do original aparece em amostras maiores:</p>
+<pre class="codigo" tabindex="0" aria-label="Amostra com reposição: quem entra, quem fica de fora e a fração única">rng = np.random.default_rng(<span class="n">0</span>)
+sorteio = rng.integers(<span class="n">0</span>, <span class="n">10</span>, size=<span class="n">10</span>)       <span class="c"># 10 sorteios, com reposição, entre as linhas 0 a 9</span>
+<span class="k">print</span>(<span class="s">"sorteadas:"</span>, sorted(sorteio.tolist()))
+<span class="k">print</span>(<span class="s">"ficaram de fora:"</span>, sorted(set(range(<span class="n">10</span>)) - set(sorteio.tolist())))
+<span class="k">for</span> n <span class="k">in</span> [<span class="n">10</span>, <span class="n">100</span>, <span class="n">1000</span>]:
+    unicas = np.mean([len(np.unique(rng.integers(<span class="n">0</span>, n, size=n))) / n <span class="k">for</span> _ <span class="k">in</span> range(<span class="n">200</span>)])
+    <span class="k">print</span>(n, <span class="s">"linhas | fração única (média de 200 sorteios):"</span>, round(unicas, <span class="n">3</span>), <span class="s">"| 1 - (1 - 1/n)^n ="</span>, round(<span class="n">1</span> - (<span class="n">1</span> - <span class="n">1</span>/n)**n, <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">sorteadas: [0, 0, 0, 1, 2, 3, 5, 6, 8, 8]
+ficaram de fora: [4, 7, 9]
+10 linhas | fração única (média de 200 sorteios): 0.657 | 1 - (1 - 1/n)^n = 0.651
+100 linhas | fração única (média de 200 sorteios): 0.638 | 1 - (1 - 1/n)^n = 0.634
+1000 linhas | fração única (média de 200 sorteios): 0.633 | 1 - (1 - 1/n)^n = 0.632</div>
+    <p>Nesse sorteio de 10, a linha 0 aparece três vezes e a 8 aparece duas, e as linhas 4, 7 e 9 ficam de fora. O número de linhas distintas varia de sorteio para sorteio, e fica mais previsível quanto maior a tabela. A chance de uma linha específica nunca ser sorteada em <code>n</code> tentativas é <code>(1 − 1/n)ⁿ</code>, que se aproxima de 0,368 quando <code>n</code> cresce; o resto, cerca de 63,2%, entra na amostra. Tirando a média de 200 sorteios, a fração observada (0,657; 0,638; 0,633) fica colada na conta (0,651; 0,634; 0,632) nos três tamanhos. Um sorteio só, como o de 10 linhas acima (7 distintas, 0,7), pode fugir um pouco da conta. Agora o bagging montado à mão: 25 árvores sem limite, cada uma treinada numa amostra com reposição das 100 linhas de treino, e a votação por maioria nas 400 linhas de teste:</p>
+<pre class="codigo" tabindex="0" aria-label="Bagging à mão: 25 árvores em amostras sorteadas e votação por maioria">rng = np.random.default_rng(<span class="n">42</span>)
+votos, acertos = [], []
+<span class="k">for</span> k <span class="k">in</span> range(<span class="n">25</span>):
+    i = rng.integers(<span class="n">0</span>, <span class="n">100</span>, size=<span class="n">100</span>)                                  <span class="c"># amostra com reposição das 100 linhas de treino</span>
+    arv = DecisionTreeClassifier(random_state=k).fit(Xtr[i], ytr[i])    <span class="c"># árvore sem limite, só nessa amostra</span>
+    p = arv.predict(Xte)
+    votos.append(p)
+    acertos.append((p == yte).mean())
+votos = np.array(votos)                                    <span class="c"># 25 linhas (árvores) por 400 colunas (exemplos de teste)</span>
+maioria = (votos.mean(axis=<span class="n">0</span>) &gt;= <span class="n">0.5</span>).astype(int)          <span class="c"># a classe que a maioria das árvores escolheu</span>
+<span class="k">print</span>(<span class="s">"cada árvore: média"</span>, round(np.mean(acertos), <span class="n">3</span>), <span class="s">"| pior"</span>, round(min(acertos), <span class="n">3</span>), <span class="s">"| melhor"</span>, round(max(acertos), <span class="n">3</span>))
+sozinha = DecisionTreeClassifier(random_state=<span class="n">0</span>).fit(Xtr, ytr)
+<span class="k">print</span>(<span class="s">"votação das 25:"</span>, round((maioria == yte).mean(), <span class="n">3</span>), <span class="s">"| uma árvore sem limite nas 100 linhas:"</span>, round(sozinha.score(Xte, yte), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">cada árvore: média 0.804 | pior 0.672 | melhor 0.87
+votação das 25: 0.818 | uma árvore sem limite nas 100 linhas: 0.782</div>
+    <p>Cada árvore sozinha é muito irregular: de 0,672 a 0,87 de acurácia no teste, com média de 0,804. A votação das 25 chega a 0,818, acima da média das árvores individuais e acima da árvore sem limite treinada nas 100 linhas inteiras (0,782). O ganho sobre a média é pequeno neste sorteio; a vantagem real do voto é ser mais estável do que qualquer árvore isolada. Agora a floresta pronta do scikit-learn, que faz esses dois passos (e o sorteio de atributos) sozinha:</p>
+<pre class="codigo" tabindex="0" aria-label="RandomForestClassifier: acurácia de treino contra teste"><span class="k">from</span> sklearn.ensemble <span class="k">import</span> RandomForestClassifier
+
+floresta = RandomForestClassifier(n_estimators=<span class="n">25</span>, random_state=<span class="n">0</span>).fit(Xtr, ytr)
+<span class="k">print</span>(<span class="s">"treino"</span>, floresta.score(Xtr, ytr), <span class="s">"| teste"</span>, round(floresta.score(Xte, yte), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"atributos sorteados em cada divisão (max_features):"</span>, floresta.max_features)</pre>
+<div class="saida" aria-label="Saída do código">treino 1.0 | teste 0.825
+atributos sorteados em cada divisão (max_features): sqrt</div>
+    <p>Com duas colunas, a raiz quadrada de 2 arredondada para baixo é 1, então cada pergunta olha um atributo sorteado. A acurácia de treino é 1,0 e a de teste, 0,825. Quanto ao número de árvores, o efeito não é uma linha reta:</p>
+<pre class="codigo" tabindex="0" aria-label="Efeito do número de árvores da floresta"><span class="k">for</span> n <span class="k">in</span> [<span class="n">1</span>, <span class="n">5</span>, <span class="n">25</span>, <span class="n">100</span>, <span class="n">300</span>]:
+    f = RandomForestClassifier(n_estimators=n, random_state=<span class="n">0</span>).fit(Xtr, ytr)
+    <span class="k">print</span>(n, <span class="s">"árvores | treino"</span>, round(f.score(Xtr, ytr), <span class="n">3</span>), <span class="s">"| teste"</span>, round(f.score(Xte, yte), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">1 árvores | treino 0.95 | teste 0.812
+5 árvores | treino 0.95 | teste 0.79
+25 árvores | treino 1.0 | teste 0.825
+100 árvores | treino 1.0 | teste 0.835
+300 árvores | treino 1.0 | teste 0.84</div>
+    <p>Com 5 árvores o resultado até piora (0,79) em relação a 1 árvore (0,812), porque poucas árvores votando ainda não cancelam os erros uns dos outros. Com mais árvores o teste sobe e o ganho vai encolhendo: de 25 para 100 são 1 ponto (0,825 para 0,835), de 100 para 300 só meio ponto (0,84). Muitas árvores custam tempo e memória a troco de pouco. Mas um único sorteio de dados não prova nada sobre variância. Repetindo o experimento em 8 conjuntos diferentes, uma árvore sem limite contra uma floresta de 30:</p>
+<pre class="codigo" tabindex="0" aria-label="Árvore contra floresta em 8 conjuntos diferentes"><span class="k">def</span> sorteio_dados(semente):
+    X, y = make_moons(n_samples=<span class="n">500</span>, noise=<span class="n">0.35</span>, random_state=semente)
+    <span class="k">return</span> X[:<span class="n">100</span>], y[:<span class="n">100</span>], X[<span class="n">100</span>:], y[<span class="n">100</span>:]
+
+placar = []
+<span class="k">for</span> s <span class="k">in</span> range(<span class="n">100</span>, <span class="n">108</span>):                                 <span class="c"># 8 conjuntos de dados diferentes</span>
+    a, b, c, d = sorteio_dados(s)
+    t = DecisionTreeClassifier(random_state=<span class="n">0</span>).fit(a, b).score(c, d)
+    f = RandomForestClassifier(n_estimators=<span class="n">30</span>, random_state=<span class="n">0</span>).fit(a, b).score(c, d)
+    placar.append((t, f))
+placar = np.array(placar)
+<span class="k">print</span>(<span class="s">"árvore  :"</span>, placar[:, <span class="n">0</span>].round(<span class="n">3</span>).tolist())
+<span class="k">print</span>(<span class="s">"floresta:"</span>, placar[:, <span class="n">1</span>].round(<span class="n">3</span>).tolist())
+<span class="k">print</span>(<span class="s">"média árvore"</span>, placar[:, <span class="n">0</span>].mean().round(<span class="n">3</span>), <span class="s">"| média floresta"</span>, placar[:, <span class="n">1</span>].mean().round(<span class="n">3</span>), <span class="s">"| floresta ganhou"</span>, (placar[:, <span class="n">1</span>] &gt; placar[:, <span class="n">0</span>]).sum(), <span class="s">"de 8"</span>)</pre>
+<div class="saida" aria-label="Saída do código">árvore  : [0.845, 0.848, 0.86, 0.768, 0.835, 0.818, 0.848, 0.835]
+floresta: [0.85, 0.885, 0.89, 0.825, 0.875, 0.885, 0.86, 0.875]
+média árvore 0.832 | média floresta 0.868 | floresta ganhou 8 de 8</div>
+    <p>A floresta ganhou nos 8 conjuntos, e a média sobe de 0,832 para 0,868. Oito conjuntos é pouco para uma garantia, mas a direção favorece a floresta (o Experimento 4.3 mostra que ela nem sempre ganha) e a arquitetura explica o motivo: a votação reduz a variância da árvore única.</p>
+
+    <figure class="fig" aria-labelledby="fig4">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 236" role="img" aria-label="Duas linhas de caixas. Na primeira, a floresta em paralelo: dados de treino, amostras sorteadas, árvores independentes e votação. Na segunda, o boosting em sequência: árvore 1, resto, árvore 2, resto, árvore 3 e soma.">
+        <text class="t2" x="8" y="20">Floresta: árvores independentes, em paralelo</text>
+        <rect class="caixa" x="8" y="32" width="110" height="44" rx="6"/><text class="t" x="63" y="59" text-anchor="middle">dados</text>
+        <rect class="caixa" x="152" y="32" width="150" height="44" rx="6"/><text class="t" x="227" y="59" text-anchor="middle">amostras sorteadas</text>
+        <rect class="caixa" x="336" y="32" width="150" height="44" rx="6"/><text class="t" x="411" y="59" text-anchor="middle">árvores</text>
+        <rect class="caixa dest" x="520" y="32" width="112" height="44" rx="6"/><text class="t" x="576" y="59" text-anchor="middle">votação</text>
+        <path class="seta" d="M120 54H148"/><path class="seta" d="M304 54H332"/><path class="seta" d="M488 54H516"/>
+        <text class="t2" x="8" y="124">Boosting: árvores rasas, em fila</text>
+        <rect class="caixa" x="8" y="136" width="70" height="44" rx="6"/><text class="t" x="43" y="163" text-anchor="middle">árvore 1</text>
+        <rect class="caixa" x="108" y="136" width="80" height="44" rx="6"/><text class="t" x="148" y="163" text-anchor="middle">resto</text>
+        <rect class="caixa" x="218" y="136" width="70" height="44" rx="6"/><text class="t" x="253" y="163" text-anchor="middle">árvore 2</text>
+        <rect class="caixa" x="318" y="136" width="80" height="44" rx="6"/><text class="t" x="358" y="163" text-anchor="middle">resto</text>
+        <rect class="caixa" x="428" y="136" width="70" height="44" rx="6"/><text class="t" x="463" y="163" text-anchor="middle">árvore 3</text>
+        <rect class="caixa dest" x="528" y="136" width="104" height="44" rx="6"/><text class="t" x="580" y="163" text-anchor="middle">soma</text>
+        <path class="seta" d="M80 158H104"/><path class="seta" d="M190 158H214"/><path class="seta" d="M290 158H314"/><path class="seta" d="M400 158H424"/><path class="seta" d="M500 158H524"/>
+        <text class="t2" x="8" y="206">Na floresta, nenhuma árvore depende da outra.</text><text class="t2" x="8" y="224">No boosting, cada uma depende do que as anteriores deixaram de acertar.</text>
+      </svg></div>
+      <figcaption id="fig4"><b>Fig. 4</b>Os dois jeitos de juntar árvores. A floresta treina em paralelo e vota. O boosting treina em fila, e cada árvore nova aprende o resto das anteriores.</figcaption>
+    </figure>
+
+    <h3>Código comentado</h3>
+    <p>No bagging à mão, <code>rng.integers(0, 100, size=100)</code> sorteia 100 índices com reposição, e <code>Xtr[i]</code> monta a tabela dessa amostra. O <code>votos</code> fica com 25 linhas (uma por árvore) e 400 colunas (uma por exemplo de teste); a média de cada coluna é a fração de árvores que votou 1, e comparar com 0,5 dá a maioria. No <code>RandomForestClassifier</code>, <code>n_estimators</code> é o número de árvores e <code>max_features</code> controla o sorteio de atributos por pergunta. Para classificação ele também tem um <code>predict_proba</code> que devolve a média das probabilidades das folhas de cada árvore, o que se parece com a fração de árvores votando em cada classe, e é por isso que a floresta devolve probabilidades com muitos valores distintos, ao contrário da árvore única.</p>
+
+    <h3>Erro comum</h3>
+    <p>Olhar a acurácia de treino da floresta e achar que ela é perfeita: 1,0 no treino e 0,825 no teste. Cada árvore da floresta vê cerca de 63% das linhas e, sem limite, decora essas linhas; as linhas sorteadas em cada amostra são justamente as do treino, então no treino a votação quase sempre acerta. Esse 1,0 é o mesmo engano da árvore sozinha, só que escondido atrás de um conjunto. A medida que vale é a do teste, com exemplos que nenhuma árvore viu. Outro engano frequente é achar que a floresta “não sobreajusta”. Ela sobreajusta menos que uma árvore, mas ainda pode errar muito fora do treino.</p>
+
+    <section class="experimento" data-ex="ia-4-3" data-pacotes="scikit-learn" aria-labelledby="exp3">
+      <header>
+        <div class="rotulo">Experimento 4.3</div>
+        <h3 id="exp3">Árvore contra floresta, em vários conjuntos</h3>
+      </header>
+      <div class="enunciado"><p>A função <code>sorteio_dados(semente)</code> devolve <code>(Xtr, ytr, Xte, yte)</code>: 100 linhas para treinar e 400 para medir, de um conjunto de duas luas diferente a cada semente. Para cada semente de 200 a 204, treine uma árvore sem limite e uma <code>RandomForestClassifier(n_estimators=25, random_state=0)</code> nas linhas de treino e meça a acurácia nas de teste. Guarde em <code>vitorias</code> em quantos dos 5 conjuntos a floresta teve acurácia <b>maior</b> que a árvore, e em <code>media_arvore</code> e <code>media_floresta</code> a acurácia média de cada uma.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.datasets import make_moons
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+def sorteio_dados(semente):
+    X, y = make_moons(n_samples=500, noise=0.35, random_state=semente)
+    return X[:100], y[:100], X[100:], y[100:]
+</script>
+      <script type="text/plain" class="py-inicial">
+vitorias = None
+media_arvore = None
+media_floresta = None
+
+# para cada semente de 200 a 204: treine as duas, meça no teste, conte as vitórias da floresta
+
+print(vitorias, media_arvore, media_floresta)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(vitorias is not None, "Conte em vitorias quantas vezes a acurácia da floresta foi maior que a da árvore.")
+verificar(vitorias == 3, "A floresta deveria vencer em 3 dos 5 conjuntos (nos outros 2 a árvore empata ou fica um pouco acima). Confira se compara com > e se usa a mesma semente de dados para as duas.")
+verificar(media_arvore is not None and abs(media_arvore - 0.838) < 0.001, "A acurácia média da árvore deveria ser 0,838.")
+verificar(media_floresta is not None and abs(media_floresta - 0.854) < 0.001, "A acurácia média da floresta deveria ser 0,854.")
+</script>
+      <script type="text/plain" class="py-solucao">
+vitorias = 0
+soma_a = 0
+soma_f = 0
+for s in range(200, 205):
+    a, b, c, d = sorteio_dados(s)
+    acc_a = DecisionTreeClassifier(random_state=0).fit(a, b).score(c, d)
+    acc_f = RandomForestClassifier(n_estimators=25, random_state=0).fit(a, b).score(c, d)
+    soma_a += acc_a
+    soma_f += acc_f
+    if acc_f > acc_a:
+        vitorias += 1
+
+media_arvore = soma_a / 5
+media_floresta = soma_f / 5
+
+print(vitorias, media_arvore, media_floresta)
+</script>
+      <template class="dica"><p>Dentro do laço: <code>a, b, c, d = sorteio_dados(s)</code> dá treino (<code>a</code>, <code>b</code>) e teste (<code>c</code>, <code>d</code>). Cada modelo é treinado com <code>.fit(a, b)</code> e medido com <code>.score(c, d)</code>.</p></template>
+      <template class="dica"><p>Acumule as acurácias em duas somas, conte <code>vitorias += 1</code> quando <code>acc_f &gt; acc_a</code>, e divida as somas por 5 no fim.</p></template>
+    </section>
+
+    <div class="ponte"><p>A floresta ataca a variância deixando as árvores independentes. O boosting ataca o problema pelo outro lado: em vez de árvores profundas que votam, árvores rasas que se corrigem em sequência.</p></div>
+
+    <h2 id="s4"><span class="nsec">4.4</span>Boosting: cada árvore corrige a anterior</h2>
+    <p class="gancho">E se, em vez de treinar árvores que não se conhecem, cada árvore nova olhasse justamente o que as anteriores erraram?</p>
+
+    <h3>Intuição</h3>
+    <p>Pense em estudar para uma prova refazendo só os exercícios que você errou na rodada anterior. A primeira rodada acerta o que é fácil; a segunda foca no que sobrou; a terceira, no que ainda sobrou. Cada passo é pequeno e simples, e o conjunto vai se ajustando aos poucos. No <b>boosting</b>, cada árvore é rasa (uma ou duas perguntas) e fraca sozinha. O que ela aprende é o <button type="button" class="termo" data-def="Resto (ou resíduo): a diferença entre o valor real e a previsão atual do modelo. É o que ainda falta acertar, e é o alvo que a próxima árvore do boosting aprende.">resto</button> do modelo até ali, e a previsão final é a soma de todos os passos.</p>
+
+    <h3>Definição</h3>
+    <p>Começa-se com uma previsão simples (a média, por exemplo). A cada etapa: calcula-se o resto (valor real menos previsão atual), treina-se uma árvore rasa para prever esse resto e soma-se à previsão atual um pedaço dela: <code>previsão nova = previsão atual + η · saída da árvore</code>. O <code>η</code> é a <button type="button" class="termo" data-def="Taxa de aprendizado (learning_rate): o tamanho do passo de cada correção no boosting. Passos pequenos exigem mais árvores, mas costumam generalizar melhor do que passos grandes.">taxa de aprendizado</button>: um número entre 0 e 1 que diz o quanto da correção se aceita. Em classificação a ideia é a mesma, mas o “resto” vem da <b>perda</b> que o modelo tenta reduzir, a perda logarítmica, e o nome <i>gradient boosting</i> vem de a correção seguir a direção que mais reduz essa perda. No scikit-learn, os dois modelos principais são o <code>GradientBoostingClassifier</code> e o <code>HistGradientBoostingClassifier</code>, uma variante que agrupa os valores dos atributos em faixas antes de treinar, pensada para tabelas grandes. Bibliotecas como XGBoost, LightGBM e CatBoost também implementam boosting de árvores, mas este capítulo não usa nenhuma delas, e nenhum exercício deste capítulo depende delas.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Primeiro o mecanismo, à mão, com seis pontos e uma árvore de uma pergunta (<code>x</code> de 1 a 6, alvo 3, 5, 4, 9, 11, 10). Etapa 0: prever a média, 42/6 = 7 para todo mundo. O resto é <code>[−4, −2, −3, 2, 4, 3]</code>. Uma árvore de uma pergunta aprende esse resto cortando em <code>x &lt;= 3,5</code>: o lado esquerdo tem média <code>(−4 − 2 − 3)/3 = −3</code> e o direito <code>(2 + 4 + 3)/3 = 3</code>. Com passo 0,5, a previsão passa para <code>7 + 0,5·(−3) = 5,5</code> à esquerda e <code>7 + 0,5·3 = 8,5</code> à direita. O erro quadrático médio cai de 9,667 para <code>(6,25 + 0,25 + 2,25 + 0,25 + 6,25 + 2,25)/6 = 2,917</code>. O código repete esse passo quatro vezes:</p>
+<pre class="codigo" tabindex="0" aria-label="Boosting à mão: cada toco aprende o que ainda falta"><span class="k">from</span> sklearn.tree <span class="k">import</span> DecisionTreeRegressor
+
+x = np.array([<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">5</span>, <span class="n">6</span>]).reshape(-<span class="n">1</span>, <span class="n">1</span>)
+alvo = np.array([<span class="n">3</span>, <span class="n">5</span>, <span class="n">4</span>, <span class="n">9</span>, <span class="n">11</span>, <span class="n">10</span>.])
+pred = np.full(<span class="n">6</span>, alvo.mean())                       <span class="c"># etapa 0: prever a média para todo mundo</span>
+<span class="k">print</span>(<span class="s">"etapa 0:"</span>, pred.round(<span class="n">3</span>).tolist(), <span class="s">"| erro quadrático médio"</span>, round(((alvo - pred)**<span class="n">2</span>).mean(), <span class="n">3</span>))
+<span class="k">for</span> etapa <span class="k">in</span> range(<span class="n">1</span>, <span class="n">5</span>):
+    resto = alvo - pred                              <span class="c"># o que ainda falta acertar</span>
+    toco = DecisionTreeRegressor(max_depth=<span class="n">1</span>, random_state=<span class="n">0</span>).fit(x, resto)   <span class="c"># árvore de uma pergunta aprende o resto</span>
+    pred = pred + <span class="n">0.5</span> * toco.predict(x)              <span class="c"># passo de 0,5: corrige só metade</span>
+    <span class="k">print</span>(<span class="s">"etapa"</span>, etapa, <span class="s">"| resto"</span>, resto.round(<span class="n">3</span>).tolist(), <span class="s">"| nova previsão"</span>, pred.round(<span class="n">3</span>).tolist(), <span class="s">"| erro"</span>, round(((alvo - pred)**<span class="n">2</span>).mean(), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">etapa 0: [7.0, 7.0, 7.0, 7.0, 7.0, 7.0] | erro quadrático médio 9.667
+etapa 1 | resto [-4.0, -2.0, -3.0, 2.0, 4.0, 3.0] | nova previsão [5.5, 5.5, 5.5, 8.5, 8.5, 8.5] | erro 2.917
+etapa 2 | resto [-2.5, -0.5, -1.5, 0.5, 2.5, 1.5] | nova previsão [4.75, 4.75, 4.75, 9.25, 9.25, 9.25] | erro 1.229
+etapa 3 | resto [-1.75, 0.25, -0.75, -0.25, 1.75, 0.75] | nova previsão [4.438, 4.438, 4.438, 8.938, 9.875, 9.875] | erro 0.643
+etapa 4 | resto [-1.438, 0.562, -0.438, 0.062, 1.125, 0.125] | nova previsão [3.719, 4.581, 4.581, 9.081, 10.019, 10.019] | erro 0.333</div>
+    <p>O erro vai de 9,667 para 2,917, 1,229, 0,643 e 0,333, e cada etapa trabalha sobre o resto da anterior. Na etapa 4 a árvore corta em <code>x &lt;= 1,5</code> para ajustar o primeiro ponto sozinho: o boosting já começa a perseguir detalhes individuais, e é aí que ele precisa parar. Para o caso de classificação, a medida de erro é a <button type="button" class="termo" data-def="Perda logarítmica (log loss): média de −ln(p) sobre os exemplos, em que p é a probabilidade que o modelo deu à classe que de fato aconteceu. Pune pouco quem acerta com confiança e muito quem erra com confiança.">perda logarítmica</button>. Uma conta com três previsões:</p>
+<pre class="codigo" tabindex="0" aria-label="Perda logarítmica de três previsões, à mão e com log_loss"><span class="k">from</span> sklearn.metrics <span class="k">import</span> log_loss
+
+prob_certa = np.array([<span class="n">0.9</span>, <span class="n">0.6</span>, <span class="n">0.2</span>])         <span class="c"># probabilidade que o modelo deu à classe que de fato aconteceu</span>
+multa = -np.log(prob_certa)
+<span class="k">print</span>(multa.round(<span class="n">3</span>).tolist(), <span class="s">"| média"</span>, round(multa.mean(), <span class="n">3</span>))
+<span class="k">print</span>(round(log_loss([<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>], [<span class="n">0.9</span>, <span class="n">0.4</span>, <span class="n">0.2</span>]), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">[0.105, 0.511, 1.609] | média 0.742
+0.742</div>
+    <p>Se o modelo deu 0,9 à classe certa, a multa é <code>−ln(0,9) = 0,105</code>; se deu 0,6, a multa é 0,511; se deu 0,2, é 1,609. A perda é a média, 0,742, e a função do scikit-learn dá o mesmo valor. Ela cresce muito quando o modelo erra com confiança, o que a torna mais sensível que a acurácia a probabilidades mal calibradas. Agora o boosting de verdade, nos mesmos dados das luas, com até 200 árvores de profundidade 2 e taxa de aprendizado 0,1. O método <code>staged_predict_proba</code> devolve a previsão depois de cada etapa, sem treinar de novo:</p>
+<pre class="codigo" tabindex="0" aria-label="GradientBoostingClassifier etapa por etapa, treino contra teste"><span class="k">from</span> sklearn.ensemble <span class="k">import</span> GradientBoostingClassifier
+
+gb = GradientBoostingClassifier(n_estimators=<span class="n">200</span>, learning_rate=<span class="n">0.1</span>, max_depth=<span class="n">2</span>, random_state=<span class="n">0</span>).fit(Xtr, ytr)
+perda_tr = [log_loss(ytr, p) <span class="k">for</span> p <span class="k">in</span> gb.staged_predict_proba(Xtr)]    <span class="c"># uma previsão por etapa</span>
+perda_te = [log_loss(yte, p) <span class="k">for</span> p <span class="k">in</span> gb.staged_predict_proba(Xte)]
+acerto_te = [(p == yte).mean() <span class="k">for</span> p <span class="k">in</span> gb.staged_predict(Xte)]
+<span class="k">for</span> k <span class="k">in</span> [<span class="n">1</span>, <span class="n">5</span>, <span class="n">10</span>, <span class="n">17</span>, <span class="n">30</span>, <span class="n">50</span>, <span class="n">100</span>, <span class="n">200</span>]:
+    <span class="k">print</span>(k, <span class="s">"árvores | perda treino"</span>, round(perda_tr[k-<span class="n">1</span>], <span class="n">3</span>), <span class="s">"| perda teste"</span>, round(perda_te[k-<span class="n">1</span>], <span class="n">3</span>), <span class="s">"| acerto teste"</span>, round(acerto_te[k-<span class="n">1</span>], <span class="n">3</span>))
+melhor_k = int(np.argmin(perda_te)) + <span class="n">1</span>
+<span class="k">print</span>(<span class="s">"menor perda no teste com"</span>, melhor_k, <span class="s">"árvores:"</span>, round(perda_te[melhor_k-<span class="n">1</span>], <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">1 árvores | perda treino 0.618 | perda teste 0.638 | acerto teste 0.842
+5 árvores | perda treino 0.437 | perda teste 0.496 | acerto teste 0.842
+10 árvores | perda treino 0.329 | perda teste 0.426 | acerto teste 0.842
+17 árvores | perda treino 0.253 | perda teste 0.402 | acerto teste 0.842
+30 árvores | perda treino 0.173 | perda teste 0.426 | acerto teste 0.842
+50 árvores | perda treino 0.107 | perda teste 0.469 | acerto teste 0.808
+100 árvores | perda treino 0.048 | perda teste 0.574 | acerto teste 0.8
+200 árvores | perda treino 0.013 | perda teste 0.824 | acerto teste 0.795
+menor perda no teste com 17 árvores: 0.402</div>
+    <p>No treino, a perda cai o tempo todo, de 0,618 para 0,013: o modelo se ajusta cada vez mais aos 100 exemplos. No teste, ela cai até 0,402 com 17 árvores e depois sobe, até 0,824 com 200. A acurácia de teste conta a mesma história com menos nitidez: 0,8425 (337 de 400) até 30 árvores (o <code>round</code> do Python mostra 0,842 aqui, e na tabela da seção 4.6 o mesmo valor aparece como 0,843, porque 0,8425 está bem no meio e cada arredondamento escolhe um lado), 0,808 com 50, 0,8 com 100 e 0,795 com 200. A Fig. 5 mostra as duas curvas por inteiro.</p>
+
+    <figure class="fig" aria-labelledby="fig5">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 300" role="img" aria-label="Gráfico de linhas da perda logarítmica por número de árvores do boosting, de 1 a 200. A perda de treino cai o tempo todo, de 0,618 para 0,013. A perda de teste cai até 0,402 com 17 árvores e depois sobe até 0,824 com 200."><path d="M70 240.0H610" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="244.0" text-anchor="end">0,0</text><path d="M70 166.7H610" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="170.7" text-anchor="end">0,3</text><path d="M70 93.3H610" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="97.3" text-anchor="end">0,6</text><path d="M70 20.0H610" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="24.0" text-anchor="end">0,9</text><text class="t2" x="70.0" y="258" text-anchor="middle">1</text><text class="t2" x="203.0" y="258" text-anchor="middle">50</text><text class="t2" x="338.6" y="258" text-anchor="middle">100</text><text class="t2" x="474.3" y="258" text-anchor="middle">150</text><text class="t2" x="610.0" y="258" text-anchor="middle">200</text><polyline points="70.0,88.9 72.7,103.2 75.4,115.0 78.1,124.9 80.9,133.2 83.6,140.3 86.3,146.3 89.0,151.4 91.7,155.9 94.4,159.7 97.1,163.7 99.8,166.7 102.6,169.4 105.3,172.5 108.0,174.7 110.7,176.4 113.4,178.2 116.1,180.5 118.8,181.9 121.6,184.2 124.3,186.2 127.0,187.3 129.7,188.4 132.4,189.9 135.1,191.5 137.8,192.7 140.6,193.5 143.3,194.5 146.0,195.9 148.7,197.7 151.4,199.9 154.1,200.7 156.8,201.9 159.5,202.6 162.3,203.2 165.0,203.9 167.7,204.9 170.4,206.0 173.1,207.3 175.8,207.8 178.5,208.3 181.3,209.0 184.0,209.7 186.7,210.5 189.4,211.2 192.1,211.8 194.8,212.3 197.5,212.7 200.3,213.3 203.0,214.0 205.7,214.5 208.4,214.8 211.1,215.2 213.8,215.7 216.5,216.3 219.2,216.6 222.0,216.9 224.7,217.4 227.4,217.9 230.1,218.2 232.8,218.4 235.5,218.8 238.2,219.1 241.0,219.3 243.7,219.5 246.4,219.9 249.1,220.3 251.8,220.6 254.5,221.0 257.2,221.2 259.9,221.5 262.7,221.8 265.4,222.1 268.1,222.4 270.8,222.6 273.5,222.8 276.2,223.1 278.9,223.3 281.7,223.6 284.4,223.8 287.1,224.1 289.8,224.5 292.5,224.7 295.2,224.9 297.9,225.1 300.7,225.3 303.4,225.6 306.1,225.8 308.8,226.0 311.5,226.2 314.2,226.4 316.9,226.7 319.6,226.9 322.4,227.1 325.1,227.4 327.8,227.5 330.5,227.7 333.2,227.8 335.9,228.0 338.6,228.2 341.4,228.4 344.1,228.5 346.8,228.6 349.5,228.8 352.2,228.9 354.9,229.1 357.6,229.3 360.4,229.4 363.1,229.5 365.8,229.7 368.5,229.8 371.2,230.0 373.9,230.2 376.6,230.3 379.3,230.4 382.1,230.6 384.8,230.8 387.5,231.0 390.2,231.1 392.9,231.2 395.6,231.2 398.3,231.3 401.1,231.4 403.8,231.6 406.5,231.6 409.2,231.8 411.9,231.9 414.6,232.0 417.3,232.2 420.1,232.2 422.8,232.3 425.5,232.4 428.2,232.5 430.9,232.6 433.6,232.7 436.3,232.8 439.0,232.9 441.8,233.0 444.5,233.1 447.2,233.2 449.9,233.3 452.6,233.4 455.3,233.5 458.0,233.6 460.8,233.6 463.5,233.7 466.2,233.8 468.9,234.0 471.6,234.0 474.3,234.1 477.0,234.2 479.7,234.3 482.5,234.3 485.2,234.4 487.9,234.5 490.6,234.5 493.3,234.6 496.0,234.6 498.7,234.7 501.5,234.8 504.2,234.9 506.9,235.0 509.6,235.0 512.3,235.1 515.0,235.1 517.7,235.2 520.5,235.2 523.2,235.3 525.9,235.4 528.6,235.5 531.3,235.5 534.0,235.6 536.7,235.6 539.4,235.7 542.2,235.7 544.9,235.8 547.6,235.8 550.3,235.9 553.0,235.9 555.7,236.0 558.4,236.0 561.2,236.1 563.9,236.1 566.6,236.2 569.3,236.3 572.0,236.3 574.7,236.3 577.4,236.4 580.2,236.4 582.9,236.5 585.6,236.6 588.3,236.6 591.0,236.6 593.7,236.7 596.4,236.7 599.1,236.7 601.9,236.8 604.6,236.8 607.3,236.8 610.0,236.9" fill="none" style="stroke:var(--color-accent-primary)" stroke-width="2.2" stroke-linejoin="round"/><polyline points="70.0,84.0 72.7,95.6 75.4,104.9 78.1,112.5 80.9,118.7 83.6,123.8 86.3,127.9 89.0,131.1 91.7,133.5 94.4,135.8 97.1,136.9 99.8,137.9 102.6,139.3 105.3,139.6 108.0,140.5 110.7,139.6 113.4,141.8 116.1,141.4 118.8,141.1 121.6,141.4 124.3,140.7 127.0,139.5 129.7,138.9 132.4,139.0 135.1,138.1 137.8,138.2 140.6,136.7 143.3,136.7 146.0,135.6 148.7,135.8 151.4,135.9 154.1,135.1 156.8,133.8 159.5,133.6 162.3,133.5 165.0,132.6 167.7,131.2 170.4,131.0 173.1,131.1 175.8,129.4 178.5,129.3 181.3,129.0 184.0,128.0 186.7,128.0 189.4,127.6 192.1,127.6 194.8,127.4 197.5,126.5 200.3,125.4 203.0,125.4 205.7,125.0 208.4,124.8 211.1,123.8 213.8,122.7 216.5,122.6 219.2,122.4 222.0,121.4 224.7,120.2 227.4,120.2 230.1,120.2 232.8,119.9 235.5,119.8 238.2,120.0 241.0,120.0 243.7,119.6 246.4,119.1 249.1,119.0 251.8,119.3 254.5,119.1 257.2,118.9 259.9,118.0 262.7,116.8 265.4,117.3 268.1,117.1 270.8,115.5 273.5,115.3 276.2,114.1 278.9,112.5 281.7,111.9 284.4,111.6 287.1,111.4 289.8,111.4 292.5,110.2 295.2,110.6 297.9,109.6 300.7,109.4 303.4,109.3 306.1,108.0 308.8,106.5 311.5,106.3 314.2,106.2 316.9,104.5 319.6,104.6 322.4,103.2 325.1,103.1 327.8,103.5 330.5,101.9 333.2,101.6 335.9,101.5 338.6,99.8 341.4,98.1 344.1,97.9 346.8,98.0 349.5,96.7 352.2,96.6 354.9,96.0 357.6,95.9 360.4,94.6 363.1,94.3 365.8,94.1 368.5,93.1 371.2,91.4 373.9,91.2 376.6,90.9 379.3,89.4 382.1,89.3 384.8,89.2 387.5,87.5 390.2,87.8 392.9,86.1 395.6,85.9 398.3,84.9 401.1,84.7 403.8,84.6 406.5,82.9 409.2,82.8 411.9,82.6 414.6,81.3 417.3,81.0 420.1,80.7 422.8,79.4 425.5,79.5 428.2,79.3 430.9,77.8 433.6,77.9 436.3,77.8 439.0,77.5 441.8,77.0 444.5,76.7 447.2,75.2 449.9,75.1 452.6,74.9 455.3,74.3 458.0,73.3 460.8,73.0 463.5,72.9 466.2,71.6 468.9,71.6 471.6,70.6 474.3,70.3 477.0,70.1 479.7,68.4 482.5,67.4 485.2,67.2 487.9,67.0 490.6,65.3 493.3,65.1 496.0,64.1 498.7,62.3 501.5,62.1 504.2,62.0 506.9,61.8 509.6,60.8 512.3,60.7 515.0,59.4 517.7,59.1 520.5,57.4 523.2,57.3 525.9,57.4 528.6,57.3 531.3,56.2 534.0,56.5 536.7,54.7 539.4,54.5 542.2,54.2 544.9,52.8 547.6,52.9 550.3,52.6 553.0,51.1 555.7,51.4 558.4,51.3 561.2,50.5 563.9,50.2 566.6,48.4 569.3,48.2 572.0,47.8 574.7,47.5 577.4,46.1 580.2,46.2 582.9,44.3 585.6,44.2 588.3,44.3 591.0,42.8 593.7,42.6 596.4,42.5 599.1,42.6 601.9,40.9 604.6,40.6 607.3,40.4 610.0,38.5" fill="none" style="stroke:var(--color-status-error)" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="6 4"/><circle cx="113.4" cy="141.8" r="5" style="fill:var(--color-status-error)"/><text class="t2" x="123.4" y="165.8">menor perda no teste: 17 árvores</text><text class="t" x="420.1" y="220.2" text-anchor="end" style="fill:var(--color-accent-primary)">treino</text><text class="t" x="501.5" y="48.1" text-anchor="end" style="fill:var(--color-status-error)">teste</text><text class="t" x="340" y="284" text-anchor="middle">número de árvores somadas</text><text class="t" x="16" y="130" text-anchor="middle" transform="rotate(-90 16 130)">perda logarítmica</text></svg></div>
+      <figcaption id="fig5"><b>Fig. 5</b>Perda logarítmica por número de árvores. A de treino (linha cheia) só desce. A de teste (tracejada) desce até 17 árvores e depois sobe: a partir dali o modelo está decorando.</figcaption>
+    </figure>
+
+    <p>Escolher o ponto de parada olhando a perda de teste, como fiz acima, é otimista pelo mesmo motivo da seção 4.2. A forma correta é a <button type="button" class="termo" data-def="Parada antecipada (early stopping): separa-se uma parte do treino como validação e interrompe-se o treino quando a perda nela deixa de melhorar por um número de etapas seguidas. Evita escolher o número de árvores olhando o teste.">parada antecipada</button>, que o próprio scikit-learn faz separando uma fração do treino como validação:</p>
+<pre class="codigo" tabindex="0" aria-label="Parada antecipada no GradientBoostingClassifier e no HistGradientBoostingClassifier">gb2 = GradientBoostingClassifier(n_estimators=<span class="n">200</span>, learning_rate=<span class="n">0.1</span>, max_depth=<span class="n">2</span>, validation_fraction=<span class="n">0.2</span>, n_iter_no_change=<span class="n">10</span>, random_state=<span class="n">0</span>).fit(Xtr, ytr)
+<span class="k">print</span>(<span class="s">"GradientBoosting parou em"</span>, gb2.n_estimators_, <span class="s">"árvores | teste"</span>, round(gb2.score(Xte, yte), <span class="n">3</span>))
+
+<span class="k">from</span> sklearn.ensemble <span class="k">import</span> HistGradientBoostingClassifier
+hgb = HistGradientBoostingClassifier(max_iter=<span class="n">200</span>, learning_rate=<span class="n">0.1</span>, max_depth=<span class="n">2</span>, early_stopping=<span class="k">True</span>, validation_fraction=<span class="n">0.2</span>, n_iter_no_change=<span class="n">10</span>, random_state=<span class="n">0</span>).fit(Xtr, ytr)
+<span class="k">print</span>(<span class="s">"HistGradientBoosting parou em"</span>, hgb.n_iter_, <span class="s">"iterações | teste"</span>, round(hgb.score(Xte, yte), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">GradientBoosting parou em 67 árvores | teste 0.835
+HistGradientBoosting parou em 87 iterações | teste 0.835</div>
+    <p>Os dois modelos pararam sozinhos, com 67 árvores e 87 iterações, e acertaram 0,835 no teste, melhor que os 0,795 de treinar as 200 e perto dos 0,842 do ponto ideal. Ficaram longe das 17 árvores da Fig. 5 por um motivo concreto: aqui a validação é uma fração de 20% das 100 linhas, ou seja, 20 exemplos, um sinal barulhento, e a regra só para depois de 10 etapas sem melhora. O mecanismo funciona, mas com tão pouca validação o ponto de parada é impreciso. Com milhares de linhas a validação fica muito mais estável.</p>
+
+    <h3>Código comentado</h3>
+    <p>O <code>learning_rate</code> e o <code>n_estimators</code> andam juntos: um passo menor pede mais árvores. Já o <code>max_depth=2</code> mantém as árvores rasas; o boosting funciona somando muitos passos pequenos, e não com poucas árvores grandes. O <code>validation_fraction=0.2</code> e o <code>n_iter_no_change=10</code> ligam a parada antecipada no <code>GradientBoostingClassifier</code>, e o atributo <code>n_estimators_</code> mostra quantas árvores ele de fato usou. No <code>HistGradientBoostingClassifier</code> o equivalente se chama <code>early_stopping=True</code> e o número de iterações usado fica em <code>n_iter_</code>.</p>
+
+    <h3>Erro comum</h3>
+    <p>Treinar um boosting com muitas árvores “para garantir” e olhar só o treino. A perda de treino sempre cai, árvore após árvore, e só mostra o quanto o modelo decorou. Na Fig. 5 as duas curvas se separam cedo: com 200 árvores a perda de treino é 0,013 e a de teste é 0,824, mais do que o dobro do melhor ponto (0,402). Dois cuidados práticos. Primeiro, decida o número de árvores por uma validação separada, não pelo teste. Segundo, lembre que taxa de aprendizado menor e árvores mais rasas deixam o modelo mais difícil de sobreajustar, ao custo de precisar de mais etapas.</p>
+
+    <section class="experimento" data-ex="ia-4-4" data-pacotes="scikit-learn" aria-labelledby="exp4">
+      <header>
+        <div class="rotulo">Experimento 4.4</div>
+        <h3 id="exp4">Quando o boosting para de ajudar</h3>
+      </header>
+      <div class="enunciado"><p>O modelo <code>gb</code> já está treinado com 150 árvores no conjunto <code>Xtr</code>, <code>ytr</code> (100 linhas), e <code>Xte</code>, <code>yte</code> (400 linhas) servem para medir. Use <code>staged_predict_proba</code> para calcular a perda logarítmica no teste depois de cada árvore (lista <code>perda_te</code>, com 150 valores). Guarde em <code>melhor_n</code> o número de árvores de menor perda (contando a partir de 1), em <code>perda_melhor</code> essa perda e em <code>perda_final</code> a perda com as 150 árvores.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.datasets import make_moons
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import log_loss
+
+X2, y2 = make_moons(n_samples=500, noise=0.3, random_state=8)
+Xtr, ytr = X2[:100], y2[:100]
+Xte, yte = X2[100:], y2[100:]
+gb = GradientBoostingClassifier(n_estimators=150, learning_rate=0.1, max_depth=2, random_state=0).fit(Xtr, ytr)
+</script>
+      <script type="text/plain" class="py-inicial">
+perda_te = []       # perda logarítmica no teste depois de cada árvore
+melhor_n = None     # número de árvores de menor perda
+perda_melhor = None
+perda_final = None  # perda com as 150 árvores
+
+# escreva aqui
+
+print(len(perda_te), melhor_n)
+print(perda_melhor, perda_final)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(len(perda_te) == 150, "perda_te deveria ter 150 valores, um por árvore. Use um laço sobre gb.staged_predict_proba(Xte).")
+verificar(melhor_n is not None, "Guarde em melhor_n a posição (a partir de 1) da menor perda de perda_te.")
+verificar(melhor_n == 37, "A menor perda de teste acontece com 37 árvores. np.argmin dá a posição a partir de 0; some 1.")
+verificar(perda_melhor is not None and perda_final is not None, "Guarde perda_melhor e perda_final: a menor perda de perda_te e a última.")
+verificar(abs(perda_melhor - 0.3127) < 0.001, "A menor perda deveria ser cerca de 0,3127: min(perda_te).")
+verificar(abs(perda_final - 0.4192) < 0.001, "A perda com as 150 árvores deveria ser cerca de 0,4192: o último valor de perda_te.")
+verificar(perda_final > perda_melhor, "Com 150 árvores a perda de teste deveria ser maior que a melhor: o modelo passou do ponto.")
+</script>
+      <script type="text/plain" class="py-solucao">
+perda_te = [log_loss(yte, p) for p in gb.staged_predict_proba(Xte)]
+melhor_n = int(np.argmin(perda_te)) + 1
+perda_melhor = min(perda_te)
+perda_final = perda_te[-1]
+
+print(len(perda_te), melhor_n)
+print(perda_melhor, perda_final)
+</script>
+      <template class="dica"><p><code>gb.staged_predict_proba(Xte)</code> entrega, uma a uma, as probabilidades depois de 1, 2, 3 árvores. Para cada uma, <code>log_loss(yte, p)</code> dá a perda; junte tudo numa lista com um laço ou uma compreensão de lista.</p></template>
+      <template class="dica"><p>A posição da menor perda é <code>np.argmin(perda_te)</code>, que começa em 0. O número de árvores é essa posição mais 1. A perda final é <code>perda_te[-1]</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Árvores, florestas e boosting têm mais em comum do que parece, inclusive um limite que nenhuma delas escapa. A próxima seção mostra qual.</p></div>
+
+    <h2 id="s5"><span class="nsec">4.5</span>O que as árvores não fazem</h2>
+    <p class="gancho">Uma árvore aprende que a cada passo em <code>x</code> o resultado sobe sempre a mesma quantidade; o que ela prevê quando <code>x</code> sai do intervalo que viu?</p>
+
+    <h3>Intuição</h3>
+    <p>Uma árvore não aprende uma regra como “soma o mesmo valor a cada passo”. Ela aprende pedaços: “quando <code>x</code> está nesta faixa, prevê este valor”. Cada folha guarda um número, a média dos exemplos de treino que caíram nela. Para um <code>x</code> maior do que todos os do treino, o exemplo cai na última folha, e a previsão é o valor dessa folha. A árvore, a floresta (média de árvores) e o boosting (soma de árvores) herdam esse limite: nenhum deles <b>extrapola</b>.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Uma relação sem nenhum ruído, <code>y = 2x</code>, com <code>x</code> de 0 a 10. A árvore de regressão decora o treino sem erro. E fora dele:</p>
+<pre class="codigo" tabindex="0" aria-label="Árvore de regressão fora do intervalo visto no treino">xs = np.arange(<span class="n">0</span>, <span class="n">11</span>).reshape(-<span class="n">1</span>, <span class="n">1</span>)         <span class="c"># 0, 1, ..., 10</span>
+ys = <span class="n">2</span> * xs.ravel()                          <span class="c"># uma relação certinha: y = 2x</span>
+reg = DecisionTreeRegressor(random_state=<span class="n">0</span>).fit(xs, ys)
+<span class="k">for</span> novo <span class="k">in</span> [<span class="n">5</span>, <span class="n">10</span>, <span class="n">12</span>, <span class="n">20</span>, <span class="n">100</span>]:
+    <span class="k">print</span>(<span class="s">"x ="</span>, novo, <span class="s">"| árvore prevê"</span>, reg.predict([[novo]])[<span class="n">0</span>], <span class="s">"| a regra y = 2x daria"</span>, <span class="n">2</span> * novo)</pre>
+<div class="saida" aria-label="Saída do código">x = 5 | árvore prevê 10.0 | a regra y = 2x daria 10
+x = 10 | árvore prevê 20.0 | a regra y = 2x daria 20
+x = 12 | árvore prevê 20.0 | a regra y = 2x daria 24
+x = 20 | árvore prevê 20.0 | a regra y = 2x daria 40
+x = 100 | árvore prevê 20.0 | a regra y = 2x daria 200</div>
+    <p>Em <code>x = 5</code> e <code>x = 10</code> a árvore acerta tudo, 10 e 20. Mas em <code>x = 12</code>, <code>x = 20</code> e <code>x = 100</code> ela repete 20, o valor do último ponto de treino, enquanto a regra daria 24, 40 e 200. O erro cresce quanto mais longe do treino. Isso importa sempre que o futuro pode sair do intervalo do passado: preços que sobem, vendas em crescimento, uma grandeza com tendência. Nesses casos, um modelo que aprende uma regra contínua pode ser mais adequado, ou a tendência pode ser tratada à parte antes de entregar o resto à árvore.</p>
+
+    <h3>Código comentado</h3>
+    <p>O <code>xs.ravel()</code> achata a coluna de 11 linhas numa lista simples para calcular <code>2 * x</code>, e <code>DecisionTreeRegressor</code> é a árvore para alvos numéricos: em vez da classe mais comum, cada folha guarda a média do alvo dos exemplos que caíram nela. Sem nenhum freio, cada ponto ganha uma folha, por isso o treino fica exato.</p>
+
+    <h3>Erro comum</h3>
+    <p>Confiar na previsão de uma árvore (ou floresta, ou boosting) para valores que o treino nunca cobriu, só porque a acurácia no teste foi boa. O teste foi sorteado do mesmo intervalo do treino e não avisa desse problema. Antes de usar o modelo, compare o intervalo de cada atributo no treino com o que ele vai receber em produção. Existe ainda um segundo limite, que só menciono porque aparece em todo tutorial: as “importâncias” que o scikit-learn calcula para cada atributo a partir da redução de impureza (o atributo <code>feature_importances_</code>) podem favorecer atributos com muitos valores distintos. O capítulo 5 mostra um jeito mais confiável de perguntar “o que pesa na decisão”, e por isso não uso esse número aqui.</p>
+
+    <section class="experimento" data-ex="ia-4-5" data-pacotes="scikit-learn" aria-labelledby="exp5">
+      <header>
+        <div class="rotulo">Experimento 4.5</div>
+        <h3 id="exp5">Fora do intervalo do treino</h3>
+      </header>
+      <div class="enunciado"><p>Os pontos de treino são <code>x</code> de 0 a 10 e <code>y = 3x + 5</code>. Treine uma <code>DecisionTreeRegressor(random_state=0)</code> e guarde em <code>prev_15</code> a previsão dela para <code>x = 15</code>, em <code>real_15</code> o valor que a regra <code>3x + 5</code> daria e em <code>erro_15</code> o real menos o previsto. Guarde em <code>repete_ultimo</code> (<code>True</code> ou <code>False</code>) se a previsão para 15 é igual à previsão para 10, o último ponto do treino.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.tree import DecisionTreeRegressor
+
+x = np.arange(0, 11).reshape(-1, 1)
+y = 3 * x.ravel() + 5
+</script>
+      <script type="text/plain" class="py-inicial">
+prev_15 = None
+real_15 = None
+erro_15 = None
+repete_ultimo = None
+
+# escreva aqui
+
+print(prev_15, real_15, erro_15, repete_ultimo)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(prev_15 is not None, "Treine a árvore com .fit(x, y) e use .predict([[15]])[0] para a previsão em x = 15.")
+verificar(abs(prev_15 - 35) < 1e-9, "A árvore deveria prever 35 para x = 15: o valor da última folha, que é y de x = 10.")
+verificar(real_15 == 50, "A regra 3x + 5 dá 50 para x = 15.")
+verificar(erro_15 is not None, "Calcule erro_15 como real_15 - prev_15.")
+verificar(abs(erro_15 - 15) < 1e-9, "O erro deveria ser 50 - 35 = 15.")
+verificar(repete_ultimo is not None and bool(repete_ultimo) is True, "A previsão para 15 é igual à previsão para 10 (as duas caem na última folha). Guarde True.")
+</script>
+      <script type="text/plain" class="py-solucao">
+arvore = DecisionTreeRegressor(random_state=0).fit(x, y)
+prev_15 = float(arvore.predict([[15]])[0])
+real_15 = 3 * 15 + 5
+erro_15 = real_15 - prev_15
+repete_ultimo = bool(prev_15 == arvore.predict([[10]])[0])
+
+print(prev_15, real_15, erro_15, repete_ultimo)
+</script>
+      <template class="dica"><p><code>arvore = DecisionTreeRegressor(random_state=0).fit(x, y)</code> treina. A previsão para 15 é <code>arvore.predict([[15]])[0]</code>. A regra dá <code>3 * 15 + 5</code>.</p></template>
+      <template class="dica"><p>Compare <code>prev_15</code> com <code>arvore.predict([[10]])[0]</code>. Se forem iguais, as duas caíram na mesma folha.</p></template>
+    </section>
+
+    <div class="ponte"><p>Com os limites à vista, dá para montar o guia que o capítulo prometeu: quando vale cada um dos três.</p></div>
+
+    <h2 id="s6"><span class="nsec">4.6</span>Quando usar cada um</h2>
+    <p class="gancho">Árvore, floresta ou boosting: existe uma resposta certa, ou só compromissos?</p>
+
+    <h3>Intuição</h3>
+    <p>Só compromissos. A árvore rasa troca precisão por clareza, a floresta troca clareza por robustez, o boosting troca simplicidade de ajuste por potencial de desempenho. Antes de escolher, vale ver os quatro modelos do capítulo lado a lado nos mesmos 400 exemplos de teste, com as medidas do capítulo 3 (acurácia e AUC). O número de árvores do boosting (20) foi escolhido perto do mínimo da Fig. 5 (17), então esse resultado leva o otimismo já discutido:</p>
+<pre class="codigo" tabindex="0" aria-label="Os modelos do capítulo lado a lado, com acurácia e AUC"><span class="k">from</span> sklearn.metrics <span class="k">import</span> roc_auc_score
+
+modelos = {
+    <span class="s">"árvore rasa (max_depth=3)"</span>: DecisionTreeClassifier(max_depth=<span class="n">3</span>, random_state=<span class="n">0</span>),
+    <span class="s">"árvore sem limite"</span>: DecisionTreeClassifier(random_state=<span class="n">0</span>),
+    <span class="s">"floresta (100 árvores)"</span>: RandomForestClassifier(n_estimators=<span class="n">100</span>, random_state=<span class="n">0</span>),
+    <span class="s">"boosting (20 árvores)"</span>: GradientBoostingClassifier(n_estimators=<span class="n">20</span>, learning_rate=<span class="n">0.1</span>, max_depth=<span class="n">2</span>, random_state=<span class="n">0</span>),
+}
+<span class="k">for</span> nome, mod <span class="k">in</span> modelos.items():
+    mod.fit(Xtr, ytr)
+    prob = mod.predict_proba(Xte)[:, <span class="n">1</span>]                 <span class="c"># a probabilidade da classe 1, como no capítulo 3</span>
+    <span class="k">print</span>(nome, <span class="s">"| acurácia"</span>, round(mod.score(Xte, yte), <span class="n">3</span>), <span class="s">"| AUC"</span>, round(roc_auc_score(yte, prob), <span class="n">3</span>), <span class="s">"| valores distintos de probabilidade:"</span>, len(np.unique(prob)))</pre>
+<div class="saida" aria-label="Saída do código">árvore rasa (max_depth=3) | acurácia 0.818 | AUC 0.825 | valores distintos de probabilidade: 4
+árvore sem limite | acurácia 0.782 | AUC 0.782 | valores distintos de probabilidade: 2
+floresta (100 árvores) | acurácia 0.835 | AUC 0.903 | valores distintos de probabilidade: 92
+boosting (20 árvores) | acurácia 0.843 | AUC 0.903 | valores distintos de probabilidade: 31</div>
+    <p>Duas leituras. Primeiro, a ordem: a árvore sem limite fica atrás (acurácia 0,782, AUC 0,782) e a floresta e o boosting ficam com a mesma AUC, 0,903, e acurácias de 0,835 e 0,8425. A diferença de acurácia entre floresta e boosting, menos de um ponto percentual, é ruído numa única divisão com 400 exemplos de teste, e eu não tiraria conclusão dela. Segundo, a última coluna: a árvore sem limite só devolve duas probabilidades (0 e 1), por isso a ROC dela é um ponto só e a AUC vira a acurácia balanceada (a média entre a taxa de acerto dos positivos e a dos negativos), que aqui fica quase igual à acurácia porque as classes estão quase meio a meio. A árvore rasa devolve 4 valores, e floresta e boosting devolvem dezenas de valores distintos, o que permite uma ordenação fina e uma curva ROC de verdade.</p>
+
+    <h3>Definição</h3>
+    <p>A tabela abaixo resume os compromissos. Ela é um guia de partida, não um veredito, e as afirmações sobre desempenho em tabelas valem como regra prática: o jeito de saber é medir no seu conjunto.</p>
+
+    <figure class="fig" aria-labelledby="tab1">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Tabela. No celular role para o lado para ver inteira.">
+        <table class="tab-dec" aria-labelledby="tab1">
+          <thead><tr><th scope="col">Critério</th><th scope="col">Árvore rasa</th><th scope="col">Floresta aleatória</th><th scope="col">Boosting</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Como decide</th><td>Uma sequência de perguntas, do topo até uma folha.</td><td>Muitas árvores profundas, em amostras sorteadas, que votam.</td><td>Muitas árvores rasas em fila; cada uma corrige o resto da soma anterior.</td></tr>
+            <tr><th scope="row">Interpretabilidade</th><td>Alta, se a árvore for pequena: o caminho até a folha é a explicação.</td><td>Baixa para um caso: são centenas de caminhos que votam.</td><td>Baixa, pelo mesmo motivo, e as árvores dependem umas das outras.</td></tr>
+            <tr><th scope="row">Dados em tabela</th><td>Boa linha de base e ponto de partida.</td><td>Costuma ir bem com pouco ajuste de parâmetros.</td><td>Costuma ser candidato forte, mas pede ajuste e validação.</td></tr>
+            <tr><th scope="row">Treino</th><td>Muito rápido.</td><td>Árvores independentes: podem ser treinadas em paralelo.</td><td>Em sequência: cada árvore espera a anterior. O <code>HistGradientBoostingClassifier</code> existe para tabelas grandes.</td></tr>
+            <tr><th scope="row">Risco de sobreajuste</th><td>Alto sem limite: decora o treino (seção 4.2).</td><td>Menor, mas a acurácia de treino engana (seção 4.3).</td><td>Alto se passar do ponto: precisa de parada antecipada (seção 4.4).</td></tr>
+            <tr><th scope="row">O que ajustar primeiro</th><td><code>max_depth</code>, <code>min_samples_leaf</code>.</td><td><code>n_estimators</code> (mais árvores, ganho cada vez menor) e <code>max_features</code>.</td><td><code>n_estimators</code> com parada antecipada, <code>learning_rate</code> e <code>max_depth</code> pequeno.</td></tr>
+            <tr><th scope="row">Quando escolher</th><td>Quando é preciso explicar regra a regra, ou como linha de base para comparar.</td><td>Quando se quer um modelo robusto sem muita afinação.</td><td>Quando se precisa do melhor desempenho que a tabela permitir e há tempo para validar.</td></tr>
+            <tr><th scope="row">Limite comum</th><td colspan="3">Nenhum dos três extrapola: fora do intervalo visto no treino, repetem o valor da borda (seção 4.5).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption id="tab1"><b>Tabela 1</b>Árvore, floresta e boosting lado a lado. As células que falam de desempenho ou velocidade são tendências gerais, não números medidos aqui.</figcaption>
+    </figure>
+
+    <h3>Código comentado</h3>
+    <p>O laço percorre um dicionário de modelos, treina cada um com <code>fit</code> e pede <code>predict_proba(Xte)[:, 1]</code>, a probabilidade da classe 1, como no capítulo 3. O <code>roc_auc_score</code> recebe essas probabilidades e não as previsões 0 e 1. A última coluna conta quantos valores distintos de probabilidade cada modelo produziu, porque é isso que decide se a curva ROC tem muitos pontos ou quase nenhum.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Três situações, escolhendo com a tabela. Um banco pequeno precisa explicar a um auditor, regra por regra, por que cada pedido foi negado: árvore rasa, porque o caminho até a folha vira a explicação. Um projeto de previsão com 50 colunas, sem tempo para afinar parâmetros e sem exigência de explicar caso a caso: floresta, que costuma ir bem sem muito ajuste. Uma competição ou um produto em que um ponto a mais de qualidade compensa semanas de validação: boosting, com parada antecipada. Nos três casos, o próximo passo é o mesmo: medir no conjunto de validação, com as métricas do capítulo 3, e só depois decidir.</p>
+
+    <h3>Erro comum</h3>
+    <p>Escolher o modelo pela fama, não pelo problema. O boosting não é “o melhor” em todo caso, e a floresta não é “só uma versão básica”. Para dados que não são tabela (imagem, áudio, texto cru), as árvores deste capítulo costumam não ser o ponto de partida. E nenhuma tabela substitui comparar candidatos no mesmo conjunto, com o mesmo método de medida, em exemplos que o modelo não viu.</p>
+
+    <div class="ponte"><p>Você tem agora os três modelos e os cuidados de cada um. Falta testar se consegue aplicar a ideia num cenário novo.</p></div>
+
+    <h2 id="s7"><span class="nsec">4.7</span>Verifique o que entendeu</h2>
+    <p class="gancho">Um cenário mostra se você consegue aplicar a ideia num problema que ainda não viu.</p>
+
+    <fieldset class="quiz" data-quiz="ia-4-q1">
+      <legend>Cenário 1</legend>
+      <p class="pergunta">Uma árvore sem limite de profundidade acerta 100% no treino e 78% em exemplos que nunca viu. O que isso indica e o que tentar primeiro?</p>
+      <label class="opcao"><input type="radio" name="ia-4-q1"><span>Que o modelo é excelente: 100% no treino é o melhor resultado possível.</span><template class="fb"><p>Acertar tudo no treino e cair tanto fora dele é o sinal clássico de que a árvore decorou os exemplos, inclusive as exceções.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-4-q1"><span>Que a árvore decorou o treino. Vale limitar a profundidade ou o tamanho mínimo da folha, ou usar uma floresta, e sempre comparar em exemplos que ela não viu.</span><template class="fb"><p>Isso. A diferença entre treino e teste mostra o sobreajuste. Os freios (<code>max_depth</code>, <code>min_samples_leaf</code>) ou a votação de muitas árvores atacam o problema, e a medida que vale é a do teste.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-4-q1"><span>Que faltam dados de teste; basta treinar de novo com as mesmas linhas até a acurácia subir.</span><template class="fb"><p>Treinar de novo nas mesmas linhas, com a semente fixa, gera a mesma árvore. O problema não é falta de teste, é que a árvore se ajustou demais ao treino.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-4-q2">
+      <legend>Cenário 2</legend>
+      <p class="pergunta">Num boosting com 500 árvores, a perda no treino cai a cada árvore nova. Um colega conclui que o modelo está cada vez melhor. O que responder?</p>
+      <label class="opcao"><input type="radio" name="ia-4-q2"><span>Concordo: se a perda no treino cai, a qualidade só pode subir.</span><template class="fb"><p>A perda de treino quase sempre cai, mesmo quando o modelo está decorando. Na Fig. 5 ela chegou a 0,013 enquanto a de teste subia até 0,824.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-4-q2"><span>Que ele deve aumentar a taxa de aprendizado, para o treino cair ainda mais rápido.</span><template class="fb"><p>Um passo maior faz o treino cair mais rápido, mas isso não resolve nada: o problema é medir só o treino, e passos maiores ainda deixam o modelo mais propenso a sobreajustar.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-4-q2"><span>Que a perda de treino sempre cai; o que importa é a perda em dados separados, e o número de árvores se escolhe onde ela para de melhorar, de preferência com parada antecipada.</span><template class="fb"><p>Certo. A curva de validação sobe a partir de certo ponto, e é esse ponto que marca quando parar. A parada antecipada faz isso de forma automática.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-4-q3">
+      <legend>Cenário 3</legend>
+      <p class="pergunta">Um banco pequeno precisa explicar a um auditor, regra por regra, por que cada pedido foi negado, e a tabela tem poucas colunas. Qual dos modelos do capítulo combina mais com a exigência?</p>
+      <label class="opcao" data-certa><input type="radio" name="ia-4-q3"><span>Uma árvore rasa, com profundidade 3 ou 4, porque o caminho da raiz até a folha é a explicação, escrito como uma lista de condições.</span><template class="fb"><p>É isso. Numa árvore pequena, cada pedido segue um caminho de poucas perguntas, e esse caminho é a justificativa. Vale medir quanto se perde de desempenho em troca dessa clareza.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-4-q3"><span>Um boosting com 300 árvores, porque costuma ser o mais preciso e isso basta como explicação.</span><template class="fb"><p>Precisão não é explicação. Um boosting soma centenas de árvores que dependem umas das outras, e isso não vira uma lista curta de condições.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-4-q3"><span>Uma floresta de 500 árvores, porque a votação dá segurança ao auditor.</span><template class="fb"><p>Uma votação de 500 caminhos diferentes não se reduz a uma regra única por pedido. A floresta ajuda na robustez, não na explicação caso a caso.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <div class="lacuna" data-lacuna="ia-4-l1">
+      <span class="rotulo">Complete</span>
+      <p>A medida de quão misturadas estão as classes de um grupo é a <input data-resp="impureza|gini|impureza de gini|entropia|impureza de entropia" aria-label="Medida de mistura das classes em um grupo, que vale 0 num grupo puro">. O quanto uma divisão reduz essa medida, pesando os filhos pelo tamanho, é o <input data-resp="ganho|ganho de informação|ganho de informacao|ganho de impureza|redução de impureza|reducao de impureza|ganho de gini" aria-label="Redução da impureza provocada por uma divisão">. Cada árvore de uma floresta treina numa amostra sorteada <input data-resp="com reposição|com reposicao|com repetição|com repeticao|bootstrap" aria-label="Como as linhas são sorteadas em cada amostra do bagging">, e a decisão final sai de uma <input data-resp="votação|votacao|maioria|voto|votos" aria-label="Como a floresta combina as árvores numa decisão única"> entre as árvores.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="lacuna" data-lacuna="ia-4-l2">
+      <span class="rotulo">Complete</span>
+      <p>Uma árvore que acerta quase tudo no treino e vai mal em exemplos novos sofreu <input data-resp="sobreajuste|overfitting|superajuste|ajuste excessivo" aria-label="Problema de decorar o treino">. No boosting, cada árvore nova aprende o <input data-resp="resto|erro|resíduo|residuo|erros" aria-label="O que a árvore nova do boosting aprende a corrigir"> das anteriores, e o tamanho do passo de cada correção é a <input data-resp="taxa de aprendizado|learning rate|learning_rate|taxa de aprendizagem" aria-label="Parâmetro que controla o tamanho do passo no boosting">. Para não passar do ponto, usa-se a <input data-resp="parada antecipada|early stopping|parada precoce" aria-label="Técnica que interrompe o treino quando a validação deixa de melhorar">. E nenhum desses modelos consegue <input data-resp="extrapolar|extrapolação|extrapolacao|prever fora do intervalo" aria-label="O que as árvores não fazem além do intervalo visto no treino"> além dos valores que viram no treino.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <h2 id="s8">Fontes e avisos</h2>
+    <p>Este capítulo não usa fatos externos com data: tudo o que está aqui é código rodado, e cada saída foi colada do motor que roda no seu navegador, em 15/11/2026. As versões foram lidas no próprio motor:</p>
+<pre class="codigo" tabindex="0" aria-label="Versões do Python, do scikit-learn e do NumPy usadas neste capítulo"><span class="k">import</span> sys
+<span class="k">import</span> sklearn
+
+<span class="k">print</span>(sys.version.split()[<span class="n">0</span>], sklearn.__version__, np.__version__)</pre>
+<div class="saida" aria-label="Saída do código">3.14.2 1.8.0 2.4.6</div>
+    <p>Python 3.14.2, scikit-learn 1.8.0 e NumPy 2.4.6. Os dados são inventados ou gerados com semente fixa (<code>make_moons</code>, do scikit-learn), e qualquer parecido com clientes reais é coincidência. Os conjuntos são pequenos de propósito, para você conferir as contas: com 100 linhas de treino, os números mostram o mecanismo, mas não provam nada sobre como cada modelo se comporta com dados reais. Algumas escolhas (a profundidade 2, as 17 árvores (o mínimo da Fig. 5), as 20 árvores da seção 4.6 (perto desse mínimo)) foram feitas olhando o teste e, por isso, são otimistas, como o próprio texto avisa. Detalhes como o formato de <code>export_text</code>, o desempate por <code>random_state</code> e os valores padrão de <code>max_features</code> são do scikit-learn dessa versão; confira a documentação da sua. XGBoost, LightGBM e CatBoost são citados apenas como nomes de bibliotecas que implementam boosting de árvores; este capítulo não rodou nenhuma delas e não afirma nada sobre o desempenho delas. Este capítulo é um complemento, não foi dado em aula.</p>
+
+    <div class="ponte"><p>Agora você sabe montar, ler e desconfiar de árvores, florestas e boosting. Até aqui, porém, todas as classes estavam mais ou menos equilibradas, e o que importava era o modelo. O próximo capítulo, “Desbalanceamento e explicabilidade”, trata de dois problemas que aparecem quando se leva um modelo para a prática: o que fazer quando a classe que interessa é rara e como perguntar a um modelo de caixa fechada o que ele está usando para decidir.</p></div>
+
+  </article>
+
+  <footer class="rodape">
+    <a href="cap-3-classificacao-e-metricas.html">Anterior: Classificação e métricas</a>
+    <span>Capítulo 4 de 20</span>
+    <button class="btn btn-concluir" id="btnConcluir" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="txt">Marcar capítulo como concluído</span></button>
+    <span>Próximo: Desbalanceamento e explicabilidade</span>
+  </footer>
+</main>
+
+<script src="assets/trilha.js"></script>
+<script src="assets/mapa.js"></script>
+<script src="assets/exercicio.js"></script>
+<script src="assets/leitura.js"></script>
+<script src="assets/ia.js"></script>
+</body>
+</html>
