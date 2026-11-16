@@ -33,6 +33,10 @@ self.onmessage = function (ev) {
     if (m.tipo === "pacotes") {
       try {
         await py.loadPackage(m.lista);
+        /* O primeiro import de scikit-learn (e do SciPy que ele puxa) leva vários segundos no navegador.
+           Fazemos aqui, no passo que não tem limite, para não estourar os 5 s do exercício. */
+        var pre = { "scikit-learn": "import sklearn, sklearn.linear_model, sklearn.naive_bayes, sklearn.metrics, sklearn.datasets, sklearn.feature_extraction.text, sklearn.model_selection", "pandas": "import pandas" };
+        for (var i = 0; i < m.lista.length; i++) { if (pre[m.lista[i]]) await py.runPythonAsync(pre[m.lista[i]]); }
         self.postMessage({ tipo: "pacotes-ok", id: m.id });
       } catch (e) {
         self.postMessage({ tipo: "pacotes-falha", id: m.id, erro: String(e && e.message || e) });

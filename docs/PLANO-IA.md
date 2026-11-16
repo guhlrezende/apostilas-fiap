@@ -1,4 +1,4 @@
-# Plano: apostila "Inteligência Artificial" (trilha completa)
+﻿# Plano: apostila "Inteligência Artificial" (trilha completa)
 
 Decidido em 13/11/2026, ampliado no mesmo dia depois de levantar currículos de referência (`docs/referencias/curriculos-ia.md`) e os livros (`docs/referencias/livros-ia.md`). Pasta `inteligencia-artificial/`, geradores `scripts/construtor/ia*.py`, entrada em `data/apostilas.js`.
 
@@ -54,7 +54,14 @@ Depois da IA, voltar à fila de `PROXIMOS-PASSOS.md`. Ligar o GitHub Pages ao fi
 
 ## Andamento
 - [x] Leitura dos livros e dos currículos de referência (13/11)
-- [x] Esqueleto: `ia_base.py`, `ia.py` (sem pasta publicada ainda)
-- [ ] Cap. 1 em escrita (identidade padrão provisória; será revestida)
-- [ ] Identidade visual própria (design-flow) e shell de exercícios com Pyodide
-- [ ] Caps. 2 a 20
+- [x] Identidade visual própria (Laboratório), casca, mapa da trilha, fontes locais (13/11)
+- [x] Motor de exercícios com Pyodide 314.0.7 local, pacotes por exercício (pandas 3.0.2 local), script `scripts/rodar_pyodide.mjs` (13/11)
+- [x] Quiz, lacunas e glossário em tooltip (13/11)
+- [x] Hub da apostila e entrada no site (13/11)
+- [x] Cap. 1 publicado (13/11) e Cap. 2 publicado (13/11), no GitHub Pages
+- [x] scikit-learn local (1.8.0 + SciPy, joblib, threadpoolctl; hash conferido) e Cap. 3 escrito, revisado e verificado (15/11), ainda não publicado; Worker pré-importa pacotes pesados\n- [ ] Cap. 4 em diante
+- [ ] Componentes restantes: arrastar e soltar, "ache o erro", laboratório de prompt
+- [ ] Passes de acessibilidade e responsivo, e design review
+- [ ] Data do lançamento público do ChatGPT (sem fonte aberta lida)
+Nota: os geradores `scripts/construtor/ia*.py` citados no início são da identidade antiga e não são usados. Os capítulos são HTML escritos sobre `modelo.html`.
+

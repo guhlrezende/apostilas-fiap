@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classificação e métricas | Inteligência Artificial</title>
+<script>
+  /* Aplica o tema salvo antes de pintar, para não piscar */
+  try { var t = localStorage.getItem("ia:tema"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) { }
+</script>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/ia.css">
+<link rel="preload" href="assets/fontes/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fontes/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="com-mapa" data-cap="3">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <button class="btn-icone so-celular" id="btnMapa" type="button" aria-label="Abrir o mapa da trilha" aria-expanded="false" aria-controls="mapa">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="marca" href="index.html"><b>Inteligência Artificial</b><span>Trilha completa</span></a>
+  <div class="espaco"></div>
+  <button class="btn-icone" id="btnTema" type="button" aria-label="Mudar para o tema escuro" aria-pressed="false">
+    <svg class="ico-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+  <div class="progresso" aria-hidden="true"><i></i></div>
+</header>
+
+<nav id="mapa" aria-label="Mapa da trilha"></nav>
+<div id="mapaFundo" aria-hidden="true"></div>
+
+<main class="pagina" id="conteudo">
+  <article class="leitura">
+    <header class="cabeca">
+      <div class="rotulo"><span class="parte">Parte 2: dados e modelos clássicos</span><span>Capítulo 3</span><span>50 min</span></div>
+      <h1>Classificação e métricas</h1>
+      <p class="lide">Classificar é responder “sim ou não” (ou “qual dentre estas”) a partir de exemplos. Treinar o modelo é a parte curta. A parte que decide se ele presta é medir: saber quantos acertos importam, quais erros custam mais e onde cortar uma probabilidade para virar decisão. Este capítulo vai de dois classificadores simples, a regressão logística e o Naive Bayes, até a matriz de confusão, a precisão, o recall, o F1, o limiar e a curva ROC.</p>
+      <div class="meta"><span class="rotulo">Complemento, não foi dado em aula</span><span class="rotulo">Python no navegador</span></div>
+    </header>
+
+    <div class="recap"><p>No capítulo 2 a tabela da loja saiu limpa: texto padronizado, datas e números convertidos, ausentes marcados e colunas novas que dizem mais do que as originais. Isso deixa os dados prontos para um modelo, e é aqui que ele entra. Você precisa de Python básico e de saber ler uma lista de números. A biblioteca <b>scikit-learn</b>, que traz os modelos e as métricas, é apresentada à medida que aparece. Os dados deste capítulo são pequenos, inventados e estão escritos no texto, para você conferir cada conta.</p></div>
+
+    <figure class="fig" aria-labelledby="fig1">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 112" role="img" aria-label="Quatro caixas em sequência ligadas por setas: probabilidade (regressão logística e Naive Bayes), limiar, matriz de confusão e métricas, e a curva ROC que varre todos os limiares.">
+        <defs><marker id="ponta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--color-text-secondary)"/></marker></defs>
+        <rect class="caixa dest" x="8" y="14" width="128" height="44" rx="6"/><text class="t" x="72" y="41" text-anchor="middle">probabilidade</text>
+        <rect class="caixa" x="168" y="14" width="128" height="44" rx="6"/><text class="t" x="232" y="41" text-anchor="middle">limiar</text>
+        <rect class="caixa" x="328" y="14" width="128" height="44" rx="6"/><text class="t" x="392" y="41" text-anchor="middle">matriz e métricas</text>
+        <rect class="caixa" x="488" y="14" width="128" height="44" rx="6"/><text class="t" x="552" y="41" text-anchor="middle">curva ROC</text>
+        <path class="seta" d="M138 36H164"/><path class="seta" d="M298 36H324"/><path class="seta" d="M458 36H484"/>
+        <text class="t2" x="72" y="82" text-anchor="middle">logística,</text><text class="t2" x="72" y="98" text-anchor="middle">Naive Bayes</text>
+        <text class="t2" x="232" y="82" text-anchor="middle">onde cortar</text><text class="t2" x="232" y="98" text-anchor="middle">a probabilidade</text>
+        <text class="t2" x="392" y="82" text-anchor="middle">precisão, recall,</text><text class="t2" x="392" y="98" text-anchor="middle">F1</text>
+        <text class="t2" x="552" y="82" text-anchor="middle">todos os limiares</text><text class="t2" x="552" y="98" text-anchor="middle">de uma vez</text>
+      </svg></div>
+      <figcaption id="fig1"><b>Fig. 1</b>O caminho deste capítulo. O modelo entrega uma probabilidade, o limiar a transforma em decisão, a matriz conta os acertos e erros da decisão e a curva ROC mostra o que acontece em todos os limiares.</figcaption>
+    </figure>
+
+    <h2 id="s1"><span class="nsec">3.1</span>Regressão logística: de um número a uma probabilidade</h2>
+    <p class="gancho">Um modelo sabe somar pesos vezes atributos e dar um número qualquer; como transformar esse número em uma chance entre 0 e 1?</p>
+
+    <h3>Intuição</h3>
+    <p>Imagine prever se uma pessoa passa numa prova olhando só as horas que ela estudou. Mais horas, mais chance. Mas “chance” tem um limite que um número livre não respeita: não existe 130% de chance, nem menos 40%. A ideia da <b>regressão logística</b> é calcular primeiro uma nota livre, que pode ser grande, negativa ou zero, e depois espremê-la num formato de “S” que nunca sai do intervalo entre 0 e 1. Nota muito negativa vira chance perto de 0, nota zero vira exatamente 0,5 e nota muito positiva vira chance perto de 1.</p>
+
+    <h3>Definição</h3>
+    <p>Com um atributo <code>x</code>, o modelo calcula a nota <code>z = w·x + b</code>, em que <code>w</code> é o peso e <code>b</code> o intercepto, ambos aprendidos dos exemplos. A probabilidade de ser da classe 1 é <code>p = 1 / (1 + e<sup>−z</sup>)</code>. Essa função em formato de S chama-se <button type="button" class="termo" data-def="Sigmoide (ou função logística): 1 / (1 + e elevado a menos z). Recebe qualquer número e devolve um valor entre 0 e 1. Com z = 0 devolve exatamente 0,5.">sigmoide</button>. Apesar do nome, a regressão logística é um classificador: o que ela devolve é a probabilidade, e a decisão vem depois, comparando <code>p</code> com um corte. O ponto onde <code>z = 0</code> é a <b>fronteira</b>, e ali <code>p = 0,5</code>.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Doze alunos fictícios, com as horas de estudo e se passaram (1) ou não (0): 0,5 h não, 1 h não, 1,5 h não, 2 h não, 2,5 h <b>sim</b>, 3 h não, 3,5 h sim, 4 h não, 4,5 h sim, 5 h sim, 5,5 h sim, 6 h sim. Repare que os dados têm barulho de propósito: quem estudou 2,5 h passou e quem estudou 3 h e 4 h não. Dado real quase nunca separa limpo. Treinando o modelo e lendo o que ele aprendeu:</p>
+<pre class="codigo" tabindex="0" aria-label="Treino da regressão logística com horas de estudo e leitura do peso e do intercepto"><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+
+horas = np.array([<span class="n">0.5</span>, <span class="n">1</span>, <span class="n">1.5</span>, <span class="n">2</span>, <span class="n">2.5</span>, <span class="n">3</span>, <span class="n">3.5</span>, <span class="n">4</span>, <span class="n">4.5</span>, <span class="n">5</span>, <span class="n">5.5</span>, <span class="n">6</span>]).reshape(-<span class="n">1</span>, <span class="n">1</span>)  <span class="c"># uma coluna, 12 linhas</span>
+passou = np.array([<span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>])
+
+modelo = LogisticRegression().fit(horas, passou)   <span class="c"># aprende w e b</span>
+w = modelo.coef_[<span class="n">0</span>][<span class="n">0</span>]                             <span class="c"># o peso</span>
+b = modelo.intercept_[<span class="n">0</span>]                           <span class="c"># o intercepto</span>
+<span class="k">print</span>(<span class="s">"peso w:"</span>, round(w, <span class="n">3</span>), <span class="s">"| intercepto b:"</span>, round(b, <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"fronteira (z = 0) em"</span>, round(-b / w, <span class="n">2</span>), <span class="s">"horas"</span>)</pre>
+<div class="saida" aria-label="Saída do código">peso w: 1.008 | intercepto b: -3.276
+fronteira (z = 0) em 3.25 horas</div>
+    <p>O peso é positivo (1,008): mais horas, nota maior. A fronteira fica em 3,25 horas, que é o ponto em que <code>w·x + b</code> dá zero. Agora a conta que o modelo faz por dentro, feita à mão para 1, 3 e 5 horas e comparada com o <code>predict_proba</code>, que devolve a probabilidade de cada classe:</p>
+<pre class="codigo" tabindex="0" aria-label="Sigmoide calculada à mão e comparada com predict_proba"><span class="k">for</span> h <span class="k">in</span> [<span class="n">1</span>, <span class="n">3</span>, <span class="n">5</span>]:
+    z = w * h + b                       <span class="c"># a nota livre</span>
+    p_mao = <span class="n">1</span> / (<span class="n">1</span> + np.exp(-z))        <span class="c"># a sigmoide</span>
+    p_sk = modelo.predict_proba([[h]])[<span class="n">0</span>, <span class="n">1</span>]   <span class="c"># coluna 1 = chance de passar</span>
+    <span class="k">print</span>(h, <span class="s">"h | z ="</span>, round(z, <span class="n">3</span>), <span class="s">"| p à mão ="</span>, round(p_mao, <span class="n">3</span>), <span class="s">"| predict_proba ="</span>, round(p_sk, <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">1 h | z = -2.268 | p à mão = 0.094 | predict_proba = 0.094
+3 h | z = -0.252 | p à mão = 0.437 | predict_proba = 0.437
+5 h | z = 1.764 | p à mão = 0.854 | predict_proba = 0.854</div>
+    <p>As duas colunas batem. Com 1 hora a nota é −2,268 e a chance de passar, 9,4%. Com 3 horas a nota é −0,252 (um pouco abaixo da fronteira) e a chance é 43,7%. Com 5 horas a nota é 1,764 e a chance chega a 85,4%. Para ver o formato de S, vale olhar a probabilidade em alguns pontos e em algumas notas extremas:</p>
+<pre class="codigo" tabindex="0" aria-label="Probabilidade em alguns pontos, perto e longe da fronteira"><span class="k">for</span> h <span class="k">in</span> [<span class="n">0.5</span>, <span class="n">2.5</span>, <span class="n">3.0</span>, <span class="n">3.25</span>, <span class="n">3.5</span>, <span class="n">6</span>]:
+    <span class="k">print</span>(h, round(<span class="n">1</span> / (<span class="n">1</span> + np.exp(-(w * h + b))), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"z = 0:"</span>, <span class="n">1</span> / (<span class="n">1</span> + np.exp(<span class="n">0</span>)), <span class="s">"| z = -4:"</span>, round(<span class="n">1</span> / (<span class="n">1</span> + np.exp(<span class="n">4</span>)), <span class="n">3</span>), <span class="s">"| z = 4:"</span>, round(<span class="n">1</span> / (<span class="n">1</span> + np.exp(-<span class="n">4</span>)), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">0.5 0.059
+2.5 0.32
+3.0 0.437
+3.25 0.5
+3.5 0.563
+6 0.941
+z = 0: 0.5 | z = -4: 0.018 | z = 4: 0.982</div>
+    <p>Perto da fronteira a probabilidade muda rápido (de 0,437 em 3 h para 0,563 em 3,5 h) e nas pontas ela achata: 0,5 h dá 0,059 e 6 h dá 0,941, sem nunca chegar a 0 ou 1. Nota −4 e nota 4 dão 0,018 e 0,982, simétricas em torno de 0,5.</p>
+
+    <h3>Código comentado</h3>
+    <p>O <code>fit</code> procura o <code>w</code> e o <code>b</code> que fazem as probabilidades combinarem bem com os 0 e 1 observados (o scikit-learn aplica por padrão uma regularização leve, que puxa os números para perto de zero, então o resultado é um pouco mais conservador que o ajuste puro). A chamada <code>reshape(-1, 1)</code> existe porque o scikit-learn espera uma tabela (linhas e colunas) e não uma lista solta: aqui é uma coluna com 12 linhas. O <code>predict_proba</code> devolve duas colunas, a primeira com a chance de ser 0 e a segunda com a de ser 1, por isso o <code>[0, 1]</code>. Já o <code>predict</code> devolve direto 0 ou 1, comparando a segunda coluna com 0,5:</p>
+<pre class="codigo" tabindex="0" aria-label="predict devolve 0 ou 1"><span class="k">print</span>(modelo.predict(horas).tolist())
+<span class="k">print</span>(<span class="s">"acertos:"</span>, (modelo.predict(horas) == passou).sum(), <span class="s">"de"</span>, len(passou))</pre>
+<div class="saida" aria-label="Saída do código">[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]
+acertos: 10 de 12</div>
+    <p>O modelo corta a história em 3,25 horas: quem está abaixo é previsto 0, quem está acima, 1. Errou dois dos doze: o aluno de 2,5 h (previsto 0, mas passou) e o de 4 h (previsto 1, mas não passou).</p>
+
+    <h3>Erro comum</h3>
+    <p>Olhar só o <code>predict</code> e esquecer que ele joga fora a informação mais útil. O aluno de 3 h e o de 3,5 h estão a meia hora de distância, caem em lados opostos da fronteira e recebem respostas diferentes, 0 e 1, mas as probabilidades são 0,437 e 0,563, quase iguais. Quem só vê o 0 e o 1 acha que há um abismo entre os dois. A probabilidade conta que o modelo está em dúvida. Guarde essa ideia, porque as seções 3.5 e 3.6 dependem dela.</p>
+
+    <section class="experimento" data-ex="ia-3-1" data-pacotes="scikit-learn" aria-labelledby="exp1">
+      <header>
+        <div class="rotulo">Experimento 3.1</div>
+        <h3 id="exp1">A sigmoide à mão</h3>
+      </header>
+      <div class="enunciado"><p>O modelo <code>modelo</code> já está treinado com os mesmos 12 alunos do texto. Usando só o peso <code>w</code> e o intercepto <code>b</code>, calcule a probabilidade de passar de quem estudou 4 horas (<code>p_4h</code>) e as horas da fronteira (<code>fronteira</code>), sem chamar <code>predict_proba</code>. Depois confira a sua conta com ele.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+horas = np.array([0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]).reshape(-1, 1)
+passou = np.array([0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1])
+modelo = LogisticRegression().fit(horas, passou)
+</script>
+      <script type="text/plain" class="py-inicial">
+w = modelo.coef_[0][0]
+b = modelo.intercept_[0]
+
+p_4h = None        # probabilidade de passar com 4 horas, pela fórmula
+fronteira = None   # horas em que a probabilidade vale 0,5
+
+# escreva aqui
+
+print(p_4h, fronteira)
+print(modelo.predict_proba([[4]])[0, 1])
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(p_4h is not None, "Calcule p_4h: primeiro a nota z = w * 4 + b, depois a sigmoide 1 / (1 + np.exp(-z)).")
+verificar(abs(p_4h - 0.6805) < 0.001, "A probabilidade com 4 horas deveria ser cerca de 0,6805. Confira se aplicou a sigmoide (1 / (1 + np.exp(-z))) e não só a nota z.")
+verificar(fronteira is not None, "Calcule fronteira: a nota é zero quando w * x + b = 0, ou seja, x = -b / w.")
+verificar(abs(fronteira - 3.25) < 0.01, "A fronteira deveria ficar perto de 3,25 horas. Resolva w * x + b = 0 para x.")
+verificar(abs(p_4h - modelo.predict_proba([[4]])[0, 1]) < 1e-9, "Sua conta deveria bater com o predict_proba do modelo.")
+</script>
+      <script type="text/plain" class="py-solucao">
+w = modelo.coef_[0][0]
+b = modelo.intercept_[0]
+
+z = w * 4 + b
+p_4h = 1 / (1 + np.exp(-z))
+fronteira = -b / w
+
+print(p_4h, fronteira)
+print(modelo.predict_proba([[4]])[0, 1])
+</script>
+      <template class="dica"><p>A nota é <code>z = w * 4 + b</code>. A probabilidade é a sigmoide da nota: <code>1 / (1 + np.exp(-z))</code>.</p></template>
+      <template class="dica"><p>Na fronteira a probabilidade é 0,5, e isso acontece quando a nota vale zero. Resolva <code>w * x + b = 0</code> para <code>x</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Até aqui o modelo aprendeu pesos para um atributo numérico. Mas há problemas em que o atributo é texto, e contar palavras é um jeito bem diferente de chegar a uma probabilidade. É o que o Naive Bayes faz.</p></div>
+
+    <h2 id="s2"><span class="nsec">3.2</span>Naive Bayes: probabilidade por contagem</h2>
+    <p class="gancho">Como sair de “a palavra ‘ganhe’ aparece muito nas mensagens ruins” para a chance de uma mensagem nova ser ruim?</p>
+
+    <h3>Intuição</h3>
+    <p>O Naive Bayes funciona como um detetive que junta pistas. Em mensagens de promoção, certas palavras aparecem muito; em mensagens normais, outras. Para uma mensagem nova, ele pergunta de qual grupo as palavras dela seriam mais comuns, e combina todas as pistas como se cada palavra opinasse sozinha. O “naive” (ingênuo) vem desse último ponto: tratar as palavras como independentes é uma simplificação, porque na vida “ganhe” e “prêmio” aparecem juntas. Mesmo assim o método costuma funcionar para texto, e é barato de treinar: só conta.</p>
+
+    <h3>Definição</h3>
+    <p>Para cada classe o modelo guarda dois tipos de número: a <b>chance anterior</b> da classe (quantas mensagens eram dela) e, para cada palavra, a <b>chance da palavra dentro da classe</b>. A chance de uma mensagem nova pertencer a uma classe é proporcional ao produto da chance anterior por todas essas chances das palavras. Para uma palavra que nunca apareceu numa classe não zerar tudo, soma-se 1 a cada contagem (a <button type="button" class="termo" data-def="Suavização de Laplace: somar 1 à contagem de cada palavra do vocabulário em cada classe, para que uma palavra nunca vista numa classe tenha chance pequena em vez de zero.">suavização</button>). Assim, a chance da palavra é <code>(vezes que ela apareceu na classe + 1) / (total de palavras da classe + tamanho do vocabulário)</code>.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Oito mensagens inventadas, quatro de promoção (1) e quatro normais (0): “ganhe dinheiro rapido”, “promocao ganhe premio”, “dinheiro rapido agora”, “premio agora ganhe” (promoção) e “reuniao amanha cedo”, “enviar relatorio amanha”, “almoco amanha cedo”, “relatorio da reuniao” (normais). O <code>CountVectorizer</code> transforma cada mensagem numa linha de contagens de palavras.</p>
+<pre class="codigo" tabindex="0" aria-label="Vocabulário e contagem de palavras por classe"><span class="k">from</span> sklearn.feature_extraction.text <span class="k">import</span> CountVectorizer
+<span class="k">from</span> sklearn.naive_bayes <span class="k">import</span> MultinomialNB
+
+msgs = [<span class="s">"ganhe dinheiro rapido"</span>, <span class="s">"promocao ganhe premio"</span>, <span class="s">"dinheiro rapido agora"</span>, <span class="s">"premio agora ganhe"</span>,
+        <span class="s">"reuniao amanha cedo"</span>, <span class="s">"enviar relatorio amanha"</span>, <span class="s">"almoco amanha cedo"</span>, <span class="s">"relatorio da reuniao"</span>]
+rotulo = [<span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>]
+
+cv = CountVectorizer()
+X = cv.fit_transform(msgs)                 <span class="c"># cada linha: quantas vezes cada palavra aparece</span>
+vocab = cv.get_feature_names_out().tolist()
+<span class="k">print</span>(len(vocab), vocab)
+cont = X.toarray()
+<span class="k">for</span> c, nome <span class="k">in</span> [(<span class="n">1</span>, <span class="s">"promoção"</span>), (<span class="n">0</span>, <span class="s">"normal"</span>)]:
+    soma = cont[np.array(rotulo) == c].sum(axis=<span class="n">0</span>)     <span class="c"># soma das linhas dessa classe</span>
+    <span class="k">print</span>(nome, <span class="s">"total de palavras:"</span>, soma.sum(), dict(zip(vocab, soma.tolist())))</pre>
+<div class="saida" aria-label="Saída do código">13 ['agora', 'almoco', 'amanha', 'cedo', 'da', 'dinheiro', 'enviar', 'ganhe', 'premio', 'promocao', 'rapido', 'relatorio', 'reuniao']
+promoção total de palavras: 12 {'agora': 2, 'almoco': 0, 'amanha': 0, 'cedo': 0, 'da': 0, 'dinheiro': 2, 'enviar': 0, 'ganhe': 3, 'premio': 2, 'promocao': 1, 'rapido': 2, 'relatorio': 0, 'reuniao': 0}
+normal total de palavras: 12 {'agora': 0, 'almoco': 1, 'amanha': 3, 'cedo': 2, 'da': 1, 'dinheiro': 0, 'enviar': 1, 'ganhe': 0, 'premio': 0, 'promocao': 0, 'rapido': 0, 'relatorio': 2, 'reuniao': 2}</div>
+    <p>O vocabulário tem 13 palavras e cada classe tem 12 palavras no total. As duas classes têm 4 mensagens, então a chance anterior é 0,5 para cada. Agora a mensagem nova, “ganhe premio amanha”. Para cada classe multiplicamos a chance anterior pelas chances das três palavras:</p>
+<pre class="codigo" tabindex="0" aria-label="Conta do Naive Bayes feita à mão para a mensagem nova">nova = <span class="s">"ganhe premio amanha"</span>
+V = len(vocab)                              <span class="c"># 13 palavras no vocabulário</span>
+placar = {}
+<span class="k">for</span> c, nome <span class="k">in</span> [(<span class="n">1</span>, <span class="s">"promoção"</span>), (<span class="n">0</span>, <span class="s">"normal"</span>)]:
+    soma = cont[np.array(rotulo) == c].sum(axis=<span class="n">0</span>)
+    total = soma.sum()
+    p = <span class="n">0.5</span>                                 <span class="c"># chance anterior da classe</span>
+    <span class="k">for</span> palavra <span class="k">in</span> nova.split():
+        i = vocab.index(palavra)
+        pw = (soma[i] + <span class="n">1</span>) / (total + V)    <span class="c"># com suavização</span>
+        <span class="k">print</span>(nome, palavra, <span class="s">":"</span>, soma[i] + <span class="n">1</span>, <span class="s">"/"</span>, total + V, <span class="s">"="</span>, round(pw, <span class="n">3</span>))
+        p = p * pw
+    placar[nome] = p
+    <span class="k">print</span>(nome, <span class="s">"placar:"</span>, p)
+<span class="k">print</span>(<span class="s">"P(promoção) à mão:"</span>, round(placar[<span class="s">"promoção"</span>] / (placar[<span class="s">"promoção"</span>] + placar[<span class="s">"normal"</span>]), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">promoção ganhe : 4 / 25 = 0.16
+promoção premio : 3 / 25 = 0.12
+promoção amanha : 1 / 25 = 0.04
+promoção placar: 0.00038399999999999996
+normal ganhe : 1 / 25 = 0.04
+normal premio : 1 / 25 = 0.04
+normal amanha : 4 / 25 = 0.16
+normal placar: 0.00012800000000000002
+P(promoção) à mão: 0.75</div>
+    <p>Na classe promoção, “ganhe” apareceu 3 vezes, então (3 + 1) / (12 + 13) = 4/25 = 0,16. “Amanha” nunca apareceu em promoção, então (0 + 1) / 25 = 0,04: a suavização deu a ela uma chance pequena em vez de zero. Os dois placares são 0,000384 e 0,000128, e como a soma deles é o total possível, a chance de promoção é <code>0,000384 / (0,000384 + 0,000128) = 0,75</code>. Agora o scikit-learn, que deve dar a mesma resposta:</p>
+<pre class="codigo" tabindex="0" aria-label="MultinomialNB com a mesma mensagem e duas outras">nb = MultinomialNB().fit(X, rotulo)
+<span class="k">print</span>(nb.predict_proba(cv.transform([nova])).round(<span class="n">3</span>).tolist())                  <span class="c"># [chance de 0, chance de 1]</span>
+<span class="k">print</span>(nb.predict_proba(cv.transform([<span class="s">"relatorio amanha"</span>])).round(<span class="n">3</span>).tolist())
+<span class="k">print</span>(nb.predict_proba(cv.transform([<span class="s">"bolo de cenoura"</span>])).round(<span class="n">3</span>).tolist())</pre>
+<div class="saida" aria-label="Saída do código">[[0.25, 0.75]]
+[[0.923, 0.077]]
+[[0.5, 0.5]]</div>
+    <p>O scikit-learn confirma os 0,75. “relatorio amanha” fica com 0,077 de chance de ser promoção, ou seja, 0,923 de ser normal. E “bolo de cenoura” só tem palavras que o modelo nunca viu, então ele ignora todas e sobra a chance anterior, 0,5 para cada lado: sem pista, sem opinião.</p>
+
+    <h3>Código comentado</h3>
+    <p>O trabalho de verdade está na tabela de contagens: o <code>fit</code> do <code>MultinomialNB</code> soma as colunas de cada classe e aplica a suavização, que é o <code>alpha=1</code> padrão. Não há nenhum ajuste iterativo, por isso treina em um instante. O <code>cv.transform</code> usa o vocabulário aprendido no <code>fit_transform</code>, e é por isso que “bolo”, “de” e “cenoura” desaparecem: não estão nas 13 palavras.</p>
+
+    <h3>Erro comum</h3>
+    <p>Tomar a probabilidade do Naive Bayes como uma medida confiável de certeza. Como ele trata cada palavra como pista independente, repetir uma palavra empilha pista sobre pista:</p>
+<pre class="codigo" tabindex="0" aria-label="Repetir uma palavra empurra a probabilidade para o extremo"><span class="k">for</span> texto <span class="k">in</span> [<span class="s">"ganhe premio amanha"</span>, <span class="s">"ganhe ganhe ganhe premio amanha"</span>, <span class="s">"ganhe premio"</span>]:
+    <span class="k">print</span>(texto, <span class="s">"-&gt;"</span>, nb.predict_proba(cv.transform([texto])).round(<span class="n">3</span>)[<span class="n">0</span>].tolist())</pre>
+<div class="saida" aria-label="Saída do código">ganhe premio amanha -&gt; [0.25, 0.75]
+ganhe ganhe ganhe premio amanha -&gt; [0.02, 0.98]
+ganhe premio -&gt; [0.077, 0.923]</div>
+    <p>Com “ganhe” três vezes a chance de promoção sobe de 0,75 para 0,98, sem nenhuma informação nova além de repetição. Por isso o Naive Bayes costuma ser bom para <b>ordenar</b> mensagens da mais para a menos suspeita, mas as probabilidades que ele devolve pedem cuidado. Esse cuidado volta na seção 3.6, com a ideia de calibração.</p>
+
+    <div class="ponte"><p>Temos dois modelos que devolvem probabilidade. Falta saber medir se essa probabilidade, depois de virar uma decisão, está acertando. Contar acertos e erros de um jeito organizado é a matriz de confusão.</p></div>
+
+    <h2 id="s3"><span class="nsec">3.3</span>Matriz de confusão, precisão, recall e F1</h2>
+    <p class="gancho">“O modelo acertou 75%” serve para uma prova da escola; para um filtro de fraude, que erros estão dentro dos 25%?</p>
+
+    <h3>Intuição</h3>
+    <p>Quando o modelo diz “sim” ou “não”, ele pode errar de dois jeitos muito diferentes. Pode dizer “sim” para algo que era “não” (alarme falso: bloquear um pedido bom) e pode dizer “não” para algo que era “sim” (deixar uma fraude passar). Cada erro tem um custo, e eles raramente custam o mesmo. A <b>matriz de confusão</b> é só uma tabela 2 por 2 que separa esses casos, e as métricas são perguntas diferentes feitas sobre ela.</p>
+
+    <figure class="fig" aria-labelledby="fig2">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 560 250" role="img" aria-label="Matriz de confusão 2 por 2. Linhas: o que era de verdade, positivo ou negativo. Colunas: o que o modelo previu, positivo ou negativo. Positivo e positivo é verdadeiro positivo (VP). Negativo previsto como positivo é falso positivo (FP). Positivo previsto como negativo é falso negativo (FN). Negativo e negativo é verdadeiro negativo (VN).">
+        <text class="t2" x="330" y="22" text-anchor="middle">o modelo previu</text>
+        <text class="t" x="250" y="48" text-anchor="middle">positivo</text><text class="t" x="410" y="48" text-anchor="middle">negativo</text>
+        <text class="t2" x="40" y="130" text-anchor="middle" transform="rotate(-90 40 130)">o que era de verdade</text>
+        <text class="t" x="110" y="95" text-anchor="end">positivo</text><text class="t" x="110" y="185" text-anchor="end">negativo</text>
+        <rect class="caixa dest" x="130" y="60" width="150" height="80" rx="6"/><text class="t" x="205" y="92" text-anchor="middle">VP</text><text class="t2" x="205" y="112" text-anchor="middle">acertou o positivo</text>
+        <rect class="caixa" x="290" y="60" width="150" height="80" rx="6"/><text class="t" x="365" y="92" text-anchor="middle">FN</text><text class="t2" x="365" y="112" text-anchor="middle">deixou passar</text>
+        <rect class="caixa" x="130" y="150" width="150" height="80" rx="6"/><text class="t" x="205" y="182" text-anchor="middle">FP</text><text class="t2" x="205" y="202" text-anchor="middle">alarme falso</text>
+        <rect class="caixa dest" x="290" y="150" width="150" height="80" rx="6"/><text class="t" x="365" y="182" text-anchor="middle">VN</text><text class="t2" x="365" y="202" text-anchor="middle">acertou o negativo</text>
+      </svg></div>
+      <figcaption id="fig2"><b>Fig. 2</b>A matriz de confusão desta apostila, com o positivo primeiro. As caixas destacadas são os acertos. Atenção: o scikit-learn escreve a matriz com o negativo primeiro, e mais adiante isso aparece no código.</figcaption>
+    </figure>
+
+    <h3>Definição</h3>
+    <p>As quatro contagens são <b>VP</b> (verdadeiro positivo: era positivo e o modelo disse positivo), <b>FP</b> (falso positivo: era negativo e o modelo disse positivo), <b>FN</b> (falso negativo: era positivo e o modelo disse negativo) e <b>VN</b> (verdadeiro negativo). Delas saem as métricas:</p>
+    <p><b>Acurácia</b> = (VP + VN) / total: de todos, quantos o modelo acertou. <b><button type="button" class="termo" data-def="Precisão: de tudo o que o modelo chamou de positivo, quantos eram mesmo positivos. VP / (VP + FP). Responde: quando ele diz sim, posso confiar?">Precisão</button></b> = VP / (VP + FP): quando o modelo diz “positivo”, quantas vezes está certo. <b><button type="button" class="termo" data-def="Recall (ou sensibilidade): de todos os positivos de verdade, quantos o modelo encontrou. VP / (VP + FN). Responde: dos casos que existem, quantos eu peguei?">Recall</button></b> = VP / (VP + FN): dos positivos que existem, quantos o modelo achou. <b>F1</b> = 2 · precisão · recall / (precisão + recall): um número único que só é alto se precisão e recall forem altos juntos.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Vinte pedidos de uma loja fictícia. Seis são fraude (1) e quatorze são normais (0), e o modelo previu o seguinte. Os 6 primeiros do vetor <code>real</code> são as fraudes:</p>
+<pre class="codigo" tabindex="0" aria-label="As quatro contagens da matriz de confusão">real = np.array([<span class="n">1</span>] * <span class="n">6</span> + [<span class="n">0</span>] * <span class="n">14</span>)
+pred = np.array([<span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>])
+
+vp = ((real == <span class="n">1</span>) &amp; (pred == <span class="n">1</span>)).sum()   <span class="c"># era fraude e o modelo disse fraude</span>
+fp = ((real == <span class="n">0</span>) &amp; (pred == <span class="n">1</span>)).sum()   <span class="c"># era normal e o modelo disse fraude</span>
+fn = ((real == <span class="n">1</span>) &amp; (pred == <span class="n">0</span>)).sum()   <span class="c"># era fraude e o modelo disse normal</span>
+vn = ((real == <span class="n">0</span>) &amp; (pred == <span class="n">0</span>)).sum()   <span class="c"># era normal e o modelo disse normal</span>
+<span class="k">print</span>(<span class="s">"VP"</span>, vp, <span class="s">"FP"</span>, fp, <span class="s">"FN"</span>, fn, <span class="s">"VN"</span>, vn, <span class="s">"| soma"</span>, vp + fp + fn + vn)</pre>
+<div class="saida" aria-label="Saída do código">VP 4 FP 3 FN 2 VN 11 | soma 20</div>
+    <p>Das 6 fraudes, 4 foram pegas (VP) e 2 passaram (FN). Dos 14 pedidos normais, 11 foram liberados (VN) e 3 foram bloqueados à toa (FP). A soma fecha em 20. Agora as métricas, cada uma como uma conta com essas quatro contagens:</p>
+<pre class="codigo" tabindex="0" aria-label="Acurácia, precisão, recall e F1 à mão">acuracia = (vp + vn) / len(real)
+precisao = vp / (vp + fp)
+recall = vp / (vp + fn)
+f1 = <span class="n">2</span> * precisao * recall / (precisao + recall)
+<span class="k">print</span>(<span class="s">"acurácia"</span>, round(acuracia, <span class="n">3</span>), <span class="s">"| precisão"</span>, round(precisao, <span class="n">3</span>), <span class="s">"| recall"</span>, round(recall, <span class="n">3</span>), <span class="s">"| F1"</span>, round(f1, <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"média simples:"</span>, round((precisao + recall) / <span class="n">2</span>, <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">acurácia 0.75 | precisão 0.571 | recall 0.667 | F1 0.615
+média simples: 0.619</div>
+    <p>Acurácia: (4 + 11) / 20 = 0,75. Precisão: 4 / (4 + 3) = 4/7 = 0,571, ou seja, de cada 7 bloqueios, 4 eram fraude de verdade. Recall: 4 / (4 + 2) = 4/6 = 0,667, ou seja, o modelo pegou dois terços das fraudes. F1: 2 · 0,571 · 0,667 / (0,571 + 0,667) = 0,615. A mesma conta com o scikit-learn:</p>
+<pre class="codigo" tabindex="0" aria-label="As mesmas métricas com o scikit-learn"><span class="k">from</span> sklearn.metrics <span class="k">import</span> confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+
+<span class="k">print</span>(confusion_matrix(real, pred))
+<span class="k">print</span>(round(accuracy_score(real, pred), <span class="n">3</span>), round(precision_score(real, pred), <span class="n">3</span>), round(recall_score(real, pred), <span class="n">3</span>), round(f1_score(real, pred), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">[[11  3]
+ [ 2  4]]
+0.75 0.571 0.667 0.615</div>
+    <p>As métricas batem com a conta à mão. A matriz vem com o negativo primeiro: a primeira linha é “era normal” (11 liberados, 3 bloqueados) e a segunda é “era fraude” (2 passaram, 4 foram pegas). Ou seja, a ordem é <code>[[VN, FP], [FN, VP]]</code>, o inverso do desenho da Fig. 2. Quem lê a matriz do scikit-learn achando que o canto de cima à esquerda é o VP troca tudo.</p>
+
+    <aside class="nota margem" aria-label="Nota de margem">
+      <span class="rotulo">Nota</span>
+      <p>Por que o F1 não é a média simples? Com precisão 1,0 e recall 0,1 (um modelo que quase não acha nada, mas quando acha acerta), a média simples dá 0,55, que parece razoável. O F1 dá 0,182. Ele puxa a nota para o lado do valor mais baixo, e por isso não deixa um número bom esconder um ruim.</p>
+    </aside>
+
+    <h3>Código comentado</h3>
+    <p>Os quatro contadores usam a combinação de duas comparações com <code>&amp;</code>: <code>(real == 1) &amp; (pred == 1)</code> vira uma lista de verdadeiro ou falso, e <code>.sum()</code> conta os verdadeiros. As métricas são só divisões dessas quatro contagens. Escrever à mão uma vez ajuda a nunca mais confundir precisão com recall: o denominador da precisão é tudo o que o modelo <b>previu</b> como positivo (VP + FP) e o do recall é tudo o que <b>existe</b> de positivo (VP + FN).</p>
+
+    <h3>Erro comum</h3>
+    <p>Trocar precisão por recall, e escolher a métrica sem pensar no custo. Num filtro de fraude em que passar uma fraude custa caro, o recall importa mais. Num filtro que bloqueia o cliente e gera atendimento, a precisão pesa. Na dúvida, escreva a pergunta em palavras antes de escolher: “quando ele bloqueia, está certo?” é precisão; “das fraudes que existem, quantas ele pegou?” é recall.</p>
+
+    <section class="experimento" data-ex="ia-3-2" data-pacotes="scikit-learn" aria-labelledby="exp2">
+      <header>
+        <div class="rotulo">Experimento 3.2</div>
+        <h3 id="exp2">Matriz de confusão e métricas à mão</h3>
+      </header>
+      <div class="enunciado"><p>Quinze pedidos de outra loja fictícia: os 7 primeiros de <code>real</code> são fraudes (1). Calcule <code>vp</code>, <code>fp</code>, <code>fn</code> e <code>vn</code> comparando <code>real</code> e <code>pred</code>, e depois <code>precisao</code>, <code>recall</code> e <code>f1</code>, sem usar funções de métricas do scikit-learn. A última linha do código inicial confere com o scikit-learn.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+
+real = np.array([1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+pred = np.array([1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0])
+</script>
+      <script type="text/plain" class="py-inicial">
+vp = fp = fn = vn = None
+precisao = recall = f1 = None
+
+# escreva aqui: conte vp, fp, fn, vn e calcule as três métricas
+
+from sklearn.metrics import precision_score, recall_score, f1_score
+print(vp, fp, fn, vn)
+print(precisao, recall, f1)
+print(precision_score(real, pred), recall_score(real, pred), f1_score(real, pred))
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(vp is not None and int(vp) == 6, "VP é quando real == 1 e pred == 1. Deveria dar 6.")
+verificar(int(fp) == 4, "FP é quando real == 0 e pred == 1. Deveria dar 4.")
+verificar(int(fn) == 1, "FN é quando real == 1 e pred == 0. Deveria dar 1.")
+verificar(int(vn) == 4, "VN é quando real == 0 e pred == 0. Deveria dar 4.")
+verificar(abs(precisao - 0.6) < 0.001, "Precisão = VP / (VP + FP) = 6 / 10 = 0,6.")
+verificar(abs(recall - 6 / 7) < 0.001, "Recall = VP / (VP + FN) = 6 / 7, cerca de 0,857.")
+verificar(abs(f1 - 0.7059) < 0.001, "F1 = 2 * precisão * recall / (precisão + recall), cerca de 0,706.")
+</script>
+      <script type="text/plain" class="py-solucao">
+vp = ((real == 1) & (pred == 1)).sum()
+fp = ((real == 0) & (pred == 1)).sum()
+fn = ((real == 1) & (pred == 0)).sum()
+vn = ((real == 0) & (pred == 0)).sum()
+
+precisao = vp / (vp + fp)
+recall = vp / (vp + fn)
+f1 = 2 * precisao * recall / (precisao + recall)
+
+from sklearn.metrics import precision_score, recall_score, f1_score
+print(vp, fp, fn, vn)
+print(precisao, recall, f1)
+print(precision_score(real, pred), recall_score(real, pred), f1_score(real, pred))
+</script>
+      <template class="dica"><p>Use o mesmo molde do texto: <code>((real == 1) &amp; (pred == 1)).sum()</code> conta o VP. Troque os números dentro das comparações para os outros três.</p></template>
+      <template class="dica"><p>Precisão: <code>vp / (vp + fp)</code>. Recall: <code>vp / (vp + fn)</code>. O F1 usa as duas: <code>2 * precisao * recall / (precisao + recall)</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Com as quatro contagens na mão, dá para ver um problema sério da acurácia: ela pode ficar altíssima num modelo que não serve para nada. A próxima seção mostra como.</p></div>
+
+    <h2 id="s4"><span class="nsec">3.4</span>Acurácia enganosa: quando a classe é rara</h2>
+    <p class="gancho">Se 95 em cada 100 transações são normais, um modelo que nunca desconfia de nada acerta 95%; isso é bom?</p>
+
+    <h3>Intuição</h3>
+    <p>A acurácia conta acertos sem perguntar de que tipo. Quando quase tudo é de uma classe só, acertar essa classe é fácil e quase não informa nada. O modelo preguiçoso que sempre responde “normal” acerta quase todas as vezes e, mesmo assim, é inútil: ele não encontra o único tipo de caso que você queria encontrar.</p>
+
+    <h3>Definição</h3>
+    <p>A <b>prevalência</b> é a fração de exemplos da classe positiva. Todo problema tem uma acurácia de referência, a do modelo que sempre responde a classe mais comum, e ela é igual a 1 menos a prevalência (quando o positivo é o raro). Um modelo só merece confiança quando supera essa referência <b>e</b> vai bem nas métricas da classe rara, recall e precisão.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Cem transações fictícias, 5 fraudes e 95 normais. Primeiro, o modelo que nunca desconfia (sempre prevê 0):</p>
+<pre class="codigo" tabindex="0" aria-label="O modelo que sempre responde normal">real = np.array([<span class="n">1</span>] * <span class="n">5</span> + [<span class="n">0</span>] * <span class="n">95</span>)
+sempre_zero = np.zeros(<span class="n">100</span>, dtype=int)             <span class="c"># prevê 0 para todo mundo</span>
+
+<span class="k">print</span>(<span class="s">"fraudes:"</span>, real.sum(), <span class="s">"de"</span>, len(real))
+<span class="k">print</span>(<span class="s">"acurácia do 'sempre normal':"</span>, accuracy_score(real, sempre_zero))
+<span class="k">print</span>(<span class="s">"recall:"</span>, recall_score(real, sempre_zero), <span class="s">"| precisão:"</span>, precision_score(real, sempre_zero, zero_division=<span class="n">0</span>))</pre>
+<div class="saida" aria-label="Saída do código">fraudes: 5 de 100
+acurácia do 'sempre normal': 0.95
+recall: 0.0 | precisão: 0.0</div>
+    <p>Acurácia de 95% e recall de 0: nenhuma fraude foi encontrada. O <code>zero_division=0</code> existe porque, sem nenhum previsto positivo, a precisão seria 0 dividido por 0, e o scikit-learn precisa saber o que devolver. Agora um modelo que de fato tenta: pega 4 das 5 fraudes, mas dá 6 alarmes falsos.</p>
+<pre class="codigo" tabindex="0" aria-label="Um modelo que tenta: pega 4 fraudes e erra 6 alarmes">util = np.array([<span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>] + [<span class="n">1</span>] * <span class="n">6</span> + [<span class="n">0</span>] * <span class="n">89</span>)   <span class="c"># 4 fraudes pegas, 1 perdida, 6 alarmes falsos</span>
+
+<span class="k">print</span>(confusion_matrix(real, util))
+<span class="k">print</span>(<span class="s">"acurácia"</span>, accuracy_score(real, util), <span class="s">"| precisão"</span>, precision_score(real, util), <span class="s">"| recall"</span>, recall_score(real, util), <span class="s">"| F1"</span>, round(f1_score(real, util), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">[[89  6]
+ [ 1  4]]
+acurácia 0.93 | precisão 0.4 | recall 0.8 | F1 0.533</div>
+    <p>O modelo útil tem acurácia de 0,93, <b>menor</b> que a do modelo inútil (0,95). Quem escolhesse pela acurácia ficaria com o que não faz nada. Pelo recall (0,8 contra 0) a escolha muda, e a precisão de 0,4 mostra o preço: de cada 10 alertas, 6 são alarme falso. Se esse preço é aceitável depende de quanto custa revisar um alerta e de quanto custa deixar uma fraude passar.</p>
+
+    <h3>Código comentado</h3>
+    <p>Nada de novo no código, e é essa a lição: as mesmas funções da seção anterior mostram o problema, desde que a gente peça as métricas certas. A linha <code>np.zeros(100, dtype=int)</code> cria o modelo ingênuo. Fazer esse teste com um modelo que não pensa é um hábito útil: se o seu modelo de verdade não supera o preguiçoso nas métricas da classe rara, ele não aprendeu nada que valha.</p>
+
+    <h3>Erro comum</h3>
+    <p>Comemorar uma acurácia alta sem olhar a prevalência. “O modelo acerta 98%” é uma frase sem sentido até alguém dizer quanto vale o modelo que sempre responde a classe comum. Outro escorregão é o oposto: otimizar só o recall. O modelo que marca <b>todas</b> as transações como fraude tem recall 1,0 e é tão inútil quanto o que não marca nenhuma, porque a precisão despenca. As duas métricas precisam andar juntas, e é para isso que o F1 existe.</p>
+
+    <section class="experimento" data-ex="ia-3-3" data-pacotes="scikit-learn" aria-labelledby="exp3">
+      <header>
+        <div class="rotulo">Experimento 3.3</div>
+        <h3 id="exp3">Qual dos dois modelos escolher?</h3>
+      </header>
+      <div class="enunciado"><p>Sessenta pacientes fictícios, 3 com uma doença rara (os 3 primeiros de <code>real</code>). O <code>modelo_a</code> prevê “saudável” para todos. O <code>modelo_b</code> acerta 2 dos 3 doentes e dá 5 alarmes falsos. Calcule a acurácia e o recall de cada um (<code>acc_a</code>, <code>rec_a</code>, <code>acc_b</code>, <code>rec_b</code>, em fração entre 0 e 1) e guarde em <code>melhor</code> a letra <code>"a"</code> ou <code>"b"</code> do modelo que você usaria para <b>encontrar</b> os doentes.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.metrics import accuracy_score, recall_score
+
+real = np.array([1] * 3 + [0] * 57)
+modelo_a = np.zeros(60, dtype=int)
+modelo_b = np.array([1, 1, 0] + [1] * 5 + [0] * 52)
+</script>
+      <script type="text/plain" class="py-inicial">
+acc_a = rec_a = acc_b = rec_b = None
+melhor = ""
+
+# escreva aqui
+
+print(acc_a, rec_a)
+print(acc_b, rec_b)
+print(melhor)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(acc_a is not None and abs(acc_a - 0.95) < 0.001, "A acurácia do modelo_a deveria ser 0,95 (57 acertos em 60).")
+verificar(abs(rec_a - 0.0) < 0.001, "O recall do modelo_a deveria ser 0: ele não achou nenhum doente.")
+verificar(abs(acc_b - 0.9) < 0.001, "A acurácia do modelo_b deveria ser 0,9 (54 acertos em 60: 2 doentes e 52 saudáveis).")
+verificar(abs(rec_b - 2 / 3) < 0.001, "O recall do modelo_b deveria ser 2/3, cerca de 0,667.")
+verificar(melhor == "b", "Para encontrar os doentes, o modelo_a não serve: ele tem a maior acurácia, mas recall 0.")
+</script>
+      <script type="text/plain" class="py-solucao">
+acc_a = accuracy_score(real, modelo_a)
+rec_a = recall_score(real, modelo_a)
+acc_b = accuracy_score(real, modelo_b)
+rec_b = recall_score(real, modelo_b)
+melhor = "b"
+
+print(acc_a, rec_a)
+print(acc_b, rec_b)
+print(melhor)
+</script>
+      <template class="dica"><p>As funções <code>accuracy_score(real, previsto)</code> e <code>recall_score(real, previsto)</code> já estão importadas. Use cada uma duas vezes, uma para cada modelo.</p></template>
+      <template class="dica"><p>Compare as duas acurácias, mas decida pelo recall: o objetivo é encontrar os doentes.</p></template>
+    </section>
+
+    <div class="ponte"><p>Os dois modelos acima só devolvem “sim” ou “não”. Mas lá atrás vimos que o modelo na verdade calcula uma probabilidade, e o “sim” e o “não” vêm de um corte. Mexer nesse corte muda todas as métricas.</p></div>
+
+    <h2 id="s5"><span class="nsec">3.5</span>O limiar de decisão</h2>
+    <p class="gancho">A probabilidade 0,5 é o ponto onde “sim” vira “não” por lei da natureza, ou só por costume?</p>
+
+    <h3>Intuição</h3>
+    <p>O corte em 0,5 é um costume, não uma lei. Pense no alarme de um detector de fumaça. Se ele só toca com certeza absoluta de incêndio, quase nunca dispara à toa, mas pode demorar a avisar de um fogo pequeno. Se toca com qualquer sinal de fumaça, avisa cedo e incomoda quando alguém queima torrada. O limiar é a sensibilidade do alarme, e quem decide o valor é o custo dos dois tipos de erro, não o modelo.</p>
+
+    <h3>Definição</h3>
+    <p>O <button type="button" class="termo" data-def="Limiar de decisão: o valor de corte da probabilidade. Se a probabilidade é maior ou igual ao limiar, a previsão é positiva. O padrão de muitas funções é 0,5, mas ele pode ser mudado.">limiar</button> é o valor a partir do qual uma probabilidade vira previsão positiva: <code>previsto = probabilidade &gt;= limiar</code>. Baixar o limiar marca mais casos como positivo: o recall sobe (menos FN) e a precisão tende a cair (mais FP). Subir o limiar faz o contrário.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Doze pedidos fictícios, já com a probabilidade de fraude que um modelo deu a cada um. Os dados estão em ordem decrescente de probabilidade. Seis são fraudes de verdade:</p>
+    <p>probabilidade: 0,92 · 0,85 · 0,78 · 0,70 · 0,62 · 0,55 · 0,48 · 0,40 · 0,33 · 0,25 · 0,15 · 0,08<br>era fraude?: 1 · 1 · 1 · 0 · 1 · 0 · 1 · 0 · 1 · 0 · 0 · 0</p>
+<pre class="codigo" tabindex="0" aria-label="Precisão, recall e F1 para três limiares">score = np.array([.<span class="n">92</span>, .<span class="n">85</span>, .<span class="n">78</span>, .<span class="n">70</span>, .<span class="n">62</span>, .<span class="n">55</span>, .<span class="n">48</span>, .<span class="n">40</span>, .<span class="n">33</span>, .<span class="n">25</span>, .<span class="n">15</span>, .<span class="n">08</span>])
+y = np.array([<span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>])
+
+<span class="k">for</span> limiar <span class="k">in</span> [<span class="n">0.3</span>, <span class="n">0.5</span>, <span class="n">0.7</span>]:
+    prev = (score &gt;= limiar).astype(int)               <span class="c"># 1 se a probabilidade passa do corte</span>
+    vp = ((y == <span class="n">1</span>) &amp; (prev == <span class="n">1</span>)).sum(); fp = ((y == <span class="n">0</span>) &amp; (prev == <span class="n">1</span>)).sum(); fn = ((y == <span class="n">1</span>) &amp; (prev == <span class="n">0</span>)).sum()
+    prec = vp / (vp + fp); rec = vp / (vp + fn)
+    <span class="k">print</span>(<span class="s">"limiar"</span>, limiar, <span class="s">"| VP"</span>, vp, <span class="s">"FP"</span>, fp, <span class="s">"FN"</span>, fn, <span class="s">"| precisão"</span>, round(prec, <span class="n">3</span>), <span class="s">"| recall"</span>, round(rec, <span class="n">3</span>), <span class="s">"| F1"</span>, round(<span class="n">2</span> * prec * rec / (prec + rec), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">limiar 0.3 | VP 6 FP 3 FN 0 | precisão 0.667 | recall 1.0 | F1 0.8
+limiar 0.5 | VP 4 FP 2 FN 2 | precisão 0.667 | recall 0.667 | F1 0.667
+limiar 0.7 | VP 3 FP 1 FN 3 | precisão 0.75 | recall 0.5 | F1 0.6</div>
+    <p>Com limiar 0,3 o modelo marca 9 dos 12 pedidos: pega as 6 fraudes (recall 1,0) e erra 3 alarmes. Com 0,5 marca 6 pedidos: 4 fraudes e 2 alarmes falsos. Com 0,7 marca só 4: 3 fraudes e 1 alarme falso, mas deixa 3 fraudes passarem. A conta de cada linha: no limiar 0,7, precisão = 3 / (3 + 1) = 0,75 e recall = 3 / (3 + 3) = 0,5. Os mesmos 12 pedidos e o mesmo modelo, três decisões diferentes, e o limiar “padrão” de 0,5 não é o de maior F1: o de 0,3 faz 0,8 contra 0,667.</p>
+
+    <h3>Código comentado</h3>
+    <p>A única linha que importa é <code>(score &gt;= limiar).astype(int)</code>: compara cada probabilidade com o corte e transforma verdadeiro e falso em 1 e 0. Todo o resto é a conta da seção 3.3. Em um modelo do scikit-learn você pega as probabilidades com <code>predict_proba(X)[:, 1]</code> e aplica o seu próprio corte, em vez de usar o <code>predict</code>, que corta sempre em 0,5.</p>
+
+    <h3>Erro comum</h3>
+    <p>Tratar o 0,5 como padrão sagrado, e também o erro oposto: escolher o limiar que dá o melhor resultado nos mesmos exemplos em que você mede o resultado. Com 12 pedidos, o limiar 0,3 parece ótimo, mas parte do acerto é sorte dos 12 casos. O limiar deve ser escolhido com um conjunto de exemplos e a qualidade final medida em outro, que o limiar nunca viu. E o valor ideal muda quando o custo de cada erro muda: se amanhã cada revisão manual ficar mais cara, o limiar bom sobe.</p>
+
+    <section class="experimento" data-ex="ia-3-4" data-pacotes="scikit-learn" aria-labelledby="exp4">
+      <header>
+        <div class="rotulo">Experimento 3.4</div>
+        <h3 id="exp4">Varrendo o limiar</h3>
+      </header>
+      <div class="enunciado"><p>Os mesmos 12 pedidos do texto estão em <code>score</code> e <code>y</code>, e <code>grade</code> traz os limiares de 0,05 a 0,95 de 0,05 em 0,05. Percorra a grade e guarde em <code>melhor_limiar</code> o limiar de maior F1 e em <code>limiar_sem_alarme</code> o <b>menor</b> limiar da grade em que não há nenhum falso positivo.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+
+score = np.array([.92, .85, .78, .70, .62, .55, .48, .40, .33, .25, .15, .08])
+y = np.array([1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0])
+grade = [round(0.05 * k, 2) for k in range(1, 20)]
+</script>
+      <script type="text/plain" class="py-inicial">
+melhor_limiar = None
+limiar_sem_alarme = None
+melhor_f1 = -1
+
+for limiar in grade:
+    prev = (score >= limiar).astype(int)
+    # calcule vp, fp, fn, precisão, recall e F1 deste limiar
+    # atualize melhor_limiar e limiar_sem_alarme quando for o caso
+    pass
+
+print(melhor_limiar, limiar_sem_alarme)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(melhor_limiar is not None, "Guarde em melhor_limiar o limiar da grade com maior F1.")
+verificar(abs(melhor_limiar - 0.3) < 0.001, "O maior F1 (0,8) acontece com limiar 0,3. Confira como calculou o F1 e se comparou com o melhor visto até agora.")
+verificar(limiar_sem_alarme is not None, "Guarde em limiar_sem_alarme o menor limiar da grade com fp == 0.")
+verificar(abs(limiar_sem_alarme - 0.75) < 0.001, "O menor limiar sem falso positivo é 0,75. Abaixo dele, algum pedido normal (0,70) já passa do corte.")
+</script>
+      <script type="text/plain" class="py-solucao">
+melhor_limiar = None
+limiar_sem_alarme = None
+melhor_f1 = -1
+
+for limiar in grade:
+    prev = (score >= limiar).astype(int)
+    vp = ((y == 1) & (prev == 1)).sum()
+    fp = ((y == 0) & (prev == 1)).sum()
+    fn = ((y == 1) & (prev == 0)).sum()
+    if vp == 0:
+        f1 = 0
+    else:
+        prec = vp / (vp + fp)
+        rec = vp / (vp + fn)
+        f1 = 2 * prec * rec / (prec + rec)
+    if f1 > melhor_f1:
+        melhor_f1 = f1
+        melhor_limiar = limiar
+    if fp == 0 and limiar_sem_alarme is None:
+        limiar_sem_alarme = limiar
+
+print(melhor_limiar, limiar_sem_alarme)
+</script>
+      <template class="dica"><p>Dentro do laço, conte <code>vp</code>, <code>fp</code> e <code>fn</code> como na seção 3.3, usando <code>y</code> e <code>prev</code>. Cuidado: se <code>vp</code> for 0, precisão e recall viram 0 e o F1 não pode ser dividido; trate esse caso à parte, com F1 igual a 0.</p></template>
+      <template class="dica"><p>Para o maior F1: <code>if f1 &gt; melhor_f1:</code> e então atualize <code>melhor_f1</code> e <code>melhor_limiar</code>. Para o menor limiar sem alarme: como a grade vai do menor para o maior, basta guardar o <b>primeiro</b> limiar com <code>fp == 0</code> (<code>if fp == 0 and limiar_sem_alarme is None</code>).</p></template>
+    </section>
+
+    <div class="ponte"><p>Escolher um limiar de cada vez funciona, mas cansa. E se pudéssemos ver o comportamento do modelo em todos os limiares de uma só vez, sem decidir nenhum? É para isso que existe a curva ROC.</p></div>
+
+    <h2 id="s6"><span class="nsec">3.6</span>Curva ROC e AUC</h2>
+    <p class="gancho">Como comparar dois modelos sem ter de escolher antes um limiar para cada um?</p>
+
+    <h3>Intuição</h3>
+    <p>Imagine descer o limiar devagar, de cima para baixo, pelos 12 pedidos ordenados da seção anterior. Cada vez que o limiar passa por um pedido, esse pedido passa a ser marcado como fraude. Se ele era fraude, o modelo ganha um acerto (sobe o recall). Se era normal, ganha um alarme falso. Anotar esses dois números a cada passo desenha uma curva. Um bom modelo coloca as fraudes lá em cima da lista, então a curva sobe quase reto antes de começar a acumular alarmes falsos.</p>
+
+    <h3>Definição</h3>
+    <p>A <b>curva ROC</b> tem no eixo horizontal a <b>taxa de falsos positivos</b> (FPR = FP / (FP + VN): dos normais, quantos foram marcados) e no vertical a <b>taxa de verdadeiros positivos</b> (TPR = VP / (VP + FN), o mesmo recall). Cada ponto é um limiar. A <b><button type="button" class="termo" data-def="AUC: área sob a curva ROC. Vai de 0 a 1. Pode ser lida como a chance de um positivo sorteado receber probabilidade maior que a de um negativo sorteado. 0,5 equivale a ordenar no sorteio.">AUC</button></b> é a área sob essa curva, de 0 a 1. Existe uma leitura simples dela: é a chance de que, sorteando um positivo e um negativo, o modelo dê probabilidade maior ao positivo. 0,5 é o mesmo que sortear a ordem; 1,0 é uma ordenação perfeita.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Com os mesmos 12 pedidos (6 fraudes e 6 normais), o <code>roc_curve</code> calcula os pontos da curva. O argumento <code>drop_intermediate=False</code> pede todos os pontos, para você ver cada limiar.</p>
+<pre class="codigo" tabindex="0" aria-label="Pontos da curva ROC, um por limiar"><span class="k">from</span> sklearn.metrics <span class="k">import</span> roc_curve, roc_auc_score
+
+fpr, tpr, lim = roc_curve(y, score, drop_intermediate=<span class="k">False</span>)
+<span class="k">for</span> a, b_, c <span class="k">in</span> zip(lim, fpr, tpr):
+    <span class="k">print</span>(<span class="s">"limiar"</span>, round(a, <span class="n">2</span>), <span class="s">"| FPR"</span>, round(b_, <span class="n">3</span>), <span class="s">"| TPR"</span>, round(c, <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">limiar inf | FPR 0.0 | TPR 0.0
+limiar 0.92 | FPR 0.0 | TPR 0.167
+limiar 0.85 | FPR 0.0 | TPR 0.333
+limiar 0.78 | FPR 0.0 | TPR 0.5
+limiar 0.7 | FPR 0.167 | TPR 0.5
+limiar 0.62 | FPR 0.167 | TPR 0.667
+limiar 0.55 | FPR 0.333 | TPR 0.667
+limiar 0.48 | FPR 0.333 | TPR 0.833
+limiar 0.4 | FPR 0.5 | TPR 0.833
+limiar 0.33 | FPR 0.5 | TPR 1.0
+limiar 0.25 | FPR 0.667 | TPR 1.0
+limiar 0.15 | FPR 0.833 | TPR 1.0
+limiar 0.08 | FPR 1.0 | TPR 1.0</div>
+    <p>O primeiro limiar é <code>inf</code> (infinito): nada passa dele, então nada é marcado e a curva começa em (0, 0). Descendo: 0,92, 0,85 e 0,78 são fraudes, e o TPR sobe de 0 a 0,5 sem nenhum alarme falso. Em 0,70 entra o primeiro normal e o FPR vai a 0,167. Em 0,33 entra a última fraude e o TPR chega a 1,0. No fim, com limiar 0,08, tudo é marcado como fraude, (1, 1). Os pontos da seção 3.5 estão aqui: limiar 0,7 (FPR 0,167 e TPR 0,5) e limiar 0,3 (que cai no ponto de limiar 0,33: FPR 0,5 e TPR 1,0).</p>
+
+    <figure class="fig" aria-labelledby="fig3">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 320 290" role="img" aria-label="Curva ROC em degraus dos 12 pedidos. A curva sobe de 0 a 0,5 na taxa de verdadeiros positivos sem alarme falso, depois avança em degraus até chegar a 1,0 em taxa de falsos positivos 0,5, e segue reta até 1. A diagonal pontilhada é o modelo que ordena no sorteio. A área sob a curva é 0,833.">
+        <rect x="50" y="20" width="220" height="220" fill="none" style="stroke:var(--color-border-primary)" stroke-width="1.2"/>
+        <path d="M50 240L270 20" fill="none" stroke-dasharray="4 4" style="stroke:var(--color-text-tertiary)" stroke-width="1.2"/>
+        <path d="M50 240L50 203.33L50 166.67L50 130L86.67 130L86.67 93.33L123.33 93.33L123.33 56.67L160 56.67L160 20L196.67 20L233.33 20L270 20" fill="none" style="stroke:var(--color-accent-primary)" stroke-width="2.2" stroke-linejoin="round"/>
+        <circle cx="86.67" cy="130" r="4" style="fill:var(--color-accent-primary)"/><circle cx="160" cy="20" r="4" style="fill:var(--color-accent-primary)"/>
+        <text class="t2" x="94" y="124">limiar 0,7</text><text class="t2" x="166" y="38">limiar 0,33</text>
+        <text class="t2" x="50" y="258" text-anchor="middle">0</text><text class="t2" x="270" y="258" text-anchor="middle">1</text>
+        <text class="t2" x="40" y="244" text-anchor="end">0</text><text class="t2" x="40" y="24" text-anchor="end">1</text>
+        <text class="t" x="160" y="280" text-anchor="middle">taxa de falsos positivos (FPR)</text>
+        <text class="t" x="14" y="130" text-anchor="middle" transform="rotate(-90 14 130)">taxa de verdadeiros positivos (TPR)</text>
+      </svg></div>
+      <figcaption id="fig3"><b>Fig. 3</b>A curva ROC dos 12 pedidos. A linha pontilhada é o modelo que ordena no sorteio. A área sob a curva em degraus é a AUC, 0,833. Quanto mais a curva encosta no canto de cima à esquerda, melhor a ordenação.</figcaption>
+    </figure>
+
+    <p>Agora a AUC pela leitura de pares. São 6 fraudes e 6 normais, ou seja, 36 pares possíveis. Contamos em quantos deles a fraude recebeu probabilidade maior que o normal:</p>
+<pre class="codigo" tabindex="0" aria-label="AUC calculada contando pares, comparada com roc_auc_score">pos = score[y == <span class="n">1</span>]
+neg = score[y == <span class="n">0</span>]
+ganha = sum(p &gt; n <span class="k">for</span> p <span class="k">in</span> pos <span class="k">for</span> n <span class="k">in</span> neg)    <span class="c"># em quantos pares o positivo vence</span>
+<span class="k">print</span>(<span class="s">"pares:"</span>, len(pos) * len(neg), <span class="s">"| positivo acima do negativo:"</span>, ganha, <span class="s">"| AUC por pares:"</span>, round(ganha / (len(pos) * len(neg)), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"roc_auc_score:"</span>, round(roc_auc_score(y, score), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">pares: 36 | positivo acima do negativo: 30 | AUC por pares: 0.833
+roc_auc_score: 0.833</div>
+    <p>Em 30 dos 36 pares a fraude vence, 30/36 = 0,833, exatamente a função do scikit-learn. Os 6 pares perdidos são aqueles em que um normal ficou acima de uma fraude: o normal de 0,70 acima das fraudes de 0,62, 0,48 e 0,33 (3 pares), o de 0,55 acima das de 0,48 e 0,33 (2 pares) e o de 0,40 acima da de 0,33 (1 par). Total: 3 + 2 + 1 = 6.</p>
+
+    <h3>Código comentado</h3>
+    <p>O <code>roc_curve</code> recebe os rótulos reais e as <b>probabilidades</b>, não as previsões 0 e 1. É um erro comum passar o resultado do <code>predict</code>: com só dois valores possíveis a curva vira um único ponto. O <code>roc_auc_score</code> faz a mesma coisa que a nossa contagem de pares, só que de forma mais eficiente para milhares de exemplos. Note também que a AUC não depende de limiar nenhum, o que a torna uma boa nota para comparar modelos quando você ainda não decidiu o corte.</p>
+
+    <h3>Erro comum</h3>
+    <p>Achar que AUC alta quer dizer probabilidades confiáveis. A AUC só olha a <b>ordem</b>: quem vem antes de quem. A <button type="button" class="termo" data-def="Calibração: o quanto as probabilidades do modelo combinam com a frequência real. Num modelo bem calibrado, entre os casos em que ele diz 0,8, cerca de 80% são mesmo positivos.">calibração</button>, que é se um “0,8” significa mesmo 80% de chance, é outra coisa. Dá para provar com os mesmos 12 pedidos: se elevarmos todas as probabilidades ao cubo, ou dividirmos todas por 2, a ordem não muda.</p>
+<pre class="codigo" tabindex="0" aria-label="A AUC não muda se as probabilidades forem distorcidas">cubo = score ** <span class="n">3</span>
+meio = score / <span class="n">2</span>
+<span class="k">print</span>(<span class="s">"AUC com score**3:"</span>, round(roc_auc_score(y, cubo), <span class="n">3</span>), <span class="s">"| AUC com score/2:"</span>, round(roc_auc_score(y, meio), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"positivos previstos em limiar 0.5, score:"</span>, (score &gt;= <span class="n">0.5</span>).sum(), <span class="s">"| score/2:"</span>, (meio &gt;= <span class="n">0.5</span>).sum())
+<span class="k">print</span>(cubo.round(<span class="n">3</span>).tolist())</pre>
+<div class="saida" aria-label="Saída do código">AUC com score**3: 0.833 | AUC com score/2: 0.833
+positivos previstos em limiar 0.5, score: 6 | score/2: 0
+[0.779, 0.614, 0.475, 0.343, 0.238, 0.166, 0.111, 0.064, 0.036, 0.016, 0.003, 0.001]</div>
+    <p>As três versões têm AUC 0,833, mas dizem coisas muito diferentes. A primeira coloca 6 pedidos acima de 0,5. A versão dividida por 2 nunca chega a 0,5, então com o limiar padrão ela não marca ninguém: recall zero com a mesma AUC. E com o cubo, a fraude de maior probabilidade passa de 0,92 para 0,779 e o décimo pedido vira 0,016, números que ninguém reconheceria como chance real. Quem precisa usar a probabilidade como número (calcular um custo esperado, por exemplo) tem de checar a calibração à parte. A AUC serve para dizer se o modelo <b>ordena</b> bem.</p>
+
+    <section class="experimento" data-ex="ia-3-5" data-pacotes="scikit-learn" aria-labelledby="exp5">
+      <header>
+        <div class="rotulo">Experimento 3.5</div>
+        <h3 id="exp5">AUC contando pares</h3>
+      </header>
+      <div class="enunciado"><p>Oito exemplos fictícios, com o rótulo real em <code>y2</code> e a probabilidade dada pelo modelo em <code>s2</code>. Calcule a AUC contando, para cada par (um positivo e um negativo), se o positivo recebeu probabilidade maior. Guarde o resultado em <code>auc_pares</code>. Não há empates nas probabilidades.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.metrics import roc_auc_score
+
+y2 = np.array([1, 0, 1, 0, 0, 1, 0, 1])
+s2 = np.array([0.9, 0.3, 0.8, 0.6, 0.5, 0.7, 0.2, 0.4])
+</script>
+      <script type="text/plain" class="py-inicial">
+auc_pares = None
+
+# escreva aqui: separe as probabilidades dos positivos e dos negativos
+# e conte em quantos pares o positivo tem probabilidade maior
+
+print(auc_pares)
+print(roc_auc_score(y2, s2))
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(auc_pares is not None, "Guarde em auc_pares a fração de pares em que o positivo vence o negativo.")
+verificar(abs(auc_pares - 0.875) < 1e-9, "São 4 positivos e 4 negativos, 16 pares. O positivo vence em 14 deles, ou seja, 14 / 16 = 0,875.")
+verificar(abs(auc_pares - roc_auc_score(y2, s2)) < 1e-9, "Sua conta deveria bater com o roc_auc_score.")
+</script>
+      <script type="text/plain" class="py-solucao">
+pos = s2[y2 == 1]
+neg = s2[y2 == 0]
+ganha = sum(p > n for p in pos for n in neg)
+auc_pares = ganha / (len(pos) * len(neg))
+
+print(auc_pares)
+print(roc_auc_score(y2, s2))
+</script>
+      <template class="dica"><p>Separe as probabilidades por classe: <code>pos = s2[y2 == 1]</code> e <code>neg = s2[y2 == 0]</code>.</p></template>
+      <template class="dica"><p>Conte os pares em que o positivo vence com <code>sum(p &gt; n for p in pos for n in neg)</code> e divida por <code>len(pos) * len(neg)</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Com limiar, matriz, métricas e ROC, a caixa de ferramentas do capítulo está completa. Falta só ver se você consegue usá-la num problema que não foi o do texto.</p></div>
+
+    <h2 id="s7"><span class="nsec">3.7</span>Verifique o que entendeu</h2>
+    <p class="gancho">Um cenário mostra se você consegue aplicar a ideia num problema que ainda não viu.</p>
+
+    <fieldset class="quiz" data-quiz="ia-3-q1">
+      <legend>Cenário 1</legend>
+      <p class="pergunta">Uma equipe treina um modelo para achar uma falha que ocorre em 2 de cada 100 peças. O relatório diz “acurácia de 98%” e a equipe quer colocar o modelo em produção. O que você pede antes?</p>
+      <label class="opcao"><input type="radio" name="ia-3-q1"><span>Nada: 98% é uma acurácia alta e está pronto.</span><template class="fb"><p>Um modelo que sempre responde “peça boa” já acerta 98% quando a falha ocorre em 2 de cada 100. A acurácia sozinha não diz se ele encontra alguma falha.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-3-q1"><span>Só o F1, porque ele substitui a acurácia em qualquer problema.</span><template class="fb"><p>O F1 ajuda, mas sem a matriz você não vê o tipo de erro. Dois modelos com o mesmo F1 podem ter recall e precisão bem diferentes, e o custo de cada erro é que decide.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-3-q1"><span>A matriz de confusão e o recall da classe falha, comparando com o modelo que sempre diz “peça boa”.</span><template class="fb"><p>Isso. A referência é 98% de acurácia sem fazer nada, então o que importa é quantas das falhas ele pega (recall) e quantos alarmes falsos gera (precisão).</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-3-q2">
+      <legend>Cenário 2</legend>
+      <p class="pergunta">Um modelo de triagem marca pacientes para um exame de confirmação barato. Perder um doente é grave e um alarme falso só custa um exame a mais. Com o limiar padrão de 0,5 o recall está em 0,6. O que fazer com o limiar?</p>
+      <label class="opcao" data-certa><input type="radio" name="ia-3-q2"><span>Baixar, por exemplo para 0,3, aceitando mais alarmes falsos em troca de encontrar mais doentes, e conferir a nova matriz.</span><template class="fb"><p>É isso. Baixar o limiar eleva o recall e aumenta os alarmes falsos, o que combina com o custo descrito. O valor exato se escolhe olhando precisão e recall em cada limiar, e medindo o resultado em exemplos que não foram usados para escolher o corte.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-3-q2"><span>Subir para 0,8, para o modelo ter mais certeza antes de marcar.</span><template class="fb"><p>Subir o limiar marca menos casos: a precisão tende a subir, mas o recall cai, e aqui o problema é o recall baixo.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-3-q2"><span>Deixar em 0,5: é o valor que a biblioteca usa, então é o correto.</span><template class="fb"><p>O 0,5 é só o padrão da função <code>predict</code>. O limiar bom depende do custo dos dois erros, que são diferentes neste caso.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-3-q3">
+      <legend>Cenário 3</legend>
+      <p class="pergunta">O modelo A tem AUC de 0,92. Um colega propõe usar a probabilidade dele como “chance real de a venda fechar” para prever a receita do mês, multiplicando valor por probabilidade. O que concluir?</p>
+      <label class="opcao"><input type="radio" name="ia-3-q3"><span>Está certo: AUC alta garante que as probabilidades são boas para essa conta.</span><template class="fb"><p>A AUC só avalia a ordem. Elevar todas as probabilidades ao cubo mantém a AUC e destrói o valor numérico delas.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-3-q3"><span>Falta checar a calibração: a AUC diz que o modelo ordena bem, não que 0,8 signifique 80% de chance.</span><template class="fb"><p>Certo. Para usar a probabilidade como número, é preciso comparar o que o modelo diz com a frequência real em cada faixa. Se não bater, a ordem continua útil, mas a multiplicação por valor dá uma receita errada.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-3-q3"><span>A AUC de 0,92 é baixa demais para qualquer uso.</span><template class="fb"><p>0,92 é um valor alto: em 92% dos pares o positivo vence. O problema é outro, o uso da probabilidade como valor absoluto.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <div class="lacuna" data-lacuna="ia-3-l1">
+      <span class="rotulo">Complete</span>
+      <p>Dos positivos que existem, a fração que o modelo encontrou é o <input data-resp="recall|sensibilidade|revocação|revocacao|tpr|taxa de verdadeiros positivos" aria-label="Métrica de VP dividido por VP mais FN">. A fração das previsões positivas que estavam certas é a <input data-resp="precisão|precisao" aria-label="Métrica de VP dividido por VP mais FP">. Para um único número que só é alto quando as duas são altas, uso o <input data-resp="f1|f-1|f 1" aria-label="Média harmônica entre precisão e recall">. Na regressão logística, a função em formato de S que transforma a nota em probabilidade é a <input data-resp="sigmoide|logística|logistica|função logística|funcao logistica" aria-label="Função que espreme um número em um valor entre 0 e 1">.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="lacuna" data-lacuna="ia-3-l2">
+      <span class="rotulo">Complete</span>
+      <p>Baixar o <input data-resp="limiar|corte" aria-label="Valor a partir do qual a probabilidade vira previsão positiva"> faz o modelo marcar mais casos como positivos: o recall <input data-resp="sobe|aumenta|cresce" aria-label="O que acontece com o recall quando o limiar baixa"> e a precisão tende a cair. A curva ROC mostra, em todos os limiares de uma vez, a taxa de verdadeiros positivos contra a taxa de <input data-resp="falsos positivos|falso positivo|falsos-positivos|fpr|taxa de falsos positivos" aria-label="Eixo horizontal da curva ROC">. A <input data-resp="auc|área|area|área sob a curva|area sob a curva" aria-label="Área sob a curva ROC"> avalia só a ordem das probabilidades, e a <input data-resp="calibração|calibracao" aria-label="Se uma probabilidade de 0,8 significa mesmo 80% de chance"> é a propriedade de a probabilidade 0,8 significar mesmo 80% de chance.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <h2 id="s8">Fontes e avisos</h2>
+    <p>Este capítulo não usa fatos externos com data: tudo o que está aqui é código rodado, e cada saída foi colada do motor que roda no seu navegador, em 15/11/2026. As versões foram lidas no próprio motor:</p>
+<pre class="codigo" tabindex="0" aria-label="Versões do Python, do scikit-learn e do NumPy usadas neste capítulo"><span class="k">import</span> sys
+<span class="k">import</span> sklearn
+
+<span class="k">print</span>(sys.version.split()[<span class="n">0</span>], sklearn.__version__, np.__version__)</pre>
+<div class="saida" aria-label="Saída do código">3.14.2 1.8.0 2.4.6</div>
+    <p>Python 3.14.2, scikit-learn 1.8.0 e NumPy 2.4.6. Os dados são inventados e qualquer parecido com pedidos, alunos ou mensagens reais é coincidência. Os conjuntos são minúsculos de propósito, para você conferir cada conta: com tão poucos exemplos, os números mostram o mecanismo, mas não provam nada sobre como um modelo se comporta com dados de verdade. Detalhes como o formato da matriz de confusão (negativo primeiro) e o primeiro limiar <code>inf</code> da curva ROC são do scikit-learn dessa versão; confira a documentação da sua. Este capítulo é um complemento, não foi dado em aula.</p>
+
+    <div class="ponte"><p>Agora você sabe medir um classificador e escolher onde cortar sua probabilidade. Falta conhecer modelos que lidam com relações mais complicadas entre os atributos do que um peso por coluna. O próximo capítulo, “Árvores, florestas e boosting”, apresenta modelos que decidem fazendo perguntas em sequência, e as mesmas métricas deste capítulo servem para comparar todos eles.</p></div>
+
+  </article>
+
+  <footer class="rodape">
+    <a href="cap-2-dados-reais.html">Anterior: Dados reais</a>
+    <span>Capítulo 3 de 20</span>
+    <button class="btn btn-concluir" id="btnConcluir" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="txt">Marcar capítulo como concluído</span></button>
+    <span>Próximo: Árvores, florestas e boosting</span>
+  </footer>
+</main>
+
+<script src="assets/trilha.js"></script>
+<script src="assets/mapa.js"></script>
+<script src="assets/exercicio.js"></script>
+<script src="assets/leitura.js"></script>
+<script src="assets/ia.js"></script>
+</body>
+</html>

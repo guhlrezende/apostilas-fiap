@@ -18,3 +18,13 @@ Baixados de `https://cdn.jsdelivr.net/pyodide/v314.0.7/full/` (CDN oficial do pr
 
 Versões do navegador, não as do Python local: o pandas aqui é o 3.x (texto vira o tipo `str` por padrão, por exemplo). Para ver a saída real: `node scripts/rodar_pyodide.mjs --pacotes pandas --codigo "..."` a partir da raiz do repositório.
 Para somar outro pacote (ex.: scikit-learn no Capítulo 3): baixar o fecho de dependências do `pyodide-lock.json`, conferir os hashes e listar aqui.
+
+## Pacotes (scikit-learn), 15/11/2026
+Mesmo método do pandas: baixados de `https://cdn.jsdelivr.net/pyodide/v314.0.7/full/`, cada arquivo conferido contra o `sha256` do `pyodide-lock.json` (numpy já estava aqui). Cerca de 18,7 MB a mais. Carregados só quando um exercício declara `data-pacotes="scikit-learn"` (o Pyodide puxa as dependências sozinho). Teste feito com `scripts/rodar_pyodide.mjs`: `sklearn 1.8.0`, `scipy 1.18.0`, `numpy 2.4.6`, e uma regressão logística ajustou e deu score.
+
+| Pacote | Versão | Arquivo | sha256 |
+|---|---|---|---|
+| scikit-learn | 1.8.0 | `scikit_learn-1.8.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl` | `432f560f54c5283d13e9d7c11dddc8bdf2f15aec326cc1d7314f600786154181` |
+| scipy | 1.18.0 | `scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl` | `17ee329a957863516d1bb6a6aaa0c60576fac027e9cd3d43de27f58b5b599b50` |
+| joblib | 1.5.3 | `joblib-1.5.3-py3-none-any.whl` | `fb2860ff70d0b6b43a3df5e3ce52d3a938ad2fcacd80a3f2f3f37e930843e607` |
+| threadpoolctl | 3.6.0 | `threadpoolctl-3.6.0-py3-none-any.whl` | `3521783ffb6bf212e03fb67ec1955af206d6ba7ea09ac21f200875077bbbe7c2` |
