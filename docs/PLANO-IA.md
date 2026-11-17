@@ -59,7 +59,7 @@ Depois da IA, voltar à fila de `PROXIMOS-PASSOS.md`. Ligar o GitHub Pages ao fi
 - [x] Quiz, lacunas e glossário em tooltip (13/11)
 - [x] Hub da apostila e entrada no site (13/11)
 - [x] Cap. 1 publicado (13/11) e Cap. 2 publicado (13/11), no GitHub Pages
-- [x] scikit-learn local (1.8.0 + SciPy, joblib, threadpoolctl; hash conferido) e Cap. 3 escrito, revisado e verificado (15/11), ainda não publicado; Worker pré-importa pacotes pesados\n- [x] Cap. 4 escrito, revisado e verificado (15/11), ainda não publicado\n- [x] Cap. 5 escrito, revisado e verificado (15/11), ainda não publicado\n- [ ] Cap. 6 em diante
+- [x] scikit-learn local (1.8.0 + SciPy, joblib, threadpoolctl; hash conferido) e Cap. 3 escrito, revisado e verificado e publicado (15/11); Worker pré-importa pacotes pesados\n- [x] Cap. 4 escrito, revisado e verificado e publicado (15/11)\n- [x] Cap. 5 escrito, revisado e verificado e publicado (15/11)\n- [ ] Cap. 6 em diante
 - [ ] Componentes restantes: arrastar e soltar, "ache o erro", laboratório de prompt
 - [ ] Passes de acessibilidade e responsivo, e design review
 - [ ] Data do lançamento público do ChatGPT (sem fonte aberta lida)
