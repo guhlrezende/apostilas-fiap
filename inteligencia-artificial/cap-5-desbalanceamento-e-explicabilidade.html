@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desbalanceamento e explicabilidade | Inteligência Artificial</title>
+<script>
+  /* Aplica o tema salvo antes de pintar, para não piscar */
+  try { var t = localStorage.getItem("ia:tema"); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) { }
+</script>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/ia.css">
+<link rel="preload" href="assets/fontes/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fontes/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* Só a tabela da seção 5.8; usa os tokens da trilha */
+  .tab-dec { width: 100%; min-width: 680px; border-collapse: collapse; font-size: var(--font-size-sm); line-height: 1.5; }
+  .tab-dec th, .tab-dec td { text-align: left; vertical-align: top; padding: var(--space-3); border-bottom: 1px solid var(--color-border-secondary); overflow-wrap: normal; }
+  .tab-dec thead th { font-family: var(--font-family-mono); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); letter-spacing: var(--letter-spacing-wide); text-transform: uppercase; color: var(--color-text-secondary); border-bottom: 2px solid var(--color-border-primary); }
+  .tab-dec tbody th { font-weight: var(--font-weight-semibold); color: var(--color-text-primary); width: 19%; }
+  .tab-dec td { color: var(--color-text-secondary); }
+  /* "Desbalanceamento" é uma palavra só e estouraria a tela de 390 px com o tamanho padrão do título */
+  @media (max-width: 480px) { .cabeca h1 { font-size: clamp(1.75rem, 9vw, 3rem); } }
+</style>
+</head>
+<body class="com-mapa" data-cap="5">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <button class="btn-icone so-celular" id="btnMapa" type="button" aria-label="Abrir o mapa da trilha" aria-expanded="false" aria-controls="mapa">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="marca" href="index.html"><b>Inteligência Artificial</b><span>Trilha completa</span></a>
+  <div class="espaco"></div>
+  <button class="btn-icone" id="btnTema" type="button" aria-label="Mudar para o tema escuro" aria-pressed="false">
+    <svg class="ico-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+  <div class="progresso" aria-hidden="true"><i></i></div>
+</header>
+
+<nav id="mapa" aria-label="Mapa da trilha"></nav>
+<div id="mapaFundo" aria-hidden="true"></div>
+
+<main class="pagina" id="conteudo">
+  <article class="leitura">
+    <header class="cabeca">
+      <div class="rotulo"><span class="parte">Parte 2: dados e modelos clássicos</span><span>Capítulo 5</span><span>70 min</span></div>
+      <h1>Desbalanceamento e explicabilidade</h1>
+      <p class="lide">Este capítulo trata de dois problemas que aparecem quando um modelo sai do caderno e vai para a prática. O primeiro: a classe que interessa é rara (uma fraude, uma falha, uma doença), e o modelo treinado do jeito padrão aprende a quase ignorá-la. O segundo: o modelo funciona, mas ninguém sabe dizer o que ele usa para decidir, e as respostas mais fáceis a essa pergunta erram com frequência. Você vai ver três jeitos de dar mais voz à classe rara (pesos, copiar raros, descartar normais), a ordem certa de fazer as coisas para o teste não mentir, a métrica e o corte que combinam com classe rara, e três ferramentas para olhar dentro de um modelo: a importância por impureza, a importância por permutação e a dependência parcial.</p>
+      <div class="meta"><span class="rotulo">Complemento, não foi dado em aula</span><span class="rotulo">Python no navegador</span></div>
+    </header>
+
+    <div class="recap"><p>No capítulo 4 você viu árvores, florestas e boosting e comparou os modelos pela acurácia e pela AUC, com classes quase meio a meio. Ficou uma dívida lá: avisei que a importância que o scikit-learn calcula pela redução de impureza pode favorecer colunas com muitos valores distintos, e prometi um jeito mais confiável de perguntar o que pesa na decisão. A seção 5.5 mostra o problema com um experimento e as seções 5.6 e 5.7 trazem as ferramentas melhores. Antes disso vem o outro assunto, que o capítulo 3 deixou de lado: o que fazer quando 95% dos exemplos são de uma classe e você quer justamente a outra. Os dados são sintéticos, com semente fixa, e nada é baixado. Você precisa de Python básico, de NumPy e das medidas do capítulo 3 (matriz de confusão, precisão, recall, corte e AUC).</p></div>
+
+    <figure class="fig" aria-labelledby="fig1">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 124" role="img" aria-label="Cinco caixas em sequência ligadas por setas: classe rara, pesos, reamostrar, métrica e corte, explicar o modelo.">
+        <defs><marker id="ponta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--color-text-secondary)"/></marker></defs>
+        <rect class="caixa dest" x="4" y="14" width="108" height="44" rx="6"/><text class="t" x="58" y="41" text-anchor="middle">classe rara</text>
+        <rect class="caixa" x="140" y="14" width="108" height="44" rx="6"/><text class="t" x="194" y="41" text-anchor="middle">pesos</text>
+        <rect class="caixa" x="276" y="14" width="108" height="44" rx="6"/><text class="t" x="330" y="41" text-anchor="middle">reamostrar</text>
+        <rect class="caixa" x="412" y="14" width="108" height="44" rx="6"/><text class="t" x="466" y="41" text-anchor="middle">métrica e corte</text>
+        <rect class="caixa" x="548" y="14" width="88" height="44" rx="6"/><text class="t" x="592" y="41" text-anchor="middle">explicar</text>
+        <path class="seta" d="M114 36H136"/><path class="seta" d="M250 36H272"/><path class="seta" d="M386 36H408"/><path class="seta" d="M522 36H544"/>
+        <text class="t2" x="58" y="82" text-anchor="middle">o modelo</text><text class="t2" x="58" y="98" text-anchor="middle">ignora os raros</text>
+        <text class="t2" x="194" y="82" text-anchor="middle">errar um raro</text><text class="t2" x="194" y="98" text-anchor="middle">custa mais</text>
+        <text class="t2" x="330" y="82" text-anchor="middle">copiar ou</text><text class="t2" x="330" y="98" text-anchor="middle">descartar, só no treino</text>
+        <text class="t2" x="466" y="82" text-anchor="middle">PR, AP e o corte</text><text class="t2" x="466" y="98" text-anchor="middle">escolhido na validação</text>
+        <text class="t2" x="592" y="82" text-anchor="middle">permutação e</text><text class="t2" x="592" y="98" text-anchor="middle">dependência parcial</text>
+      </svg></div>
+      <figcaption id="fig1"><b>Fig. 1</b>O caminho deste capítulo. As quatro primeiras caixas tratam de treinar e medir quando a classe é rara. A última pergunta o que o modelo aprendeu.</figcaption>
+    </figure>
+
+    <h2 id="s1"><span class="nsec">5.1</span>Classe rara: o que o modelo enxerga</h2>
+    <p class="gancho">Um modelo que acerta 96,9% dos casos parece ótimo; o que ele faz com os casos raros?</p>
+
+    <h3>Intuição</h3>
+    <p>No capítulo 3 você viu que a acurácia engana quando 95% dos exemplos são de uma classe só. Aqui o foco é o motivo, porque ele aponta o conserto. Um classificador como a regressão logística não responde “raro” ou “normal” de cara: ele estima a probabilidade de o exemplo ser raro, e só depois a regra padrão corta essa probabilidade em 0,5. Numa região do espaço em que um em cada três exemplos é raro, a estimativa honesta é 0,33, e o corte em 0,5 manda todos para “normal”. O modelo não está errado sobre as probabilidades. A regra de decisão é que não combina com o que você quer, que é encontrar os raros.</p>
+
+    <h3>Definição</h3>
+    <p>Chamo de <b>raro</b> o rótulo 1 e de <b>normal</b> o rótulo 0, com a classe rara como a positiva, como no capítulo 3. A prevalência é a fração de raros. Para separar treino e teste com pouca classe rara usa-se a divisão <b>estratificada</b>: o sorteio é feito dentro de cada classe, de modo que treino e teste fiquem com a mesma fração de raros. Sem isso, o sorteio pode deixar o teste com poucos raros e o recall deixa de significar alguma coisa. O teste fica com a proporção real e deve ficar assim durante o capítulo inteiro: tudo o que mexe nos dados ou na perda (pesos, cópias, descartes) acontece só no treino.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>O gerador <code>make_classification</code>, do scikit-learn, cria dados sintéticos: aqui são 3000 linhas com 6 atributos numéricos, 3 deles com informação sobre o rótulo, e a opção <code>weights</code> fixa a fração de cada classe. Nada é baixado, e a semente fixa faz o resultado se repetir.</p>
+<pre class="codigo" tabindex="0" aria-label="Criação do conjunto sintético com 5% de raros e divisão estratificada"><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.datasets <span class="k">import</span> make_classification
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> train_test_split
+
+<span class="c"># 3000 linhas e 6 atributos; 5% de classe rara (rótulo 1). Dados sintéticos, semente fixa.</span>
+X, y = make_classification(n_samples=<span class="n">3000</span>, n_features=<span class="n">6</span>, n_informative=<span class="n">3</span>, n_redundant=<span class="n">0</span>,
+                           n_clusters_per_class=<span class="n">1</span>, weights=[<span class="n">0.95</span>, <span class="n">0.05</span>], flip_y=<span class="n">0</span>,
+                           class_sep=<span class="n">1.0</span>, random_state=<span class="n">1</span>)
+<span class="c"># stratify=y mantém a mesma fração de raros no treino e no teste</span>
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=<span class="n">0.3</span>, stratify=y, random_state=<span class="n">0</span>)
+
+<span class="k">print</span>(<span class="s">"treino:"</span>, len(ytr), <span class="s">"linhas | raros:"</span>, ytr.sum(), <span class="s">"| fração:"</span>, ytr.mean())
+<span class="k">print</span>(<span class="s">"teste: "</span>, len(yte), <span class="s">"linhas | raros:"</span>, yte.sum(), <span class="s">"| fração:"</span>, yte.mean())</pre>
+<div class="saida" aria-label="Saída do código">treino: 2100 linhas | raros: 105 | fração: 0.05
+teste:  900 linhas | raros: 45 | fração: 0.05</div>
+    <p>Os 150 raros se dividiram em 105 no treino e 45 no teste, com 5% nos dois lados. Guarde o número 45. O teste tem poucos raros, então cada raro a mais ou a menos que o modelo acerta mexe no recall em 1/45, ou seja, 2,2 pontos percentuais. Todo número deste capítulo carrega essa incerteza. Agora a regressão logística do capítulo 3, sem tratamento nenhum:</p>
+<pre class="codigo" tabindex="0" aria-label="Regressão logística sem tratamento, matriz de confusão, recall e precisão"><span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+<span class="k">from</span> sklearn.metrics <span class="k">import</span> confusion_matrix, recall_score, precision_score
+
+sem_peso = LogisticRegression(max_iter=<span class="n">1000</span>).fit(Xtr, ytr)
+prev = sem_peso.predict(Xte)
+<span class="k">print</span>(confusion_matrix(yte, prev))
+<span class="k">print</span>(<span class="s">"acurácia"</span>, round(sem_peso.score(Xte, yte), <span class="n">3</span>), <span class="s">"| referência (sempre normal)"</span>, round(<span class="n">1</span> - yte.mean(), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"recall"</span>, round(recall_score(yte, prev), <span class="n">3</span>), <span class="s">"| precisão"</span>, round(precision_score(yte, prev), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">[[848   7]
+ [ 21  24]]
+acurácia 0.969 | referência (sempre normal) 0.95
+recall 0.533 | precisão 0.774</div>
+    <p>A acurácia, 0,969, passa da referência de 0,95 de quem nunca desconfia de nada. Mas a matriz mostra o resto: dos 45 raros, o modelo marcou 24 e deixou 21 passarem (recall 0,533), e dos 31 alarmes, 24 eram reais (precisão 0,774). Quase metade dos raros escapa com 96,9% de acurácia. A pista de por que está nas probabilidades:</p>
+<pre class="codigo" tabindex="0" aria-label="Probabilidade média prevista e quantos exemplos passam de cada corte">p = sem_peso.predict_proba(Xte)[:, <span class="n">1</span>]
+<span class="k">print</span>(<span class="s">"probabilidade média prevista:"</span>, round(p.mean(), <span class="n">4</span>), <span class="s">"| fração real de raros:"</span>, round(yte.mean(), <span class="n">4</span>))
+<span class="k">for</span> corte <span class="k">in</span> [<span class="n">0.5</span>, <span class="n">0.1</span>]:
+    <span class="k">print</span>(<span class="s">"corte"</span>, corte, <span class="s">"| raros acima:"</span>, (p[yte == <span class="n">1</span>] &gt;= corte).sum(), <span class="s">"de"</span>, yte.sum(),
+          <span class="s">"| normais acima:"</span>, (p[yte == <span class="n">0</span>] &gt;= corte).sum(), <span class="s">"de"</span>, (yte == <span class="n">0</span>).sum())</pre>
+<div class="saida" aria-label="Saída do código">probabilidade média prevista: 0.0487 | fração real de raros: 0.05
+corte 0.5 | raros acima: 24 de 45 | normais acima: 7 de 855
+corte 0.1 | raros acima: 39 de 45 | normais acima: 45 de 855</div>
+    <p>A probabilidade média prevista, 0,0487, é quase a fração real de raros (0,05): a média das probabilidades bate com a fração real. Ele só não atravessa a linha de 0,5 com facilidade, e apenas 24 dos 45 raros ficam em 0,5 ou mais. Se o corte descer para 0,1, passam 39 dos 45 raros, ao preço de 45 normais (de 855) passarem junto. O modelo ordena razoavelmente bem. O corte padrão é que está longe do que o problema pede.</p>
+
+    <h3>Código comentado</h3>
+    <p>Em <code>make_classification</code>, <code>weights=[0.95, 0.05]</code> pede 95% de uma classe e 5% da outra, e <code>flip_y=0</code> impede o gerador de trocar rótulos ao acaso, então os raros são exatamente 150. O <code>stratify=y</code> do <code>train_test_split</code> faz a divisão estratificada. A <code>confusion_matrix</code> tem o rótulo real nas linhas e a previsão nas colunas, então a linha de baixo é [raros que passaram, raros acertados]. O <code>predict_proba(Xte)[:, 1]</code> devolve a probabilidade da classe 1, a mesma que o capítulo 3 usou para a ROC.</p>
+
+    <h3>Erro comum</h3>
+    <p>Concluir que o modelo “não funciona para a classe rara” e trocar de algoritmo antes de olhar o corte. O mesmo modelo, sem retreinar, recupera 39 dos 45 raros só movendo o corte de 0,5 para 0,1. O segundo engano é comparar estratégias pela diferença de um ou dois raros no teste: com 45 raros isso é ruído, e por isso as comparações da seção 5.3 aparecem repetidas em 20 conjuntos diferentes.</p>
+
+    <div class="ponte"><p>O modelo ordena bem e o corte padrão decide mal para o seu objetivo. Há dois jeitos de corrigir isso já no treino, sem encostar no teste. O primeiro avisa o treino de que errar um raro custa mais do que errar um normal.</p></div>
+
+    <h2 id="s2"><span class="nsec">5.2</span>Pesos de classe: errar um raro custa mais</h2>
+    <p class="gancho">Se um erro num raro dói mais do que um erro num normal, como contar isso ao modelo?</p>
+
+    <h3>Intuição</h3>
+    <p>Treinar é minimizar uma soma de erros, um por exemplo. Com 1995 normais e 105 raros, 95% dessa soma vem de normais, e o modelo ganha muito mais acertando os normais do que arriscando algo nos raros. O <button type="button" class="termo" data-def="Peso de classe: número que multiplica o erro de cada exemplo de uma classe na hora de treinar. Um peso maior faz errar naquela classe custar mais.">peso de classe</button> multiplica o erro de cada exemplo por um número que depende da classe. Se um raro pesa 19 vezes mais que um normal, errar um raro passa a doer como errar 19 normais.</p>
+
+    <h3>Definição</h3>
+    <p>A perda ponderada é a soma, sobre os exemplos, de <code>peso · erro</code>. O scikit-learn aceita <code>class_weight="balanced"</code>, que dá à classe <code>c</code> o peso <code>n / (K · n_c)</code>, com <code>n</code> exemplos no total, <code>K</code> classes e <code>n_c</code> exemplos da classe. Com isso as classes ficam com o mesmo peso total: <code>n / K</code> cada uma. Também se pode passar um dicionário, como <code>{0: 1, 1: 19}</code>, para escolher os pesos à mão.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>O treino tem 2100 linhas, 1995 normais e 105 raros. Cada normal passa a valer <code>2100 / (2 · 1995) = 0,526</code> e cada raro <code>2100 / (2 · 105) = 10</code>.</p>
+<pre class="codigo" tabindex="0" aria-label="Pesos do balanced calculados à mão e com compute_class_weight">n = len(ytr)
+contagem = np.bincount(ytr)            <span class="c"># [normais, raros] no treino</span>
+peso = n / (<span class="n">2</span> * contagem)              <span class="c"># fórmula do "balanced" com 2 classes: n / (K * n_da_classe)</span>
+<span class="k">print</span>(<span class="s">"contagem:"</span>, contagem, <span class="s">"| pesos [normal, raro]:"</span>, peso.round(<span class="n">4</span>))
+<span class="k">print</span>(<span class="s">"peso total de cada classe:"</span>, (contagem * peso).round(<span class="n">1</span>))
+
+<span class="k">from</span> sklearn.utils.class_weight <span class="k">import</span> compute_class_weight
+<span class="k">print</span>(<span class="s">"compute_class_weight:"</span>, compute_class_weight(<span class="s">"balanced"</span>, classes=np.array([<span class="n">0</span>, <span class="n">1</span>]), y=ytr).round(<span class="n">4</span>))</pre>
+<div class="saida" aria-label="Saída do código">contagem: [1995  105] | pesos [normal, raro]: [ 0.5263 10.    ]
+peso total de cada classe: [1050. 1050.]
+compute_class_weight: [ 0.5263 10.    ]</div>
+    <figure class="fig" aria-labelledby="fig2">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 250" role="img" aria-label="Dois grupos de barras horizontais com o peso total de cada classe no treino. Sem peso: normais 1995, raros 105. Com class_weight balanced: normais 1050, raros 1050.">
+        <text class="t" x="8" y="18">Sem peso: cada linha vale 1</text>
+        <text class="t2" x="140" y="48" text-anchor="end">normais</text><rect x="150" y="30" width="400.0" height="26" rx="3" style="fill:var(--color-border-primary)"/><text class="t2" x="558" y="48">1995</text>
+        <text class="t2" x="140" y="82" text-anchor="end">raros</text><rect x="150" y="64" width="21.1" height="26" rx="3" style="fill:var(--color-accent-primary)"/><text class="t2" x="179.05263157894737" y="82">105</text>
+        <text class="t" x="8" y="126">Com balanced: normal vale 0,526 e raro vale 10</text>
+        <text class="t2" x="140" y="156" text-anchor="end">normais</text><rect x="150" y="138" width="210.5" height="26" rx="3" style="fill:var(--color-border-primary)"/><text class="t2" x="368.52631578947364" y="156">1050</text>
+        <text class="t2" x="140" y="190" text-anchor="end">raros</text><rect x="150" y="172" width="210.5" height="26" rx="3" style="fill:var(--color-accent-primary)"/><text class="t2" x="368.52631578947364" y="190">1050</text>
+        <text class="t2" x="8" y="232">Comprimento da barra = soma dos pesos das linhas da classe.</text>
+      </svg></div>
+      <figcaption id="fig2"><b>Fig. 2</b>O peso total de cada classe no treino de 2100 linhas. Sem peso, os raros somam 105 contra 1995. Com <code>balanced</code>, os dois lados somam 1050.</figcaption>
+    </figure>
+    <p>O que isso muda na decisão? Imagine uma região do espaço em que 30% dos exemplos são raros. Sem peso, a melhor estimativa é 0,30, abaixo de 0,5, e o modelo diz “normal”. Com peso, os raros da região somam <code>0,30 · 10 = 3,0</code> e os normais somam <code>0,70 · 0,526 = 0,368</code>, então a probabilidade vira <code>3,0 / (3,0 + 0,368) = 0,891</code>, bem acima de 0,5. A fronteira entre as duas respostas está onde <code>p · 10 = (1 − p) · 0,526</code>, isto é, <code>p = 0,526 / (0,526 + 10) = 0,05</code>, que é a fração de raros do treino.</p>
+<pre class="codigo" tabindex="0" aria-label="A probabilidade de uma região com 30% de raros depois do peso, e o limiar equivalente">w0, w1 = peso
+p_local = <span class="n">0.30</span>        <span class="c"># numa região do espaço, 30% dos exemplos são raros</span>
+p_pesado = w1 * p_local / (w1 * p_local + w0 * (<span class="n">1</span> - p_local))
+<span class="k">print</span>(<span class="s">"probabilidade com peso:"</span>, round(p_pesado, <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"limiar equivalente:"</span>, round(w0 / (w0 + w1), <span class="n">3</span>), <span class="s">"| fração de raros no treino:"</span>, round(ytr.mean(), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">probabilidade com peso: 0.891
+limiar equivalente: 0.05 | fração de raros no treino: 0.05</div>
+    <p>Em resumo: com pesos balanceados, a regra “corte em 0,5” passa a se comportar como “corte em 0,05 sobre a probabilidade sem peso”. Isso vale em linhas gerais, quando o modelo estima bem as probabilidades. Em outros modelos o peso também muda a forma como o modelo é ajustado, então é uma regra de bolso e não uma igualdade. Treinando de verdade:</p>
+<pre class="codigo" tabindex="0" aria-label="Regressão logística com class_weight balanced">com_peso = LogisticRegression(max_iter=<span class="n">1000</span>, class_weight=<span class="s">"balanced"</span>).fit(Xtr, ytr)
+prev_w = com_peso.predict(Xte)
+<span class="k">print</span>(confusion_matrix(yte, prev_w))
+<span class="k">print</span>(<span class="s">"recall"</span>, round(recall_score(yte, prev_w), <span class="n">3</span>), <span class="s">"| precisão"</span>, round(precision_score(yte, prev_w), <span class="n">3</span>))
+p_w = com_peso.predict_proba(Xte)[:, <span class="n">1</span>]
+<span class="k">print</span>(<span class="s">"probabilidade média com peso:"</span>, round(p_w.mean(), <span class="n">3</span>), <span class="s">"| fração real de raros:"</span>, round(yte.mean(), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">[[783  72]
+ [  3  42]]
+recall 0.933 | precisão 0.368
+probabilidade média com peso: 0.147 | fração real de raros: 0.05</div>
+    <p>O recall subiu de 0,533 para 0,933 (42 dos 45), e a precisão caiu de 0,774 para 0,368 (42 acertos em 114 alarmes). Os alarmes falsos passaram de 7 para 72. A probabilidade média prevista subiu para 0,147, quase três vezes a fração real de 0,05: as probabilidades do modelo com peso já não são frequências reais. Agora uma evidência de que o peso é parecido com mexer no corte (num teste só, com 45 raros): o modelo sem peso, mas cortando em 0,05.</p>
+<pre class="codigo" tabindex="0" aria-label="Modelo sem peso com corte igual à fração de raros">prev_lim = (p &gt;= ytr.mean()).astype(int)       <span class="c"># sem peso, mas cortando em 0,05 (a fração de raros do treino)</span>
+<span class="k">print</span>(confusion_matrix(yte, prev_lim))
+<span class="k">print</span>(<span class="s">"recall"</span>, round(recall_score(yte, prev_lim), <span class="n">3</span>), <span class="s">"| precisão"</span>, round(precision_score(yte, prev_lim), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"alarmes: com peso"</span>, prev_w.sum(), <span class="s">"| sem peso, corte 0,05:"</span>, prev_lim.sum())</pre>
+<div class="saida" aria-label="Saída do código">[[782  73]
+ [  4  41]]
+recall 0.911 | precisão 0.36
+alarmes: com peso 114 | sem peso, corte 0,05: 114</div>
+    <p>Os dois marcam 114 alarmes. O modelo sem peso com corte em 0,05 tem recall 0,911 e precisão 0,36; o modelo com peso, 0,933 e 0,368. A diferença é um raro (41 acertos contra 42) e um alarme a mais ou a menos. São quase o mesmo remédio com outra embalagem.</p>
+
+    <h3>Código comentado</h3>
+    <p>O <code>np.bincount(ytr)</code> conta quantos 0 e quantos 1 há no treino, e <code>n / (2 * contagem)</code> aplica a fórmula nas duas classes de uma vez. O <code>compute_class_weight("balanced", ...)</code> é a função do scikit-learn para a mesma conta e confirma o resultado. No <code>LogisticRegression</code>, a palavra <code>"balanced"</code> pede essa fórmula e um dicionário define os pesos à mão. O <code>DecisionTreeClassifier</code> e o <code>RandomForestClassifier</code> também têm <code>class_weight</code>. O <code>GradientBoostingClassifier</code>, do capítulo 4, não tem, mas o seu <code>fit</code> aceita <code>sample_weight</code>, um peso por linha, que dá para montar a partir da classe de cada linha.</p>
+
+    <h3>Erro comum</h3>
+    <p>Três cuidados. Primeiro, usar a probabilidade de um modelo com peso como se fosse a frequência real: ela veio inflada, 0,147 de média contra 0,05 de verdade, e quem precisa de uma probabilidade confiável (para calcular um custo esperado, por exemplo) deve recalibrar ou usar o modelo sem peso. Segundo, esperar que o peso crie informação: ele basicamente move o ponto de trabalho entre recall e precisão, e aqui o recall subiu 40 pontos percentuais enquanto a precisão caiu mais de 40. Terceiro, achar que <code>{0: 1, 1: 19}</code> e <code>"balanced"</code> são a mesma coisa porque a razão entre os pesos é a mesma:</p>
+<pre class="codigo" tabindex="0" aria-label="Dicionário de pesos com a mesma razão do balanced e o efeito da regularização">com_dict = LogisticRegression(max_iter=<span class="n">1000</span>, class_weight={<span class="n">0</span>: <span class="n">1</span>, <span class="n">1</span>: <span class="n">19</span>}).fit(Xtr, ytr)
+<span class="k">print</span>(<span class="s">"razão dos pesos do balanced:"</span>, round(w1 / w0, <span class="n">3</span>))
+<span class="k">print</span>(confusion_matrix(yte, com_dict.predict(Xte)))
+<span class="k">for</span> C <span class="k">in</span> [<span class="n">1</span>, <span class="n">1_000_000</span>]:       <span class="c"># C é a força inversa da regularização; C enorme quase a desliga</span>
+    m1 = LogisticRegression(max_iter=<span class="n">5000</span>, C=C, class_weight=<span class="s">"balanced"</span>).fit(Xtr, ytr)
+    m2 = LogisticRegression(max_iter=<span class="n">5000</span>, C=C, class_weight={<span class="n">0</span>: <span class="n">1</span>, <span class="n">1</span>: <span class="n">19</span>}).fit(Xtr, ytr)
+    <span class="k">print</span>(<span class="s">f"C = {C} | maior diferença entre os coeficientes dos dois modelos: {np.abs(m1.coef_ - m2.coef_).max():.2g}"</span>)</pre>
+<div class="saida" aria-label="Saída do código">razão dos pesos do balanced: 19.0
+[[782  73]
+ [  3  42]]
+C = 1 | maior diferença entre os coeficientes dos dois modelos: 0.069
+C = 1000000 | maior diferença entre os coeficientes dos dois modelos: 8.1e-08</div>
+    <p>A razão é 19 nos dois, mas o resultado muda em um exemplo (73 alarmes falsos em vez de 72). Com a regularização quase desligada (<code>C = 1000000</code>) os coeficientes ficam iguais até a sétima casa decimal. Então a diferença vem da regularização: ela não é multiplicada pelo peso, e por isso a escala dos pesos muda o equilíbrio entre a perda e a regularização.</p>
+
+    <section class="experimento" data-ex="ia-5-1" data-pacotes="scikit-learn" aria-labelledby="exp1">
+      <header>
+        <div class="rotulo">Experimento 5.1</div>
+        <h3 id="exp1">A conta do peso à mão</h3>
+      </header>
+      <div class="enunciado"><p>Um treino tem 1000 linhas, 40 raras (rótulo 1) e 960 normais, guardadas em <code>y</code>. Calcule os pesos do <code>balanced</code> à mão: <code>peso_raro</code> e <code>peso_normal</code>, com a fórmula <code>n / (2 · n_da_classe)</code>. Numa região em que 25% dos exemplos são raros (<code>p_local = 0.25</code>), calcule a probabilidade depois do peso, <code>p_pesado</code>. Por fim calcule <code>limiar_equiv</code>, o valor de <code>p</code> a partir do qual a probabilidade pesada passa de 0,5. Compare com a fração de raros de <code>y</code>.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+
+y = np.r_[np.ones(40, dtype=int), np.zeros(960, dtype=int)]
+</script>
+      <script type="text/plain" class="py-inicial">
+n = len(y)
+n_raros = None      # quantos raros há em y
+n_normais = None    # quantos normais há em y
+
+peso_raro = None    # n / (2 * n_raros)
+peso_normal = None  # n / (2 * n_normais)
+
+p_local = 0.25
+p_pesado = None     # w1*p / (w1*p + w0*(1 - p)), com w1 = peso do raro e w0 = peso do normal
+limiar_equiv = None # w0 / (w0 + w1)
+
+print(peso_raro, peso_normal)
+print(p_pesado, limiar_equiv)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(peso_raro is not None and peso_normal is not None, "Calcule peso_raro e peso_normal com n / (2 * quantidade_da_classe). Conte as classes com y.sum() e len(y) - y.sum().")
+verificar(abs(peso_raro - 12.5) < 1e-6, "O peso do raro deveria ser 1000 / (2 * 40) = 12,5.")
+verificar(abs(peso_normal - 1000 / 1920) < 1e-6, "O peso do normal deveria ser 1000 / (2 * 960), cerca de 0,5208.")
+verificar(p_pesado is not None, "Calcule p_pesado com w1*p / (w1*p + w0*(1 - p)).")
+verificar(abs(p_pesado - 0.8889) < 0.001, "Com p = 0,25: 12,5 * 0,25 = 3,125 e 0,5208 * 0,75 = 0,3906, então p_pesado = 3,125 / 3,5156 = 0,889.")
+verificar(limiar_equiv is not None, "Calcule limiar_equiv = w0 / (w0 + w1).")
+verificar(abs(limiar_equiv - 0.04) < 1e-6, "O limiar equivalente deveria ser 0,04, igual à fração de raros de y (40 de 1000).")
+</script>
+      <script type="text/plain" class="py-solucao">
+n = len(y)
+n_raros = y.sum()
+n_normais = n - n_raros
+
+peso_raro = n / (2 * n_raros)
+peso_normal = n / (2 * n_normais)
+
+p_local = 0.25
+p_pesado = peso_raro * p_local / (peso_raro * p_local + peso_normal * (1 - p_local))
+limiar_equiv = peso_normal / (peso_normal + peso_raro)
+
+print(peso_raro, peso_normal)
+print(p_pesado, limiar_equiv)
+print("fração de raros:", y.mean())
+</script>
+      <template class="dica"><p>Os raros são <code>y.sum()</code> (os 1 somam 1 cada) e os normais são <code>n - n_raros</code>. Cada peso é <code>n / (2 * quantidade_da_classe)</code>.</p></template>
+      <template class="dica"><p><code>p_pesado = w1*p / (w1*p + w0*(1 - p))</code>, com <code>w1 = peso_raro</code> e <code>w0 = peso_normal</code>. O limiar é a fração <code>w0 / (w0 + w1)</code> e deve dar o mesmo número que <code>y.mean()</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Os pesos mexem na perda e deixam os dados como estão. O outro caminho faz o contrário: mexe nos dados, copiando raros ou jogando normais fora, e é aí que mora a armadilha mais comum do assunto.</p></div>
+
+    <h2 id="s3"><span class="nsec">5.3</span>Reamostrar do jeito certo</h2>
+    <p class="gancho">Se o problema é ter poucos raros, por que não simplesmente ter mais?</p>
+
+    <h3>Intuição</h3>
+    <p>A <button type="button" class="termo" data-def="Sobreamostragem (aleatória): sortear exemplos da classe rara, com reposição, e acrescentar as cópias ao treino até a classe ficar do tamanho da outra.">sobreamostragem</button> fotocopia raros: sorteia raros do treino, com reposição, até igualar o número de normais. A <button type="button" class="termo" data-def="Subamostragem (aleatória): sortear exemplos da classe comum, sem reposição, e ficar só com eles, até a classe ficar do tamanho da rara. Os exemplos descartados saem do treino.">subamostragem</button> faz o oposto: descarta normais ao acaso até igualar o número de raros. Em qualquer dos dois casos o modelo passa a ver as classes meio a meio. Nenhuma das duas cria informação nova: a primeira repete o que já havia e a segunda joga fora uma parte do que havia. O que muda é quanto cada classe pesa na soma de erros, como no peso de classe.</p>
+
+    <h3>Definição</h3>
+    <p>Existem técnicas que fabricam raros “novos”, e uma delas tem o nome de SMOTE. Este capítulo não usa nenhuma delas, só as duas versões aleatórias, que o <code>resample</code> do scikit-learn faz. O ponto central é a ordem das operações, na Fig. 3: <b>primeiro separa-se o teste, depois reamostra-se apenas o treino</b>. O teste continua com os 5% de raros e sem nenhuma cópia, porque ele existe para simular o mundo real, onde os raros continuam raros. Quando se reamostra antes de separar, ocorre um <button type="button" class="termo" data-def="Vazamento de dados: quando informação do teste entra no treino, direta ou indiretamente. A medida de desempenho sai melhor do que o modelo realmente consegue em dados novos.">vazamento</button>: cópias do mesmo exemplo caem dos dois lados e o teste deixa de medir generalização.</p>
+
+    <figure class="fig" aria-labelledby="fig3">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 230" role="img" aria-label="Duas linhas de quatro caixas. Ordem certa: separar treino e teste, reamostrar só o treino, treinar, medir no teste intacto. Ordem errada: reamostrar tudo, separar treino e teste, treinar, medir num teste com cópias.">
+        <text class="t2" x="8" y="18">Ordem certa</text>
+        <rect class="caixa dest" x="8" y="28" width="140" height="52" rx="6"/><text class="t" x="78" y="50" text-anchor="middle">separar</text><text class="t2" x="78" y="68" text-anchor="middle">treino e teste</text><rect class="caixa" x="170" y="28" width="140" height="52" rx="6"/><text class="t" x="240" y="50" text-anchor="middle">reamostrar</text><text class="t2" x="240" y="68" text-anchor="middle">só o treino</text><rect class="caixa" x="332" y="28" width="140" height="52" rx="6"/><text class="t" x="402" y="50" text-anchor="middle">treinar</text><text class="t2" x="402" y="68" text-anchor="middle">no treino reamostrado</text><rect class="caixa dest" x="494" y="28" width="140" height="52" rx="6"/><text class="t" x="564" y="50" text-anchor="middle">medir</text><text class="t2" x="564" y="68" text-anchor="middle">no teste intacto</text>
+        <path class="seta" d="M150 54H168"/><path class="seta" d="M312 54H330"/><path class="seta" d="M474 54H492"/>
+        <text class="t2" x="8" y="126">Ordem errada</text>
+        <rect class="caixa erro" x="8" y="136" width="140" height="52" rx="6" style="stroke:var(--color-status-error)"/><text class="t" x="78" y="158" text-anchor="middle">reamostrar</text><text class="t2" x="78" y="176" text-anchor="middle">o conjunto todo</text><rect class="caixa" x="170" y="136" width="140" height="52" rx="6"/><text class="t" x="240" y="158" text-anchor="middle">separar</text><text class="t2" x="240" y="176" text-anchor="middle">treino e teste</text><rect class="caixa" x="332" y="136" width="140" height="52" rx="6"/><text class="t" x="402" y="158" text-anchor="middle">treinar</text><text class="t2" x="402" y="176" text-anchor="middle">vê cópias do teste</text><rect class="caixa erro" x="494" y="136" width="140" height="52" rx="6" style="stroke:var(--color-status-error)"/><text class="t" x="564" y="158" text-anchor="middle">medir</text><text class="t2" x="564" y="176" text-anchor="middle">num teste com cópias</text>
+        <path class="seta" d="M150 162H168"/><path class="seta" d="M312 162H330"/><path class="seta" d="M474 162H492"/>
+        <text class="t2" x="8" y="214">Na ordem errada, a mesma linha pode estar no treino e no teste.</text>
+      </svg></div>
+      <figcaption id="fig3"><b>Fig. 3</b>A ordem das operações. O teste existe para simular o mundo real: ele é separado antes e não recebe nenhuma cópia.</figcaption>
+    </figure>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Começando pelo jeito certo: o teste (<code>Xte</code>) já está separado, e só o treino é reamostrado.</p>
+<pre class="codigo" tabindex="0" aria-label="Sobreamostrar e subamostrar apenas o treino com resample"><span class="k">from</span> sklearn.utils <span class="k">import</span> resample
+
+Xn, Xp = Xtr[ytr == <span class="n">0</span>], Xtr[ytr == <span class="n">1</span>]           <span class="c"># normais e raros, só do TREINO</span>
+<span class="c"># sobreamostrar: sorteia raros COM reposição até igualar o número de normais</span>
+Xp_mais = resample(Xp, replace=<span class="k">True</span>, n_samples=len(Xn), random_state=<span class="n">0</span>)
+Xs = np.vstack([Xn, Xp_mais])
+ys = np.r_[np.zeros(len(Xn), dtype=int), np.ones(len(Xn), dtype=int)]
+<span class="k">print</span>(<span class="s">"sobreamostrado:"</span>, Xs.shape, <span class="s">"| raros:"</span>, ys.sum(), <span class="s">"| raros distintos:"</span>, len(np.unique(Xp_mais, axis=<span class="n">0</span>)))
+
+<span class="c"># subamostrar: sorteia normais SEM reposição até igualar o número de raros</span>
+Xn_menos = resample(Xn, replace=<span class="k">False</span>, n_samples=len(Xp), random_state=<span class="n">0</span>)
+Xd = np.vstack([Xn_menos, Xp])
+yd = np.r_[np.zeros(len(Xp), dtype=int), np.ones(len(Xp), dtype=int)]
+<span class="k">print</span>(<span class="s">"subamostrado:"</span>, Xd.shape, <span class="s">"| raros:"</span>, yd.sum())
+<span class="k">print</span>(<span class="s">"o teste não mudou:"</span>, len(yte), <span class="s">"linhas,"</span>, yte.sum(), <span class="s">"raros"</span>)</pre>
+<div class="saida" aria-label="Saída do código">sobreamostrado: (3990, 6) | raros: 1995 | raros distintos: 105
+subamostrado: (210, 6) | raros: 105
+o teste não mudou: 900 linhas, 45 raros</div>
+    <p>O treino sobreamostrado tem 3990 linhas (1995 de cada classe), mas só 105 raros distintos: cada um foi copiado cerca de 19 vezes (1995 / 105). O subamostrado tem 210 linhas e descartou 1890 dos 1995 normais. O teste continua com 900 linhas e 45 raros. Os quatro modelos no mesmo teste:</p>
+<pre class="codigo" tabindex="0" aria-label="Quatro estratégias comparadas no mesmo teste">sobre = LogisticRegression(max_iter=<span class="n">1000</span>).fit(Xs, ys)
+sub = LogisticRegression(max_iter=<span class="n">1000</span>).fit(Xd, yd)
+<span class="k">for</span> nome, mod <span class="k">in</span> [(<span class="s">"sem peso"</span>, sem_peso), (<span class="s">"class_weight"</span>, com_peso), (<span class="s">"sobreamostrar"</span>, sobre), (<span class="s">"subamostrar"</span>, sub)]:
+    pr = mod.predict(Xte)
+    <span class="k">print</span>(<span class="s">f"{nome:13s} | recall {recall_score(yte, pr):.3f} | precisão {precision_score(yte, pr):.3f} | alarmes {pr.sum()}"</span>)</pre>
+<div class="saida" aria-label="Saída do código">sem peso      | recall 0.533 | precisão 0.774 | alarmes 31
+class_weight  | recall 0.933 | precisão 0.368 | alarmes 114
+sobreamostrar | recall 0.933 | precisão 0.365 | alarmes 115
+subamostrar   | recall 0.911 | precisão 0.390 | alarmes 105</div>
+    <p>Os três tratamentos movem o modelo para o lado do recall (0,911 a 0,933 contra 0,533) e pagam em precisão (0,365 a 0,390 contra 0,774). Sobreamostrar e <code>class_weight</code> dão quase o mesmo modelo, o que faz sentido: copiar cada raro 19 vezes e multiplicar o erro dele por 19 dizem quase a mesma coisa à regressão logística. Mas isso é um único teste com 45 raros, e um raro vale 2,2 pontos. Para não depender dessa divisão, repito tudo em 20 conjuntos diferentes, cada um gerado com outra semente (de 100 a 119, sem relação com a semente 1 do conjunto principal):</p>
+<pre class="codigo" tabindex="0" aria-label="As quatro estratégias repetidas em 20 conjuntos"><span class="k">def</span> gerar(semente):
+    Xa, ya = make_classification(n_samples=<span class="n">3000</span>, n_features=<span class="n">6</span>, n_informative=<span class="n">3</span>, n_redundant=<span class="n">0</span>,
+                                 n_clusters_per_class=<span class="n">1</span>, weights=[<span class="n">0.95</span>, <span class="n">0.05</span>], flip_y=<span class="n">0</span>,
+                                 class_sep=<span class="n">1.0</span>, random_state=semente)
+    <span class="k">return</span> train_test_split(Xa, ya, test_size=<span class="n">0.3</span>, stratify=ya, random_state=<span class="n">0</span>)
+
+<span class="k">def</span> quatro_modelos(Xa, ya):
+    Xn_, Xp_ = Xa[ya == <span class="n">0</span>], Xa[ya == <span class="n">1</span>]
+    mais = resample(Xp_, replace=<span class="k">True</span>, n_samples=len(Xn_), random_state=<span class="n">0</span>)
+    menos = resample(Xn_, replace=<span class="k">False</span>, n_samples=len(Xp_), random_state=<span class="n">0</span>)
+    <span class="k">return</span> {
+        <span class="s">"sem peso"</span>: LogisticRegression(max_iter=<span class="n">1000</span>).fit(Xa, ya),
+        <span class="s">"class_weight"</span>: LogisticRegression(max_iter=<span class="n">1000</span>, class_weight=<span class="s">"balanced"</span>).fit(Xa, ya),
+        <span class="s">"sobreamostrar"</span>: LogisticRegression(max_iter=<span class="n">1000</span>).fit(np.vstack([Xn_, mais]), np.r_[np.zeros(len(Xn_)), np.ones(len(Xn_))]),
+        <span class="s">"subamostrar"</span>: LogisticRegression(max_iter=<span class="n">1000</span>).fit(np.vstack([menos, Xp_]), np.r_[np.zeros(len(Xp_)), np.ones(len(Xp_))]),
+    }
+
+placar = {}
+<span class="k">for</span> semente <span class="k">in</span> range(<span class="n">100</span>, <span class="n">120</span>):                 <span class="c"># 20 conjuntos diferentes, cada um com 45 raros no teste</span>
+    Xa, Xb, ya, yb = gerar(semente)
+    <span class="k">for</span> nome, mod <span class="k">in</span> quatro_modelos(Xa, ya).items():
+        pr = mod.predict(Xb)
+        placar.setdefault(nome, []).append((recall_score(yb, pr), precision_score(yb, pr)))
+<span class="k">for</span> nome, v <span class="k">in</span> placar.items():
+    v = np.array(v)
+    <span class="k">print</span>(<span class="s">f"{nome:13s} | recall médio {v[:, 0].mean():.3f} (desvio {v[:, 0].std():.3f}) | precisão média {v[:, 1].mean():.3f} (desvio {v[:, 1].std():.3f})"</span>)</pre>
+<div class="saida" aria-label="Saída do código">sem peso      | recall médio 0.751 (desvio 0.237) | precisão média 0.896 (desvio 0.150)
+class_weight  | recall médio 0.940 (desvio 0.074) | precisão média 0.627 (desvio 0.288)
+sobreamostrar | recall médio 0.942 (desvio 0.071) | precisão média 0.629 (desvio 0.291)
+subamostrar   | recall médio 0.940 (desvio 0.070) | precisão média 0.583 (desvio 0.271)</div>
+    <p>A história se repete: sem tratamento, o recall médio é 0,751 e a precisão 0,896; com qualquer tratamento, o recall vai a 0,94 e a precisão cai para algo entre 0,583 e 0,629. Os desvios entre conjuntos são grandes (0,27 a 0,29 na precisão) e a diferença entre as três estratégias é pequena (0,04), então eu não tiraria conclusão de qual é melhor só com esses números; para isso seria preciso comparar as diferenças pareadas, conjunto por conjunto. A diferença que se vê de verdade é entre tratar e não tratar. Dá para dizer também que a subamostragem tem um preço próprio, o de jogar fora 95% dos normais, e que a sobreamostragem mantém todos os dados. Qual das duas serve depende do tamanho do conjunto e do modelo, e se decide medindo, no mesmo estilo.</p>
+    <p>Agora a armadilha. Vou sobreamostrar o conjunto <b>inteiro</b>, depois separar treino e teste, e comparar com o jeito certo. Uso uma árvore sem limite de profundidade (capítulo 4), que decora o que vê, e a regressão logística, que quase não decora:</p>
+<pre class="codigo" tabindex="0" aria-label="Reamostrar antes de separar infla o teste; separar antes mantém o teste honesto"><span class="k">from</span> sklearn.tree <span class="k">import</span> DecisionTreeClassifier
+
+<span class="k">def</span> sobreamostrar(X_, y_, semente=<span class="n">0</span>):
+    Xp_, Xn_ = X_[y_ == <span class="n">1</span>], X_[y_ == <span class="n">0</span>]
+    mais = resample(Xp_, replace=<span class="k">True</span>, n_samples=len(Xn_), random_state=semente)
+    <span class="k">return</span> np.vstack([Xn_, mais]), np.r_[np.zeros(len(Xn_), dtype=int), np.ones(len(Xn_), dtype=int)]
+
+<span class="k">def</span> medir(rotulo, Xa, ya, Xb, yb):
+    <span class="k">for</span> nome, mod <span class="k">in</span> [(<span class="s">"árvore"</span>, DecisionTreeClassifier(random_state=<span class="n">0</span>)), (<span class="s">"logística"</span>, LogisticRegression(max_iter=<span class="n">1000</span>))]:
+        pr = mod.fit(Xa, ya).predict(Xb)
+        <span class="k">print</span>(<span class="s">f"{rotulo} | {nome:9s} | teste {len(yb)} linhas, {yb.sum()} raros | recall {recall_score(yb, pr):.3f} | precisão {precision_score(yb, pr):.3f}"</span>)
+
+<span class="c"># ERRADO: reamostrar o conjunto inteiro e só depois separar treino e teste</span>
+Xbal, ybal = sobreamostrar(X, y)
+Xa, Xb, ya, yb = train_test_split(Xbal, ybal, test_size=<span class="n">0.3</span>, stratify=ybal, random_state=<span class="n">0</span>)
+medir(<span class="s">"ERRADO"</span>, Xa, ya, Xb, yb)
+vistos = {tuple(linha) <span class="k">for</span> linha <span class="k">in</span> Xa[ya == <span class="n">1</span>]}
+<span class="k">print</span>(<span class="s">"ERRADO | raros do teste que são cópia exata de um raro do treino:"</span>, sum(tuple(l) <span class="k">in</span> vistos <span class="k">for</span> l <span class="k">in</span> Xb[yb == <span class="n">1</span>]), <span class="s">"de"</span>, yb.sum())
+
+<span class="c"># CERTO: separar primeiro (já feito lá em cima) e reamostrar só o treino</span>
+Xs2, ys2 = sobreamostrar(Xtr, ytr)
+medir(<span class="s">"CERTO "</span>, Xs2, ys2, Xte, yte)
+vistos2 = {tuple(linha) <span class="k">for</span> linha <span class="k">in</span> Xs2[ys2 == <span class="n">1</span>]}
+<span class="k">print</span>(<span class="s">"CERTO  | raros do teste que são cópia de um raro do treino:"</span>, sum(tuple(l) <span class="k">in</span> vistos2 <span class="k">for</span> l <span class="k">in</span> Xte[yte == <span class="n">1</span>]), <span class="s">"de"</span>, yte.sum())</pre>
+<div class="saida" aria-label="Saída do código">ERRADO | árvore    | teste 1710 linhas, 855 raros | recall 1.000 | precisão 0.976
+ERRADO | logística | teste 1710 linhas, 855 raros | recall 0.945 | precisão 0.906
+ERRADO | raros do teste que são cópia exata de um raro do treino: 855 de 855
+CERTO  | árvore    | teste 900 linhas, 45 raros | recall 0.711 | precisão 0.604
+CERTO  | logística | teste 900 linhas, 45 raros | recall 0.933 | precisão 0.365
+CERTO  | raros do teste que são cópia de um raro do treino: 0 de 45</div>
+    <p>A árvore dá recall 1,000 e precisão 0,976 na ordem errada, e 0,711 e 0,604 na ordem certa. O motivo está na linha de baixo do bloco errado: os 855 raros do teste são cópia exata de algum raro do treino, porque os 150 raros originais viraram 2850 linhas antes da divisão. A árvore acerta tudo porque já viu cada um deles. A regressão logística quase não decora, e por isso o recall dela mal muda (0,945 contra 0,933). A precisão dela, porém, pula de 0,365 para 0,906, e essa é uma segunda distorção: o teste da ordem errada tem metade de raros (855 de 1710), e com metade de raros quase todo alarme acerta. Uma precisão medida num teste meio a meio não responde à pergunta de quem vai usar o modelo, que é quantos alarmes vão ser reais quando os raros forem 5%.</p>
+
+    <h3>Código comentado</h3>
+    <p>O <code>resample(Xp, replace=True, n_samples=len(Xn), random_state=0)</code> sorteia <code>n_samples</code> linhas de <code>Xp</code> com reposição, e por isso há repetições; com <code>replace=False</code> o sorteio é sem reposição, então só funciona para pedir menos linhas do que existem. O <code>np.vstack</code> empilha as tabelas e o <code>np.r_</code> monta o vetor de rótulos, zeros para os normais e uns para os raros. Na contagem de cópias, <code>tuple(linha)</code> transforma cada linha em algo que cabe num conjunto; como a cópia é idêntica à linha original, a igualdade exata dos números funciona. A função <code>quatro_modelos</code> do bloco das 20 sementes refaz as mesmas quatro estratégias dentro de um laço, sempre com o teste intocado de cada conjunto.</p>
+
+    <h3>Erro comum</h3>
+    <p>Reamostrar antes de separar, que é o que o bloco mostrou. O erro tem outra forma, mais sutil: reamostrar dentro de um passo que depois alimenta um teste de rótulo balanceado e relatar a precisão desse teste como se fosse a do mundo real. Também é erro comparar o recall de um teste reamostrado com o de um modelo medido no teste original. O teste é sempre o conjunto original, com a proporção original, em qualquer estratégia.</p>
+
+    <section class="experimento" data-ex="ia-5-2" data-pacotes="scikit-learn" aria-labelledby="exp2">
+      <header>
+        <div class="rotulo">Experimento 5.2</div>
+        <h3 id="exp2">Sem tratamento, com peso e com cópias</h3>
+      </header>
+      <div class="enunciado"><p>Os dados são os do texto, já separados em <code>Xtr</code>, <code>Xte</code>, <code>ytr</code> e <code>yte</code>. Treine três regressões logísticas com <code>max_iter=1000</code>: <code>m_sem</code> (sem tratamento), <code>m_peso</code> (com <code>class_weight="balanced"</code>) e <code>m_sobre</code>, treinada num treino sobreamostrado. Para a terceira, sorteie só os raros do <b>treino</b> com <code>resample(..., replace=True, n_samples=número_de_normais, random_state=0)</code>, junte com os normais em <code>Xs</code> e <code>ys</code>. Guarde em <code>placar</code> um dicionário com as chaves <code>"sem"</code>, <code>"peso"</code> e <code>"sobre"</code>, cada uma com a tupla <code>(recall, precisão)</code> medida no <b>teste</b>.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import recall_score, precision_score
+from sklearn.utils import resample
+
+X, y = make_classification(n_samples=3000, n_features=6, n_informative=3, n_redundant=0,
+                           n_clusters_per_class=1, weights=[0.95, 0.05], flip_y=0,
+                           class_sep=1.0, random_state=1)
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.3, stratify=y, random_state=0)
+</script>
+      <script type="text/plain" class="py-inicial">
+m_sem = None
+m_peso = None
+
+# sobreamostragem, só no treino
+Xs = None   # normais do treino + raros sorteados com reposição
+ys = None
+m_sobre = None
+
+placar = {}   # placar["sem"] = (recall, precisão), e o mesmo para "peso" e "sobre"
+print(placar)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(m_sem is not None and m_peso is not None, "Treine m_sem e m_peso: LogisticRegression(max_iter=1000) e, no segundo, também class_weight=\"balanced\".")
+verificar(Xs is not None and ys is not None and m_sobre is not None, "Monte Xs e ys sobreamostrando só o treino e treine m_sobre com eles.")
+verificar(len(ys) == 3990 and int(ys.sum()) == 1995, "Depois de sobreamostrar, o treino deveria ter 1995 normais e 1995 raros (3990 linhas). Sorteie n_samples = número de normais, com replace=True.")
+verificar(set(placar.keys()) == {"sem", "peso", "sobre"}, "O dicionário placar precisa das chaves \"sem\", \"peso\" e \"sobre\".")
+r_sem, p_sem = placar["sem"]
+r_peso, p_peso = placar["peso"]
+r_sobre, p_sobre = placar["sobre"]
+verificar(abs(r_sem - 24 / 45) < 0.01 and abs(p_sem - 24 / 31) < 0.01, "Sem tratamento, o recall deveria ser 24/45 (0,533) e a precisão 24/31 (0,774), medidos no teste.")
+verificar(abs(r_peso - 42 / 45) < 0.01 and abs(p_peso - 42 / 114) < 0.01, "Com class_weight, o recall deveria ser 42/45 (0,933) e a precisão 42/114 (0,368), medidos no teste.")
+verificar(abs(r_sobre - 42 / 45) < 0.01 and abs(p_sobre - 42 / 115) < 0.01, "Com sobreamostragem só do treino, o recall deveria ser 42/45 (0,933) e a precisão 42/115 (0,365). Confira se mediu no teste original.")
+verificar(r_peso > r_sem and p_peso < p_sem, "O tratamento deveria subir o recall e baixar a precisão.")
+</script>
+      <script type="text/plain" class="py-solucao">
+m_sem = LogisticRegression(max_iter=1000).fit(Xtr, ytr)
+m_peso = LogisticRegression(max_iter=1000, class_weight="balanced").fit(Xtr, ytr)
+
+Xn, Xp = Xtr[ytr == 0], Xtr[ytr == 1]
+Xp_mais = resample(Xp, replace=True, n_samples=len(Xn), random_state=0)
+Xs = np.vstack([Xn, Xp_mais])
+ys = np.r_[np.zeros(len(Xn), dtype=int), np.ones(len(Xn), dtype=int)]
+m_sobre = LogisticRegression(max_iter=1000).fit(Xs, ys)
+
+placar = {}
+for nome, mod in [("sem", m_sem), ("peso", m_peso), ("sobre", m_sobre)]:
+    pr = mod.predict(Xte)
+    placar[nome] = (recall_score(yte, pr), precision_score(yte, pr))
+print(placar)
+</script>
+      <template class="dica"><p>Os normais do treino são <code>Xtr[ytr == 0]</code> e os raros <code>Xtr[ytr == 1]</code>. Sorteie os raros com <code>resample(Xp, replace=True, n_samples=len(Xn), random_state=0)</code> e empilhe com <code>np.vstack</code>.</p></template>
+      <template class="dica"><p>Os rótulos de <code>Xs</code> são <code>len(Xn)</code> zeros seguidos de <code>len(Xn)</code> uns: <code>np.r_[np.zeros(len(Xn), dtype=int), np.ones(len(Xn), dtype=int)]</code>. Para medir, use <code>mod.predict(Xte)</code> e compare com <code>yte</code>, não com <code>ys</code>.</p></template>
+    </section>
+
+    <section class="experimento" data-ex="ia-5-3" data-pacotes="scikit-learn" aria-labelledby="exp3">
+      <header>
+        <div class="rotulo">Experimento 5.3</div>
+        <h3 id="exp3">Pegue o vazamento</h3>
+      </header>
+      <div class="enunciado"><p>Os dados do texto estão em <code>X</code>, <code>y</code> (inteiros) e em <code>Xtr</code>, <code>Xte</code>, <code>ytr</code>, <code>yte</code> (já separados). A função <code>sobreamostrar(X, y)</code> devolve a versão com raros copiados até igualar os normais. Na ordem errada, sobreamostre <code>X</code> e <code>y</code> <b>inteiros</b>, separe em treino e teste (30%, <code>stratify</code>, <code>random_state=0</code>), treine uma <code>DecisionTreeClassifier(random_state=0)</code> e guarde o recall no teste em <code>rec_errado</code>. Guarde em <code>repetidos</code> quantos raros desse teste são cópia exata de um raro do treino. Na ordem certa, sobreamostre só <code>Xtr</code>, treine a mesma árvore e guarde o recall no <code>Xte</code> original em <code>rec_certo</code>.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import recall_score
+from sklearn.utils import resample
+
+X, y = make_classification(n_samples=3000, n_features=6, n_informative=3, n_redundant=0,
+                           n_clusters_per_class=1, weights=[0.95, 0.05], flip_y=0,
+                           class_sep=1.0, random_state=1)
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.3, stratify=y, random_state=0)
+
+def sobreamostrar(X_, y_, semente=0):
+    Xp_, Xn_ = X_[y_ == 1], X_[y_ == 0]
+    mais = resample(Xp_, replace=True, n_samples=len(Xn_), random_state=semente)
+    return np.vstack([Xn_, mais]), np.r_[np.zeros(len(Xn_), dtype=int), np.ones(len(Xn_), dtype=int)]
+</script>
+      <script type="text/plain" class="py-inicial">
+# ordem ERRADA: reamostrar tudo e só depois separar
+Xbal, ybal = sobreamostrar(X, y)
+rec_errado = None
+repetidos = None
+
+# ordem CERTA: Xtr, Xte, ytr e yte já foram separados antes
+rec_certo = None
+
+print(rec_errado, repetidos, rec_certo)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(rec_errado is not None and repetidos is not None, "Calcule rec_errado e repetidos: separe Xbal e ybal em treino e teste, treine a árvore e meça o recall no teste.")
+verificar(rec_errado > 0.99, "Na ordem errada o recall da árvore deveria ficar perto de 1,0. Confira se separou Xbal e ybal (e não X e y) com test_size=0.3, stratify=ybal e random_state=0.")
+verificar(repetidos == 855, "Todos os 855 raros do teste deveriam ser cópia de algum raro do treino. Monte um conjunto de tuplas dos raros do treino e conte os raros do teste que estão nele.")
+verificar(rec_certo is not None, "Calcule rec_certo: sobreamostre só Xtr e ytr, treine a árvore e meça o recall no Xte e yte originais.")
+verificar(abs(rec_certo - 32 / 45) < 0.01, "Na ordem certa o recall da árvore deveria ser 32/45 (0,711). Confira se mediu no Xte e yte originais, sem cópias.")
+</script>
+      <script type="text/plain" class="py-solucao">
+Xbal, ybal = sobreamostrar(X, y)
+Xa, Xb, ya, yb = train_test_split(Xbal, ybal, test_size=0.3, stratify=ybal, random_state=0)
+arv = DecisionTreeClassifier(random_state=0).fit(Xa, ya)
+rec_errado = recall_score(yb, arv.predict(Xb))
+vistos = {tuple(linha) for linha in Xa[ya == 1]}
+repetidos = sum(tuple(linha) in vistos for linha in Xb[yb == 1])
+
+Xs, ys = sobreamostrar(Xtr, ytr)
+arv2 = DecisionTreeClassifier(random_state=0).fit(Xs, ys)
+rec_certo = recall_score(yte, arv2.predict(Xte))
+
+print(rec_errado, repetidos, rec_certo)
+</script>
+      <template class="dica"><p>Na ordem errada: <code>train_test_split(Xbal, ybal, test_size=0.3, stratify=ybal, random_state=0)</code>, árvore treinada no treino e <code>recall_score(yb, arv.predict(Xb))</code> no teste.</p></template>
+      <template class="dica"><p>Para contar cópias, monte <code>vistos = {tuple(linha) for linha in Xa[ya == 1]}</code> e conte quantas linhas de <code>Xb[yb == 1]</code> têm <code>tuple(linha) in vistos</code>. Na ordem certa, <code>sobreamostrar(Xtr, ytr)</code> e o recall é medido em <code>Xte</code>, <code>yte</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Com o teste protegido, dá para falar de medida. Tanto a ROC do capítulo 3 quanto o recall que usei até aqui deixam escapar uma coisa que quem recebe os alarmes sente na pele: quantos deles são reais.</p></div>
+
+    <h2 id="s4"><span class="nsec">5.4</span>Métrica e corte para classe rara</h2>
+    <p class="gancho">A AUC deu 0,96. Quantos alarmes falsos isso significa para quem vai ter de olhar cada alarme?</p>
+
+    <h3>Intuição</h3>
+    <p>A taxa de falsos positivos da ROC divide os alarmes falsos pelo total de normais. Com 855 normais no teste, uma taxa de 7,8% parece pequena e são 67 alarmes. Quem recebe os alarmes não olha para 7,8%: olha para 67 casos falsos misturados com os verdadeiros. A precisão divide pelos alarmes, não pelos normais, e por isso enxerga isso. A curva de precisão contra recall e o seu resumo em um número, a <button type="button" class="termo" data-def="Precisão média (AP, de average precision): resume a curva de precisão contra recall em um número. Soma, a cada raro encontrado descendo o ranking do modelo, o quanto o recall subiu vezes a precisão naquele ponto. Um modelo que ordena no sorteio fica com AP perto da fração de raros.">precisão média</button>, olham só para os raros e para os alarmes. A pilha enorme de normais que o modelo deixou em paz não entra na conta.</p>
+
+    <h3>Definição</h3>
+    <p>Descendo o ranking do modelo (do maior para o menor score), cada corte dá um par (recall, precisão), e a <b>curva PR</b> é o conjunto desses pares. A <b>precisão média</b> é <code>AP = Σ (R<sub>n</sub> − R<sub>n−1</sub>) · P<sub>n</sub></code>: a cada novo ponto, o aumento do recall vezes a precisão naquele ponto. Ela não é a área trapezoidal sob a curva, é essa soma em degraus. A ROC e a PR respondem a perguntas diferentes: a AUC pergunta se o modelo ordena os raros acima dos normais, o AP pergunta se os primeiros alarmes da fila são, de fato, raros. Mais uma diferença: o AUC de uma ordem sorteada é 0,5 em qualquer problema, enquanto o AP de uma ordem sorteada fica perto da fração de raros.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Dez itens ordenados pelo modelo, com 2 raros, um no 1º lugar e outro no 4º. Descendo a fila, a precisão logo depois do primeiro raro é 1/1 e logo depois do segundo é 2/4. Cada raro acrescenta 1/2 de recall, então <code>AP = 0,5 · 1 + 0,5 · 0,5 = 0,75</code>.</p>
+<pre class="codigo" tabindex="0" aria-label="AP calculada à mão para dez itens e comparada com average_precision_score"><span class="k">from</span> sklearn.metrics <span class="k">import</span> average_precision_score, roc_auc_score
+
+y10 = np.array([<span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>])      <span class="c"># 10 itens ordenados pelo modelo; os 2 raros estão no 1º e no 4º lugar</span>
+s10 = np.linspace(<span class="n">0.95</span>, <span class="n">0.05</span>, <span class="n">10</span>)                    <span class="c"># scores decrescentes: a ordem já é o ranking</span>
+precisoes = [<span class="n">1</span> / <span class="n">1</span>, <span class="n">2</span> / <span class="n">4</span>]                           <span class="c"># precisão logo depois de cada acerto</span>
+ap_mao = <span class="n">0.5</span> * precisoes[<span class="n">0</span>] + <span class="n">0.5</span> * precisoes[<span class="n">1</span>]     <span class="c"># cada raro acrescenta 1/2 de recall</span>
+<span class="k">print</span>(<span class="s">"AP à mão:"</span>, ap_mao, <span class="s">"| average_precision_score:"</span>, average_precision_score(y10, s10), <span class="s">"| AUC:"</span>, roc_auc_score(y10, s10))</pre>
+<div class="saida" aria-label="Saída do código">AP à mão: 0.75 | average_precision_score: 0.75 | AUC: 0.875</div>
+    <p>O <code>average_precision_score</code> confirma os 0,75. A AUC desse mesmo ranking é 0,875: o segundo raro está acima de 6 dos 8 normais, e o primeiro acima de todos, dando 14 dos 16 pares. Com poucos itens a diferença entre as duas é pequena. Com muitos normais ela cresce, e é o que acontece nos dados do capítulo:</p>
+<pre class="codigo" tabindex="0" aria-label="AUC e AP do modelo sem peso no teste, e de uma ordem sorteada"><span class="k">print</span>(<span class="s">"AUC"</span>, round(roc_auc_score(yte, p), <span class="n">3</span>), <span class="s">"| AP"</span>, round(average_precision_score(yte, p), <span class="n">3</span>), <span class="s">"| fração de raros:"</span>, round(yte.mean(), <span class="n">3</span>))
+sorteio = np.random.default_rng(<span class="n">0</span>).random(len(yte))   <span class="c"># ordem no sorteio</span>
+<span class="k">print</span>(<span class="s">"sorteio: AUC"</span>, round(roc_auc_score(yte, sorteio), <span class="n">3</span>), <span class="s">"| AP"</span>, round(average_precision_score(yte, sorteio), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">AUC 0.96 | AP 0.738 | fração de raros: 0.05
+sorteio: AUC 0.487 | AP 0.059</div>
+    <p>AUC de 0,96 e AP de 0,738 para o mesmo modelo, no mesmo teste. A AUC é alta e o AP, bem menor, indica que a fila ainda tem muito normal misturado. Uma ordem no sorteio dá AUC 0,487 (perto de 0,5, como esperado) e AP 0,059, que fica perto da fração de raros, 0,05. Por isso o AP só se lê contra a fração de raros do problema: 0,738 contra 0,05 é muito, mas o mesmo 0,738 num problema com 60% de raros seria pouco. Quanto isso pesa para quem recebe os alarmes:</p>
+<pre class="codigo" tabindex="0" aria-label="Recall, taxa de falsos positivos e alarmes falsos em três pontos da ROC"><span class="k">from</span> sklearn.metrics <span class="k">import</span> roc_curve
+
+fpr, tpr, _ = roc_curve(yte, p)
+<span class="k">for</span> alvo <span class="k">in</span> [<span class="n">0.8</span>, <span class="n">0.9</span>, <span class="n">0.95</span>]:
+    i = np.argmax(tpr &gt;= alvo)                 <span class="c"># primeiro ponto da ROC com recall &gt;= alvo</span>
+    acertos = round(tpr[i] * yte.sum())
+    falsos = round(fpr[i] * (yte == <span class="n">0</span>).sum())
+    <span class="k">print</span>(<span class="s">f"recall &gt;= {alvo} | FPR {fpr[i]:.3f} | acertos {acertos} | alarmes falsos {falsos} | precisão {acertos / (acertos + falsos):.3f}"</span>)</pre>
+<div class="saida" aria-label="Saída do código">recall &gt;= 0.8 | FPR 0.039 | acertos 36 | alarmes falsos 33 | precisão 0.522
+recall &gt;= 0.9 | FPR 0.078 | acertos 41 | alarmes falsos 67 | precisão 0.380
+recall &gt;= 0.95 | FPR 0.258 | acertos 43 | alarmes falsos 221 | precisão 0.163</div>
+    <p>Para um recall de pelo menos 0,9, a taxa de falsos positivos é 0,078, que parece pouco, e são 67 alarmes falsos para 41 acertos: só 38% dos alarmes são reais. Subir o recall para 0,95 leva a taxa a 0,258, com 221 alarmes falsos para 43 acertos. Os dois primeiros acertos extras custaram 154 alarmes falsos. A ROC não mostra isso com clareza porque o denominador dela (855 normais) é grande.</p>
+    <p>Falta escolher o corte. Escolher olhando o teste seria cair no erro que o capítulo 3 já apontou: o corte ficaria ajustado aos 45 raros do teste e a medida final sairia otimista. Então separo uma validação de dentro do treino (30% dele), treino o modelo no resto, escolho na validação o maior corte que ainda dá recall de pelo menos 0,90 e só então olho o teste, uma vez.</p>
+<pre class="codigo" tabindex="0" aria-label="Corte escolhido na validação com precision_recall_curve e aplicado ao teste"><span class="k">from</span> sklearn.metrics <span class="k">import</span> precision_recall_curve
+
+<span class="c"># validação: uma parte do TREINO fica de lado; o teste só entra no fim</span>
+Xa, Xv, ya, yv = train_test_split(Xtr, ytr, test_size=<span class="n">0.3</span>, stratify=ytr, random_state=<span class="n">0</span>)
+mod = LogisticRegression(max_iter=<span class="n">1000</span>).fit(Xa, ya)
+pv = mod.predict_proba(Xv)[:, <span class="n">1</span>]
+prec, rec, cortes = precision_recall_curve(yv, pv)        <span class="c"># prec e rec têm um valor a mais que cortes</span>
+ok = rec[:-<span class="n">1</span>] &gt;= <span class="n">0.90</span>                                      <span class="c"># cortes que ainda dão recall &gt;= 0,90 na validação</span>
+corte = cortes[ok].max()                                   <span class="c"># o mais alto deles, para ter menos alarmes</span>
+<span class="k">print</span>(<span class="s">"validação:"</span>, len(yv), <span class="s">"linhas,"</span>, yv.sum(), <span class="s">"raros | corte escolhido:"</span>, round(corte, <span class="n">4</span>))
+<span class="k">for</span> nome, Xq, yq <span class="k">in</span> [(<span class="s">"validação"</span>, Xv, yv), (<span class="s">"teste"</span>, Xte, yte)]:
+    pr = (mod.predict_proba(Xq)[:, <span class="n">1</span>] &gt;= corte).astype(int)
+    <span class="k">print</span>(<span class="s">f"{nome:9s} | recall {recall_score(yq, pr):.3f} | precisão {precision_score(yq, pr):.3f} | alarmes {pr.sum()}"</span>)
+pr = mod.predict(Xte)
+<span class="k">print</span>(<span class="s">f"teste, corte 0,5 | recall {recall_score(yte, pr):.3f} | precisão {precision_score(yte, pr):.3f} | alarmes {pr.sum()}"</span>)</pre>
+<div class="saida" aria-label="Saída do código">validação: 630 linhas, 31 raros | corte escolhido: 0.0288
+validação | recall 0.903 | precisão 0.272 | alarmes 103
+teste     | recall 0.911 | precisão 0.306 | alarmes 134
+teste, corte 0,5 | recall 0.511 | precisão 0.697 | alarmes 33</div>
+    <p>O corte escolhido foi 0,0288. Na validação ele entrega recall 0,903 e precisão 0,272, e no teste, que não participou da escolha, recall 0,911 e precisão 0,306, com 134 alarmes. O corte padrão de 0,5, no mesmo modelo, dá recall 0,511 e precisão 0,697 com 33 alarmes. A escolha entre os dois é de custo: 134 alarmes para achar 41 raros, ou 33 alarmes para achar 23. Quem decide é o custo de deixar passar um raro contra o custo de revisar um alarme. Há um limite honesto aqui: a validação tem só 31 raros, então o corte é instável. Outro sorteio de validação daria outro corte, e a semelhança entre os 0,903 da validação e os 0,911 do teste não é garantia.</p>
+
+    <h3>Código comentado</h3>
+    <p>O <code>average_precision_score(y, score)</code> recebe o rótulo real e o <b>score</b> (a probabilidade), não a previsão 0 ou 1, assim como o <code>roc_auc_score</code>. O <code>precision_recall_curve</code> devolve três vetores, <code>prec</code>, <code>rec</code> e <code>cortes</code>. Os dois primeiros têm um elemento a mais que o terceiro, porque o último ponto (recall 0, precisão 1) não tem corte. Por isso a conta usa <code>rec[:-1]</code> para alinhar com <code>cortes</code>. O recall diminui quando o corte sobe, então <code>cortes[ok].max()</code> é o corte mais alto que ainda atinge o alvo, o que dá menos alarmes. No <code>roc_curve</code>, <code>np.argmax(tpr &gt;= alvo)</code> acha o primeiro ponto com recall suficiente.</p>
+
+    <h3>Erro comum</h3>
+    <p>Comparar AP entre problemas com prevalências diferentes: 0,738 com 5% de raros e 0,738 com 40% de raros não querem dizer a mesma coisa, porque o ponto de partida (o AP do sorteio) é diferente. Outro engano é achar que a AUC alta resolve: ela pode estar alta com a precisão em 0,38. Use as duas, a AUC para dizer se o modelo ordena bem e o AP, com a precisão no corte escolhido, para dizer se os alarmes valem a pena.</p>
+
+    <section class="experimento" data-ex="ia-5-4" data-pacotes="scikit-learn" aria-labelledby="exp4">
+      <header>
+        <div class="rotulo">Experimento 5.4</div>
+        <h3 id="exp4">Um corte para recall 0,80</h3>
+      </header>
+      <div class="enunciado"><p>A validação do texto já está em <code>Xv</code>, <code>yv</code>, com o modelo <code>mod</code> treinado em <code>Xa</code>, <code>ya</code>. Agora o alvo é um recall de pelo menos 0,80 na <b>validação</b>. Calcule <code>pv</code> (a probabilidade da classe 1 na validação), use <code>precision_recall_curve</code> para achar em <code>corte</code> o maior corte que ainda atinge o alvo e só então aplique esse corte ao <b>teste</b> (<code>Xte</code>, <code>yte</code>), guardando <code>rec_teste</code>, <code>prec_teste</code> e <code>alarmes</code> (quantos exemplos do teste foram marcados).</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_recall_curve, recall_score, precision_score
+
+X, y = make_classification(n_samples=3000, n_features=6, n_informative=3, n_redundant=0,
+                           n_clusters_per_class=1, weights=[0.95, 0.05], flip_y=0,
+                           class_sep=1.0, random_state=1)
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.3, stratify=y, random_state=0)
+Xa, Xv, ya, yv = train_test_split(Xtr, ytr, test_size=0.3, stratify=ytr, random_state=0)
+mod = LogisticRegression(max_iter=1000).fit(Xa, ya)
+</script>
+      <script type="text/plain" class="py-inicial">
+pv = None            # probabilidade da classe 1 na validação
+corte = None         # maior corte com recall >= 0,80 na validação
+
+rec_teste = None
+prec_teste = None
+alarmes = None
+
+print(corte, rec_teste, prec_teste, alarmes)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(pv is not None and corte is not None, "Calcule pv com mod.predict_proba(Xv)[:, 1] e escolha o corte com precision_recall_curve(yv, pv).")
+pr_val = (pv >= corte).astype(int)
+verificar(recall_score(yv, pr_val) >= 0.80, "Na validação, o corte escolhido deveria dar recall de pelo menos 0,80.")
+acima = pv[pv > corte]
+if len(acima) > 0:
+    pr_prox = (pv >= acima.min()).astype(int)
+    verificar(recall_score(yv, pr_prox) < 0.80, "Esse não é o MAIOR corte que atinge o alvo: um corte um pouco mais alto ainda dá recall de 0,80 ou mais na validação. Use cortes[ok].max().")
+verificar(rec_teste is not None and prec_teste is not None and alarmes is not None, "Aplique o corte ao teste: (mod.predict_proba(Xte)[:, 1] >= corte) e calcule recall, precisão e o número de alarmes.")
+verificar(abs(rec_teste - 38 / 45) < 0.01, "No teste, o recall deveria ser 38/45 (0,844). Confira se aplicou o corte ao teste (Xte) e não à validação.")
+verificar(int(alarmes) == 81 and abs(prec_teste - 38 / 81) < 0.01, "No teste deveriam ser 81 alarmes, com precisão 38/81 (0,469).")
+</script>
+      <script type="text/plain" class="py-solucao">
+pv = mod.predict_proba(Xv)[:, 1]
+prec, rec, cortes = precision_recall_curve(yv, pv)
+ok = rec[:-1] >= 0.80
+corte = cortes[ok].max()
+
+pr = (mod.predict_proba(Xte)[:, 1] >= corte).astype(int)
+rec_teste = recall_score(yte, pr)
+prec_teste = precision_score(yte, pr)
+alarmes = pr.sum()
+
+print(corte, rec_teste, prec_teste, alarmes)
+</script>
+      <template class="dica"><p>Use <code>prec, rec, cortes = precision_recall_curve(yv, pv)</code>. As posições onde <code>rec[:-1] &gt;= 0.80</code> são os cortes que atingem o alvo; o maior deles é <code>cortes[ok].max()</code>.</p></template>
+      <template class="dica"><p>No teste, <code>pr = (mod.predict_proba(Xte)[:, 1] &gt;= corte).astype(int)</code>. Depois <code>recall_score(yte, pr)</code>, <code>precision_score(yte, pr)</code> e <code>pr.sum()</code> para os alarmes.</p></template>
+    </section>
+
+    <div class="ponte"><p>Com o treino e a medida resolvidos, passamos ao segundo problema do capítulo. Mesmo um modelo bem treinado e bem medido continua sendo uma caixa fechada, e a primeira pergunta que se faz a uma caixa fechada é “o que pesa aí dentro?”. A resposta mais à mão está no próprio scikit-learn, e é ela que o capítulo 4 deixou em aberto.</p></div>
+
+    <h2 id="s5"><span class="nsec">5.5</span>Importância por impureza: por que desconfiar</h2>
+    <p class="gancho">A floresta devolve um número por coluna dizendo o quanto ela “importa”; dá para confiar nele?</p>
+
+    <h3>Intuição</h3>
+    <p>Cada vez que uma árvore faz uma pergunta, a impureza dos grupos cai um pouco (seção 4.1). Some essas quedas por coluna, e você tem um ranking de quais colunas mais separaram os exemplos. O problema está em quem mede: o ganho é calculado nos exemplos de <b>treino</b> que a árvore usou para escolher a pergunta. Uma coluna com muitos valores distintos oferece centenas de cortes candidatos, e entre centenas de tentativas sempre aparece algum que, por sorte, separa melhor o treino. Esse ganho de sorte conta como importância, embora não valha nada em exemplos novos.</p>
+
+    <h3>Definição</h3>
+    <p>O <code>feature_importances_</code> de uma floresta é, para cada coluna, a soma das reduções de impureza das perguntas feitas sobre ela (ponderada pelo número de exemplos em cada nó), tirada a média entre as árvores e normalizada para somar 1. Duas consequências saem direto da definição. A primeira: a soma é sempre 1, mesmo quando o modelo não serve para nada. A segunda: ela é medida no treino, não em dados que o modelo não viu.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Uma tabela inventada de 800 linhas com quatro colunas. A coluna <code>forte</code> pesa bastante no rótulo, a <code>fraco</code> pesa pouco, e as duas últimas não têm relação nenhuma com o rótulo: <code>ruido_fino</code> é um número sorteado (quase todo valor é diferente dos outros) e <code>ruido_bin</code> é um 0 ou 1 sorteado (só dois valores). Se a importância por impureza fosse confiável, as duas últimas teriam de ficar perto de zero.</p>
+<pre class="codigo" tabindex="0" aria-label="Tabela com duas colunas úteis e duas de ruído, floresta e importância por impureza"><span class="k">from</span> sklearn.ensemble <span class="k">import</span> RandomForestClassifier
+
+<span class="k">def</span> gerar_tabela(n=<span class="n">800</span>, semente=<span class="n">0</span>, ruido=<span class="n">0.8</span>):
+    rng = np.random.default_rng(semente)
+    forte = rng.normal(size=n)                  <span class="c"># pesa bastante no rótulo</span>
+    fraco = rng.normal(size=n)                  <span class="c"># pesa pouco</span>
+    ruido_fino = rng.normal(size=n)             <span class="c"># nenhuma relação com o rótulo, mas quase todo valor é diferente</span>
+    ruido_bin = rng.integers(<span class="n">0</span>, <span class="n">2</span>, size=n)      <span class="c"># nenhuma relação com o rótulo, só 2 valores</span>
+    y_ = (forte + <span class="n">0.6</span> * fraco + rng.normal(scale=ruido, size=n) &gt; <span class="n">0</span>).astype(int)
+    <span class="k">return</span> np.column_stack([forte, fraco, ruido_fino, ruido_bin]), y_
+
+nomes = [<span class="s">"forte"</span>, <span class="s">"fraco"</span>, <span class="s">"ruido_fino"</span>, <span class="s">"ruido_bin"</span>]
+X2, y2 = gerar_tabela()
+X2tr, X2te, y2tr, y2te = train_test_split(X2, y2, test_size=<span class="n">0.4</span>, random_state=<span class="n">0</span>)
+floresta = RandomForestClassifier(n_estimators=<span class="n">50</span>, random_state=<span class="n">0</span>).fit(X2tr, y2tr)
+<span class="k">print</span>(<span class="s">"valores distintos no treino:"</span>, dict(zip(nomes, [len(np.unique(X2tr[:, j])) <span class="k">for</span> j <span class="k">in</span> range(<span class="n">4</span>)])))
+<span class="k">print</span>(<span class="s">"acurácia: treino"</span>, round(floresta.score(X2tr, y2tr), <span class="n">3</span>), <span class="s">"| teste"</span>, round(floresta.score(X2te, y2te), <span class="n">3</span>))
+<span class="k">for</span> nome, imp <span class="k">in</span> zip(nomes, floresta.feature_importances_):
+    <span class="k">print</span>(<span class="s">f"{nome:11s} {imp:.3f}"</span>)
+<span class="k">print</span>(<span class="s">"soma das importâncias:"</span>, round(floresta.feature_importances_.sum(), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">valores distintos no treino: {'forte': 480, 'fraco': 480, 'ruido_fino': 480, 'ruido_bin': 2}
+acurácia: treino 0.996 | teste 0.822
+forte       0.556
+fraco       0.280
+ruido_fino  0.150
+ruido_bin   0.014
+soma das importâncias: 1.0</div>
+    <p>A floresta acerta 99,6% no treino e 82,2% no teste (ela decorou boa parte do treino, como no capítulo 4). A coluna <code>ruido_fino</code>, sem informação nenhuma, recebeu 15% da importância, mais da metade do que recebeu a coluna <code>fraco</code> (28%), enquanto a <code>ruido_bin</code>, igualmente inútil, ficou com 1,4%. A diferença de cerca de dez vezes entre os dois ruídos é só o número de valores distintos: 480 contra 2. Uma coluna binária oferece um único corte possível, uma com 480 valores oferece 479.</p>
+    <p>Agora o teste do absurdo. Uso as mesmas quatro colunas, mas com o rótulo decidido na moeda, de modo que nenhuma coluna tem relação com ele:</p>
+<pre class="codigo" tabindex="0" aria-label="Importância por impureza quando o rótulo é decidido na moeda">y_moeda = np.random.default_rng(<span class="n">1</span>).integers(<span class="n">0</span>, <span class="n">2</span>, size=len(X2))      <span class="c"># rótulo decidido na moeda</span>
+a_tr, a_te, b_tr, b_te = train_test_split(X2, y_moeda, test_size=<span class="n">0.4</span>, random_state=<span class="n">0</span>)
+f_moeda = RandomForestClassifier(n_estimators=<span class="n">50</span>, random_state=<span class="n">0</span>).fit(a_tr, b_tr)
+<span class="k">print</span>(<span class="s">"acurácia no teste:"</span>, round(f_moeda.score(a_te, b_te), <span class="n">3</span>))
+<span class="k">for</span> nome, imp <span class="k">in</span> zip(nomes, f_moeda.feature_importances_):
+    <span class="k">print</span>(<span class="s">f"{nome:11s} {imp:.3f}"</span>)
+<span class="k">print</span>(<span class="s">"soma das importâncias:"</span>, round(f_moeda.feature_importances_.sum(), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">acurácia no teste: 0.516
+forte       0.303
+fraco       0.328
+ruido_fino  0.332
+ruido_bin   0.038
+soma das importâncias: 1.0</div>
+    <p>Com o rótulo sorteado, a floresta acerta 51,6% no teste (um chute) e, mesmo assim, reparte 100% da importância: as três colunas contínuas ficam com cerca de um terço cada, e a binária com 3,8%. Um modelo sem utilidade ainda entrega um ranking de importâncias aparentemente razoável. A soma que sempre dá 1 esconde isso.</p>
+
+    <h3>Código comentado</h3>
+    <p>A função <code>gerar_tabela</code> usa o gerador novo do NumPy (<code>np.random.default_rng</code>) com semente, para que o resultado se repita. O <code>np.unique(X2tr[:, j])</code> conta os valores distintos de cada coluna. O <code>floresta.feature_importances_</code> é um vetor com uma importância por coluna, na ordem das colunas. O <code>zip(nomes, ...)</code> casa cada nome com o seu número. Usei 50 árvores para o exemplo rodar rápido no navegador.</p>
+
+    <h3>Erro comum</h3>
+    <p>Ler <code>feature_importances_</code> como “o quanto a coluna ajuda a prever”. O número diz o quanto a coluna foi usada para dividir os exemplos de treino. Uma coluna com muitos valores distintos, como um identificador de cliente ou um carimbo de data e hora, pode subir no ranking sem ajudar em nada, e o ranking sempre soma 1, mesmo que o modelo seja inútil. Isso não quer dizer que a medida seja sempre errada: quando as colunas têm quantidades parecidas de valores distintos, ela tende a ser menos enganosa. Mas você nem sempre sabe quando está nesse caso, e há uma medida que não tem esse problema.</p>
+
+    <div class="ponte"><p>A medida melhor pergunta outra coisa: o que acontece com o desempenho, em exemplos que o modelo não viu, se a coluna deixar de valer?</p></div>
+
+    <h2 id="s6"><span class="nsec">5.6</span>Importância por permutação</h2>
+    <p class="gancho">Em vez de perguntar às árvores quanto usaram uma coluna, dá para perguntar ao modelo o que acontece quando a coluna deixa de significar alguma coisa?</p>
+
+    <h3>Intuição</h3>
+    <p>Pegue o conjunto de teste e embaralhe uma coluna. Os valores continuam existindo, mas trocados de linha, então perdem a ligação com o rótulo. Meça o modelo de novo. Se o desempenho cai muito, o modelo dependia da coluna. Se não muda, ele não precisava dela. A ideia é a mesma de tirar uma peça de um aparelho e ver se ele continua funcionando, só que sem desmontar nada.</p>
+
+    <h3>Definição</h3>
+    <p>A <button type="button" class="termo" data-def="Importância por permutação: o desempenho do modelo no conjunto de teste menos o desempenho depois de embaralhar uma coluna. Quanto maior a queda, mais o modelo dependia da coluna. Repete-se o embaralhamento várias vezes para tirar a média.">importância por permutação</button> de uma coluna é <code>desempenho original − desempenho com a coluna embaralhada</code>, calculada no <b>teste</b> (ou numa validação), repetida <code>n_repeats</code> vezes, com média e desvio. A medida padrão é a do <code>score</code> do modelo, que é a acurácia nos classificadores, e se pode trocar com o argumento <code>scoring</code> (por exemplo, por AUC ou por precisão média). O resultado pode ser negativo: se embaralhar a coluna melhora o modelo por acaso, a “importância” sai levemente abaixo de zero.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>Primeiro à mão, com a floresta da seção anterior. A acurácia no teste é 0,822. Para cada coluna, embaralho só ela, 10 vezes, e anoto a queda média:</p>
+<pre class="codigo" tabindex="0" aria-label="Importância por permutação calculada à mão no conjunto de teste">base = floresta.score(X2te, y2te)                     <span class="c"># acurácia no teste, sem mexer em nada</span>
+rng = np.random.default_rng(<span class="n">0</span>)
+<span class="k">for</span> j, nome <span class="k">in</span> enumerate(nomes):
+    quedas = []
+    <span class="k">for</span> _ <span class="k">in</span> range(<span class="n">10</span>):                                <span class="c"># 10 embaralhamentos por coluna</span>
+        Xp = X2te.copy()
+        Xp[:, j] = rng.permutation(Xp[:, j])           <span class="c"># embaralha só a coluna j, no TESTE</span>
+        quedas.append(base - floresta.score(Xp, y2te))
+    <span class="k">print</span>(<span class="s">f"{nome:11s} queda média {np.mean(quedas):+.3f} | desvio {np.std(quedas):.3f}"</span>)</pre>
+<div class="saida" aria-label="Saída do código">forte       queda média +0.264 | desvio 0.023
+fraco       queda média +0.090 | desvio 0.010
+ruido_fino  queda média -0.001 | desvio 0.006
+ruido_bin   queda média -0.004 | desvio 0.007</div>
+    <p>Embaralhar <code>forte</code> derruba a acurácia em 0,264, de 0,822 para cerca de 0,558, perto de um chute. Embaralhar <code>fraco</code> derruba 0,090. As duas colunas de ruído ficam em −0,001 e −0,004, com desvios de 0,006 e 0,007: indistinguíveis de zero, como deveria ser. Agora a função do scikit-learn:</p>
+<pre class="codigo" tabindex="0" aria-label="permutation_importance com n_repeats e random_state fixos"><span class="k">from</span> sklearn.inspection <span class="k">import</span> permutation_importance
+
+res = permutation_importance(floresta, X2te, y2te, n_repeats=<span class="n">10</span>, random_state=<span class="n">0</span>)
+<span class="k">for</span> nome, m, s <span class="k">in</span> zip(nomes, res.importances_mean, res.importances_std):
+    <span class="k">print</span>(<span class="s">f"{nome:11s} média {m:+.3f} | desvio {s:.3f}"</span>)</pre>
+<div class="saida" aria-label="Saída do código">forte       média +0.263 | desvio 0.019
+fraco       média +0.095 | desvio 0.019
+ruido_fino  média -0.001 | desvio 0.008
+ruido_bin   média -0.006 | desvio 0.005</div>
+    <p>Os números da função (0,263; 0,095; −0,001; −0,006) não são idênticos aos da mão porque os sorteios de embaralhamento são outros, mas contam a mesma história: a ordem é forte, fraco, e os dois ruídos em zero. A leitura também precisa do desvio: o valor de <code>fraco</code> é 0,095 com desvio 0,019, claramente acima de zero, e os dois ruídos ficam a pouco mais de um desvio de zero, no máximo. Por que no teste e não no treino? O bloco abaixo faz as duas coisas.</p>
+<pre class="codigo" tabindex="0" aria-label="Permutação no treino e no teste lado a lado">res_tr = permutation_importance(floresta, X2tr, y2tr, n_repeats=<span class="n">10</span>, random_state=<span class="n">0</span>)
+<span class="k">print</span>(<span class="s">"no TREINO:"</span>, dict(zip(nomes, res_tr.importances_mean.round(<span class="n">3</span>).tolist())))
+<span class="k">print</span>(<span class="s">"no TESTE: "</span>, dict(zip(nomes, res.importances_mean.round(<span class="n">3</span>).tolist())))</pre>
+<div class="saida" aria-label="Saída do código">no TREINO: {'forte': 0.401, 'fraco': 0.223, 'ruido_fino': 0.094, 'ruido_bin': 0.01}
+no TESTE:  {'forte': 0.263, 'fraco': 0.095, 'ruido_fino': -0.001, 'ruido_bin': -0.006}</div>
+    <p>No treino, o <code>ruido_fino</code> aparece com 0,094. A floresta decorou o treino, e uma parte dessa decoreba usa o ruído, então embaralhá-lo atrapalha a floresta onde ela se lembra do treino. No teste, que a floresta não decorou, a importância cai para zero. Por isso a permutação se calcula no teste ou numa validação. Por fim, repetindo com 10 tabelas diferentes (as mesmas quatro colunas, sementes de 0 a 9), para ver se o padrão é só desta tabela:</p>
+<pre class="codigo" tabindex="0" aria-label="Impureza e permutação, médias em 10 tabelas diferentes">imps, perms = [], []
+<span class="k">for</span> semente <span class="k">in</span> range(<span class="n">10</span>):                           <span class="c"># 10 tabelas diferentes</span>
+    Xa, ya = gerar_tabela(semente=semente)
+    a1, a2, b1, b2 = train_test_split(Xa, ya, test_size=<span class="n">0.4</span>, random_state=<span class="n">0</span>)
+    f = RandomForestClassifier(n_estimators=<span class="n">50</span>, random_state=<span class="n">0</span>).fit(a1, b1)
+    imps.append(f.feature_importances_)
+    perms.append(permutation_importance(f, a2, b2, n_repeats=<span class="n">5</span>, random_state=<span class="n">0</span>).importances_mean)
+<span class="k">print</span>(<span class="s">"impureza (média de 10 tabelas):  "</span>, dict(zip(nomes, np.mean(imps, axis=<span class="n">0</span>).round(<span class="n">3</span>).tolist())))
+<span class="k">print</span>(<span class="s">"permutação (média de 10 tabelas):"</span>, dict(zip(nomes, np.mean(perms, axis=<span class="n">0</span>).round(<span class="n">3</span>).tolist())))</pre>
+<div class="saida" aria-label="Saída do código">impureza (média de 10 tabelas):   {'forte': 0.519, 'fraco': 0.287, 'ruido_fino': 0.173, 'ruido_bin': 0.021}
+permutação (média de 10 tabelas): {'forte': 0.214, 'fraco': 0.077, 'ruido_fino': -0.004, 'ruido_bin': -0.001}</div>
+    <figure class="fig" aria-labelledby="fig4">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 290" role="img" aria-label="Barras horizontais comparando, para quatro colunas, a importância por impureza e a importância por permutação. Forte: 0,556 e 0,263. Fraco: 0,280 e 0,095. Ruído fino: 0,150 e menos 0,001. Ruído binário: 0,014 e menos 0,006.">
+        <rect x="150" y="8" width="14" height="14" rx="2" style="fill:var(--color-accent-primary)"/><text class="t2" x="170" y="20">impureza (treino)</text>
+        <rect x="330" y="8" width="14" height="14" rx="2" style="fill:var(--color-text-secondary)"/><text class="t2" x="350" y="20">permutação (teste)</text>
+        <path d="M150 34V282" style="stroke:var(--color-border-primary)" stroke-width="1.2"/>
+        <text class="t" x="140" y="68" text-anchor="end">forte</text><rect x="150" y="44" width="355.8" height="18" rx="2" style="fill:var(--color-accent-primary)"/><text class="t2" x="513.8" y="57">0,556</text><rect x="150.0" y="66" width="168.3" height="18" rx="2" style="fill:var(--color-text-secondary)"/><text class="t2" x="326.3" y="79">0,263</text><text class="t" x="140" y="126" text-anchor="end">fraco</text><rect x="150" y="102" width="179.2" height="18" rx="2" style="fill:var(--color-accent-primary)"/><text class="t2" x="337.2" y="115">0,280</text><rect x="150.0" y="124" width="60.8" height="18" rx="2" style="fill:var(--color-text-secondary)"/><text class="t2" x="218.8" y="137">0,095</text><text class="t" x="140" y="184" text-anchor="end">ruido_fino</text><rect x="150" y="160" width="96.0" height="18" rx="2" style="fill:var(--color-accent-primary)"/><text class="t2" x="254.0" y="173">0,150</text><rect x="149.4" y="182" width="1.2" height="18" rx="2" style="fill:var(--color-text-secondary)"/><text class="t2" x="158.0" y="195">-0,001</text><text class="t" x="140" y="242" text-anchor="end">ruido_bin</text><rect x="150" y="218" width="9.0" height="18" rx="2" style="fill:var(--color-accent-primary)"/><text class="t2" x="167.0" y="231">0,014</text><rect x="146.2" y="240" width="3.8" height="18" rx="2" style="fill:var(--color-text-secondary)"/><text class="t2" x="158.0" y="253">-0,006</text>
+      </svg></div>
+      <figcaption id="fig4"><b>Fig. 4</b>As duas importâncias na tabela da seção 5.5. A impureza dá 0,150 ao <code>ruido_fino</code>, que não tem relação com o rótulo. A permutação, no teste, o leva a zero. Atenção: as duas barras estão em escalas diferentes (a impureza soma 1 entre todas as colunas; a permutação é a queda da acurácia), então compare a posição de cada coluna, não o tamanho das barras entre os dois lados.</figcaption>
+    </figure>
+    <p>Em média, a impureza dá 0,173 ao ruído contínuo e 0,021 ao binário, enquanto a permutação dá −0,004 e −0,001. A diferença entre as duas medidas está nas colunas inúteis: a impureza as infla (a contínua, sobretudo) e a permutação as leva a zero. Nas colunas úteis as duas concordam na ordem, forte e depois fraco. Dez tabelas ainda é pouco para uma regra geral, mas o mecanismo explicado na seção anterior justifica o que se vê.</p>
+
+    <h3>Código comentado</h3>
+    <p>À mão, <code>rng.permutation(Xp[:, j])</code> devolve os valores da coluna <code>j</code> em outra ordem, e <code>X2te.copy()</code> evita estragar o teste original. A queda é <code>base − floresta.score(Xp, y2te)</code>, e <code>np.mean(quedas)</code> e <code>np.std(quedas)</code> resumem os 10 embaralhamentos. No <code>permutation_importance(modelo, X, y, n_repeats=10, random_state=0)</code>, o <code>n_repeats</code> é o número de embaralhamentos por coluna e o <code>random_state</code> fixa os sorteios. O resultado guarda <code>importances_mean</code> (médias), <code>importances_std</code> (desvios) e <code>importances</code> (todas as repetições). O custo é <code>n_repeats × colunas</code> avaliações do modelo, e por isso aqui os números são pequenos.</p>
+
+    <h3>Erro comum</h3>
+    <p>Calcular no treino, o que o bloco acima mostrou: o resultado herda a decoreba do modelo. Outro engano é rodar uma única repetição e ordenar colunas cujas diferenças são menores que o desvio: com <code>forte</code> em 0,263 e <code>fraco</code> em 0,095 a ordem é clara, mas duas colunas com 0,010 e 0,012 não se distinguem. E, como sempre, esquecer o <code>random_state</code>: sem ele a ordem de colunas com importância parecida pode mudar de uma execução para outra.</p>
+
+    <section class="experimento" data-ex="ia-5-5" data-pacotes="scikit-learn" aria-labelledby="exp5">
+      <header>
+        <div class="rotulo">Experimento 5.5</div>
+        <h3 id="exp5">Impureza contra permutação</h3>
+      </header>
+      <div class="enunciado"><p>A floresta de 30 árvores já foi treinada na tabela do texto (colunas <code>forte</code>, <code>fraco</code>, <code>ruido_fino</code> e <code>ruido_bin</code>, nesta ordem; só as duas primeiras têm relação com o rótulo). Guarde em <code>imp_ruido</code> a importância por impureza da coluna <code>ruido_fino</code> (índice 2). Guarde em <code>perm_ruido</code> a importância dela por permutação no conjunto de <b>teste</b>, com <code>n_repeats=5</code> e <code>random_state=0</code>. Guarde em <code>ranking</code> a lista de nomes ordenada da mais para a menos importante pela permutação.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.inspection import permutation_importance
+
+def gerar_tabela(n=800, semente=0, ruido=0.8):
+    rng = np.random.default_rng(semente)
+    forte = rng.normal(size=n)
+    fraco = rng.normal(size=n)
+    ruido_fino = rng.normal(size=n)
+    ruido_bin = rng.integers(0, 2, size=n)
+    y_ = (forte + 0.6 * fraco + rng.normal(scale=ruido, size=n) > 0).astype(int)
+    return np.column_stack([forte, fraco, ruido_fino, ruido_bin]), y_
+
+nomes = ["forte", "fraco", "ruido_fino", "ruido_bin"]
+X2, y2 = gerar_tabela()
+X2tr, X2te, y2tr, y2te = train_test_split(X2, y2, test_size=0.4, random_state=0)
+floresta = RandomForestClassifier(n_estimators=30, random_state=0).fit(X2tr, y2tr)
+</script>
+      <script type="text/plain" class="py-inicial">
+imp_ruido = None    # importância por impureza de ruido_fino
+perm_ruido = None   # importância por permutação de ruido_fino, no TESTE
+ranking = None      # nomes, da mais para a menos importante pela permutação
+
+print(imp_ruido, perm_ruido, ranking)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(imp_ruido is not None, "Pegue a importância por impureza em floresta.feature_importances_[2].")
+verificar(perm_ruido is not None and ranking is not None, "Calcule permutation_importance(floresta, X2te, y2te, n_repeats=5, random_state=0) e use importances_mean.")
+verificar(imp_ruido > 0.08, "A importância por impureza do ruido_fino deveria passar de 0,08 (a coluna é só ruído, mas tem muitos valores distintos).")
+verificar(abs(perm_ruido) < 0.03, "A importância por permutação do ruido_fino deveria ficar perto de zero. Confira se calculou no teste (X2te, y2te) e não no treino.")
+verificar(list(ranking[:2]) == ["forte", "fraco"], "O ranking pela permutação deveria começar com forte e depois fraco.")
+verificar(len(ranking) == 4, "O ranking deveria ter os 4 nomes.")
+</script>
+      <script type="text/plain" class="py-solucao">
+imp_ruido = floresta.feature_importances_[2]
+
+res = permutation_importance(floresta, X2te, y2te, n_repeats=5, random_state=0)
+perm_ruido = res.importances_mean[2]
+ordem = np.argsort(res.importances_mean)[::-1]
+ranking = [nomes[i] for i in ordem]
+
+print(imp_ruido, perm_ruido, ranking)
+</script>
+      <template class="dica"><p>A importância por impureza é <code>floresta.feature_importances_[2]</code>. A por permutação vem de <code>permutation_importance(floresta, X2te, y2te, n_repeats=5, random_state=0).importances_mean</code>, que tem um número por coluna.</p></template>
+      <template class="dica"><p>Para ordenar, <code>np.argsort(valores)</code> dá os índices do menor para o maior; com <code>[::-1]</code> fica do maior para o menor. Depois troque cada índice pelo nome em <code>nomes</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Saber que a coluna <code>forte</code> importa ainda não diz como. A probabilidade sobe quando ela cresce? Há um ponto de virada? Para isso existe a terceira ferramenta.</p></div>
+
+    <h2 id="s7"><span class="nsec">5.7</span>Dependência parcial: como a previsão muda com uma coluna</h2>
+    <p class="gancho">Se a coluna <code>forte</code> importa, a chance de ser da classe 1 sobe quando ela cresce, e a partir de onde?</p>
+
+    <h3>Intuição</h3>
+    <p>Fixe a coluna em um valor, o mesmo para <b>todos</b> os exemplos do teste, e deixe as outras como estão. Peça ao modelo a probabilidade de cada exemplo e tire a média. Repita para uma grade de valores e ligue os pontos: a <button type="button" class="termo" data-def="Dependência parcial (PDP): a previsão média do modelo quando uma coluna é fixada em cada valor de uma grade, em todos os exemplos, com as demais colunas como estão. Mostra a forma média do efeito da coluna segundo o modelo.">dependência parcial</button> é essa curva. É como perguntar “e se todo mundo tivesse esta mesma idade?”, medindo a resposta média do modelo.</p>
+
+    <h3>Definição</h3>
+    <p>Para uma coluna <code>j</code> e um valor <code>v</code>, a dependência parcial é a média, sobre os exemplos <code>i</code>, da previsão do modelo com a coluna <code>j</code> trocada por <code>v</code>: <code>PD(v) = média de f(x<sub>i</sub> com a coluna j = v)</code>. A grade costuma ir do percentil 5 ao 95 da coluna, para não gastar pontos em valores extremos e raros. Ela descreve o modelo, e não a realidade.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p>À mão, com a mesma floresta e o mesmo teste da seção anterior. A grade tem 5 valores (poucos, para você conferir) entre os percentis 5 e 95 da coluna <code>forte</code>:</p>
+<pre class="codigo" tabindex="0" aria-label="Dependência parcial calculada à mão para a coluna forte"><span class="k">def</span> dependencia_parcial(modelo, X_, j, grade):
+    medias = []
+    <span class="k">for</span> v <span class="k">in</span> grade:
+        Xv = X_.copy()
+        Xv[:, j] = v                                           <span class="c"># TODOS os exemplos passam a ter o valor v na coluna j</span>
+        medias.append(modelo.predict_proba(Xv)[:, <span class="n">1</span>].mean())   <span class="c"># probabilidade média da classe 1</span>
+    <span class="k">return</span> np.array(medias)
+
+grade = np.linspace(*np.percentile(X2te[:, <span class="n">0</span>], [<span class="n">5</span>, <span class="n">95</span>]), <span class="n">5</span>)    <span class="c"># 5 valores entre os percentis 5 e 95 da coluna "forte"</span>
+pdp_mao = dependencia_parcial(floresta, X2te, <span class="n">0</span>, grade)
+<span class="k">for</span> v, m <span class="k">in</span> zip(grade, pdp_mao):
+    <span class="k">print</span>(<span class="s">f"forte = {v:+.2f} -&gt; probabilidade média {m:.3f}"</span>)
+<span class="k">for</span> j <span class="k">in</span> [<span class="n">1</span>, <span class="n">2</span>]:
+    g = np.linspace(*np.percentile(X2te[:, j], [<span class="n">5</span>, <span class="n">95</span>]), <span class="n">5</span>)
+    d = dependencia_parcial(floresta, X2te, j, g)
+    <span class="k">print</span>(<span class="s">f"{nomes[j]:11s} grade {g.round(2).tolist()} -&gt; {d.round(3).tolist()} | de {d.min():.3f} a {d.max():.3f}"</span>)</pre>
+<div class="saida" aria-label="Saída do código">forte = -1.61 -&gt; probabilidade média 0.131
+forte = -0.83 -&gt; probabilidade média 0.131
+forte = -0.05 -&gt; probabilidade média 0.360
+forte = +0.74 -&gt; probabilidade média 0.842
+forte = +1.52 -&gt; probabilidade média 0.936
+fraco       grade [-1.43, -0.66, 0.11, 0.89, 1.66] -&gt; [0.266, 0.242, 0.522, 0.604, 0.715] | de 0.242 a 0.715
+ruido_fino  grade [-1.58, -0.75, 0.08, 0.91, 1.74] -&gt; [0.502, 0.494, 0.471, 0.476, 0.505] | de 0.471 a 0.505</div>
+    <figure class="fig" aria-labelledby="fig5">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 256" role="img" aria-label="Gráfico de linhas da dependência parcial de três colunas. Forte sobe de 0,131 para 0,936 passando por 0,360 perto de zero. Fraco vai de 0,266 a 0,715. Ruído fino fica entre 0,471 e 0,505.">
+        <text class="t2" x="70" y="16">probabilidade média da classe 1</text>
+        <path d="M70 218.0H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="222.0" text-anchor="end">0,00</text><path d="M70 170.5H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="174.5" text-anchor="end">0,25</text><path d="M70 123.0H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="127.0" text-anchor="end">0,50</text><path d="M70 75.5H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="79.5" text-anchor="end">0,75</text><path d="M70 28.0H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="32.0" text-anchor="end">1,00</text><text class="t2" x="70.0" y="238" text-anchor="middle">−2</text><text class="t2" x="182.5" y="238" text-anchor="middle">−1</text><text class="t2" x="295.0" y="238" text-anchor="middle">0</text><text class="t2" x="407.5" y="238" text-anchor="middle">1</text><text class="t2" x="520.0" y="238" text-anchor="middle">2</text><polyline points="113.9,193.1 201.6,193.1 289.4,149.6 378.3,58.0 466.0,40.2" fill="none" style="stroke:var(--color-accent-primary)" stroke-width="2.2" stroke-linejoin="round"/><circle cx="113.9" cy="193.1" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="201.6" cy="193.1" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="289.4" cy="149.6" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="378.3" cy="58.0" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="466.0" cy="40.2" r="3.6" style="fill:var(--color-accent-primary)"/><text class="t" x="476.0" y="44.2" style="fill:var(--color-accent-primary)">forte</text><polyline points="134.1,167.5 220.7,172.0 307.4,118.8 395.1,103.2 481.8,82.2" fill="none" style="stroke:var(--color-status-error)" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="6 4"/><circle cx="134.1" cy="167.5" r="3.6" style="fill:var(--color-status-error)"/><circle cx="220.7" cy="172.0" r="3.6" style="fill:var(--color-status-error)"/><circle cx="307.4" cy="118.8" r="3.6" style="fill:var(--color-status-error)"/><circle cx="395.1" cy="103.2" r="3.6" style="fill:var(--color-status-error)"/><circle cx="481.8" cy="82.2" r="3.6" style="fill:var(--color-status-error)"/><text class="t" x="491.8" y="86.2" style="fill:var(--color-status-error)">fraco</text><polyline points="117.3,122.6 210.6,124.1 304.0,128.5 397.4,127.6 490.8,122.0" fill="none" style="stroke:var(--color-text-secondary)" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="2 4"/><circle cx="117.3" cy="122.6" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="210.6" cy="124.1" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="304.0" cy="128.5" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="397.4" cy="127.6" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="490.8" cy="122.0" r="3.6" style="fill:var(--color-text-secondary)"/><text class="t" x="500.8" y="138.1" style="fill:var(--color-text-secondary)">ruido_fino</text>
+        <text class="t2" x="295" y="248" text-anchor="middle">valor em que a coluna é fixada</text>
+      </svg></div>
+      <figcaption id="fig5"><b>Fig. 5</b>Dependência parcial de três colunas, com os números do bloco acima. A curva de <code>forte</code> sobe em degrau no meio, a de <code>fraco</code> sobe pouco e a de <code>ruido_fino</code> fica quase plana perto de 0,5.</figcaption>
+    </figure>
+    <p>Quando a coluna <code>forte</code> vale −1,61 ou −0,83 para todo mundo, a probabilidade média da classe 1 fica em 0,131: a floresta não distingue um valor do outro nessa faixa. Perto de zero ela sobe para 0,360, em 0,74 chega a 0,842 e fica em 0,936 no valor mais alto. A subida concentrada no meio e os trechos retos nas pontas são típicos de árvores, que respondem em degraus (capítulo 4). Para <code>fraco</code>, a média vai de 0,242 a 0,715, um efeito menor; para <code>ruido_fino</code>, de 0,471 a 0,505, uma curva praticamente plana. A ordem de grandeza das amplitudes (0,805 para <code>forte</code>, 0,473 para <code>fraco</code> e 0,034 para o ruído) concorda com a importância por permutação. A função do scikit-learn dá o mesmo resultado:</p>
+<pre class="codigo" tabindex="0" aria-label="partial_dependence com a mesma grade e comparação com o cálculo à mão"><span class="k">from</span> sklearn.inspection <span class="k">import</span> partial_dependence
+
+pd_fn = partial_dependence(floresta, X2te, features=[<span class="n">0</span>], custom_values={<span class="n">0</span>: grade}, method=<span class="s">"brute"</span>, kind=<span class="s">"average"</span>)
+<span class="k">print</span>(<span class="s">"chaves:"</span>, list(pd_fn.keys()))
+<span class="k">print</span>(<span class="s">"grade:"</span>, pd_fn[<span class="s">"grid_values"</span>][<span class="n">0</span>].round(<span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"média:"</span>, pd_fn[<span class="s">"average"</span>][<span class="n">0</span>].round(<span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"igual ao cálculo à mão:"</span>, np.allclose(pd_fn[<span class="s">"average"</span>][<span class="n">0</span>], pdp_mao))</pre>
+<div class="saida" aria-label="Saída do código">chaves: ['grid_values', 'average']
+grade: [-1.61 -0.83 -0.05  0.74  1.52]
+média: [0.131 0.131 0.36  0.842 0.936]
+igual ao cálculo à mão: True</div>
+
+    <h3>Código comentado</h3>
+    <p>A função <code>dependencia_parcial</code> tem um laço sobre a grade. Dentro dele, <code>X_.copy()</code> evita mexer no teste, <code>Xv[:, j] = v</code> troca a coluna inteira pelo valor <code>v</code> e <code>predict_proba(Xv)[:, 1].mean()</code> tira a média das probabilidades da classe 1. O <code>np.percentile(coluna, [5, 95])</code> dá os extremos da grade e o <code>np.linspace(a, b, 5)</code> espalha 5 pontos entre eles. No <code>partial_dependence</code>, o argumento <code>custom_values={0: grade}</code> impõe a grade da coluna 0 (sem ele a função monta uma própria com <code>grid_resolution</code> pontos), <code>method="brute"</code> pede exatamente esse cálculo de trocar a coluna e tirar a média, e <code>kind="average"</code> devolve a curva média, em <code>["average"]</code>, com os pontos em <code>["grid_values"]</code>. Para alguns modelos há um método mais rápido que não usamos aqui. Com <code>custom_values</code>, que existe na versão do scikit-learn usada neste capítulo, a comparação com a mão dá <code>True</code>.</p>
+
+    <h3>Erro comum</h3>
+    <p>Ler a curva como o que aconteceria no mundo se você mudasse a coluna. Ela mostra o que o <b>modelo</b> prevê, em exemplos em que a coluna foi forçada para valores que talvez nunca aconteçam junto com as outras colunas daquela linha. Pense em fixar a idade em 20 anos para quem tem 25 anos de casa: a linha deixa de existir na vida real, mas o modelo responde mesmo assim. Quanto mais correlacionadas as colunas, pior a combinação forçada.</p>
+
+    <section class="experimento" data-ex="ia-5-6" data-pacotes="scikit-learn" aria-labelledby="exp6">
+      <header>
+        <div class="rotulo">Experimento 5.6</div>
+        <h3 id="exp6">Dependência parcial à mão</h3>
+      </header>
+      <div class="enunciado"><p>Escreva a função <code>dependencia_parcial(modelo, X, j, grade)</code>: para cada valor <code>v</code> da grade, ela faz uma cópia de <code>X</code>, põe <code>v</code> na coluna <code>j</code> de todas as linhas e guarda a probabilidade média da classe 1. Ela devolve um array com um valor por ponto da grade. Calcule <code>pdp_fraco</code> para a coluna <code>fraco</code> (índice 1, grade de 5 valores entre os percentis 5 e 95 do teste, já pronta) e guarde em <code>amplitude</code> o maior valor menos o menor de <code>pdp_fraco</code>. Não altere <code>X2te</code>.</p></div>
+      <script type="text/plain" class="py-preparo">
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.inspection import partial_dependence
+
+def gerar_tabela(n=800, semente=0, ruido=0.8):
+    rng = np.random.default_rng(semente)
+    forte = rng.normal(size=n)
+    fraco = rng.normal(size=n)
+    ruido_fino = rng.normal(size=n)
+    ruido_bin = rng.integers(0, 2, size=n)
+    y_ = (forte + 0.6 * fraco + rng.normal(scale=ruido, size=n) > 0).astype(int)
+    return np.column_stack([forte, fraco, ruido_fino, ruido_bin]), y_
+
+X2, y2 = gerar_tabela()
+X2tr, X2te, y2tr, y2te = train_test_split(X2, y2, test_size=0.4, random_state=0)
+floresta = RandomForestClassifier(n_estimators=30, random_state=0).fit(X2tr, y2tr)
+X2te_original = X2te.copy()
+</script>
+      <script type="text/plain" class="py-inicial">
+def dependencia_parcial(modelo, X, j, grade):
+    # para cada v da grade: copie X, ponha v na coluna j de TODAS as linhas
+    # e guarde a probabilidade média da classe 1
+    return None
+
+grade = np.linspace(*np.percentile(X2te[:, 1], [5, 95]), 5)
+pdp_fraco = dependencia_parcial(floresta, X2te, 1, grade)
+amplitude = None   # maior valor menos menor valor de pdp_fraco
+
+print(pdp_fraco, amplitude)
+</script>
+      <script type="text/plain" class="py-teste">
+verificar(pdp_fraco is not None, "A função ainda devolve None. Monte uma lista com a probabilidade média de cada ponto da grade e devolva np.array(lista).")
+verificar(len(pdp_fraco) == 5, "A função deveria devolver 5 valores, um por ponto da grade.")
+verificar(np.array_equal(X2te, X2te_original), "Você alterou X2te em vez de uma cópia. Dentro do laço use Xv = X.copy() e mude só o Xv.")
+ref = partial_dependence(floresta, X2te, features=[1], custom_values={1: grade}, method="brute", kind="average")["average"][0]
+verificar(np.allclose(pdp_fraco, ref), "Os valores não batem com o partial_dependence do scikit-learn. Confira se trocou a coluna j inteira por v e se tirou a média de predict_proba(Xv)[:, 1].")
+verificar(amplitude is not None, "Calcule amplitude = pdp_fraco.max() - pdp_fraco.min().")
+verificar(abs(amplitude - (ref.max() - ref.min())) < 1e-9, "A amplitude deveria ser o maior valor de pdp_fraco menos o menor.")
+</script>
+      <script type="text/plain" class="py-solucao">
+def dependencia_parcial(modelo, X, j, grade):
+    medias = []
+    for v in grade:
+        Xv = X.copy()
+        Xv[:, j] = v
+        medias.append(modelo.predict_proba(Xv)[:, 1].mean())
+    return np.array(medias)
+
+grade = np.linspace(*np.percentile(X2te[:, 1], [5, 95]), 5)
+pdp_fraco = dependencia_parcial(floresta, X2te, 1, grade)
+amplitude = pdp_fraco.max() - pdp_fraco.min()
+
+print(pdp_fraco, amplitude)
+</script>
+      <template class="dica"><p>Dentro do laço: <code>Xv = X.copy()</code>, <code>Xv[:, j] = v</code> e <code>modelo.predict_proba(Xv)[:, 1].mean()</code>. Guarde cada média numa lista e devolva <code>np.array(lista)</code>.</p></template>
+      <template class="dica"><p>A amplitude é <code>pdp_fraco.max() - pdp_fraco.min()</code>. Se o teste reclamar que <code>X2te</code> mudou, falta o <code>.copy()</code>.</p></template>
+    </section>
+
+    <div class="ponte"><p>Você tem agora três ferramentas, cada uma com um jeito de dar errado. Falta olhar de frente para esses limites, porque um ranking de importâncias apresentado como “a explicação do modelo” esconde todos eles.</p></div>
+
+    <h2 id="s8"><span class="nsec">5.8</span>Os limites das três ferramentas</h2>
+    <p class="gancho">Se as ferramentas funcionam, por que ninguém deveria apresentar um ranking de importâncias como a explicação do modelo?</p>
+
+    <h3>Intuição</h3>
+    <p>Porque cada ferramenta responde a uma pergunta estreita, e é fácil ouvir uma resposta maior do que a dada. Três confusões aparecem o tempo todo. A importância se divide entre colunas parecidas e some de cada uma. A importância mede utilidade para prever e é lida como se medisse efeito. E a média da dependência parcial pode esconder um efeito forte quando ele muda de sinal conforme outra coluna. Cada uma tem um experimento curto.</p>
+
+    <h3>Definição</h3>
+    <p>Dois atributos são <b>correlacionados</b> quando um acompanha o outro; o modelo pode usar qualquer um dos dois e, na permutação, embaralhar um deles deixa o outro segurando a informação. <b>Causalidade</b> é o que acontece com o mundo quando se age sobre uma coluna; a importância mede apenas o quanto a coluna ajuda a prever dentro dos dados que existem. E uma <button type="button" class="termo" data-def="Interação: quando o efeito de uma coluna sobre o rótulo depende do valor de outra coluna. Pode ser forte e, ainda assim, sumir de uma média calculada sobre todas as linhas.">interação</button> é quando o efeito de uma coluna depende do valor de outra.</p>
+
+    <h3>Exemplo resolvido, com número</h3>
+    <p><b>1. Colunas correlacionadas dividem a importância.</b> Acrescento à tabela uma cópia quase idêntica da coluna <code>forte</code> (a correlação é 0,981) e comparo a permutação com e sem ela:</p>
+<pre class="codigo" tabindex="0" aria-label="Permutação com uma cópia correlacionada de forte, e embaralhando as duas juntas">rng = np.random.default_rng(<span class="n">5</span>)
+copia = X2[:, <span class="n">0</span>] + rng.normal(scale=<span class="n">0.2</span>, size=len(X2))             <span class="c"># quase igual à coluna "forte"</span>
+<span class="k">print</span>(<span class="s">"correlação entre forte e a cópia:"</span>, round(np.corrcoef(X2[:, <span class="n">0</span>], copia)[<span class="n">0</span>, <span class="n">1</span>], <span class="n">3</span>))
+
+<span class="k">def</span> importancia(colunas, nomes_col):
+    Atr, Ate, a, b = train_test_split(colunas, y2, test_size=<span class="n">0.4</span>, random_state=<span class="n">0</span>)
+    mod_ = RandomForestClassifier(n_estimators=<span class="n">50</span>, random_state=<span class="n">0</span>).fit(Atr, a)
+    r = permutation_importance(mod_, Ate, b, n_repeats=<span class="n">10</span>, random_state=<span class="n">0</span>)
+    <span class="k">print</span>(<span class="s">"   acurácia no teste"</span>, round(mod_.score(Ate, b), <span class="n">3</span>), <span class="s">"|"</span>, dict(zip(nomes_col, r.importances_mean.round(<span class="n">3</span>).tolist())))
+    <span class="k">return</span> mod_, Ate, b
+
+<span class="k">print</span>(<span class="s">"sem a cópia:"</span>); importancia(X2[:, :<span class="n">2</span>], [<span class="s">"forte"</span>, <span class="s">"fraco"</span>])
+<span class="k">print</span>(<span class="s">"com a cópia:"</span>); mod_c, Ate_c, b_c = importancia(np.column_stack([X2[:, :<span class="n">2</span>], copia]), [<span class="s">"forte"</span>, <span class="s">"fraco"</span>, <span class="s">"cópia"</span>])
+
+<span class="c"># embaralhar forte e cópia JUNTAS (mesma permutação nas duas colunas)</span>
+base_c = mod_c.score(Ate_c, b_c)
+quedas = []
+<span class="k">for</span> _ <span class="k">in</span> range(<span class="n">10</span>):
+    ordem = rng.permutation(len(Ate_c))
+    Xp = Ate_c.copy()
+    Xp[:, <span class="n">0</span>], Xp[:, <span class="n">2</span>] = Xp[ordem, <span class="n">0</span>], Xp[ordem, <span class="n">2</span>]
+    quedas.append(base_c - mod_c.score(Xp, b_c))
+<span class="k">print</span>(<span class="s">"queda ao embaralhar forte e cópia juntas:"</span>, round(np.mean(quedas), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">correlação entre forte e a cópia: 0.981
+sem a cópia:
+   acurácia no teste 0.819 | {'forte': 0.249, 'fraco': 0.106}
+com a cópia:
+   acurácia no teste 0.828 | {'forte': 0.154, 'fraco': 0.108, 'cópia': 0.062}
+queda ao embaralhar forte e cópia juntas: 0.258</div>
+    <p>Sem a cópia, <code>forte</code> tem importância 0,249. Com ela, a importância de <code>forte</code> cai para 0,154 e a da cópia é 0,062, embora o modelo continue igualmente bom (a acurácia até subiu, de 0,819 para 0,828, dentro do ruído). O modelo repartiu o uso entre as duas colunas, e embaralhar uma deixa a outra segurando a informação. Quando as duas são embaralhadas juntas, com a mesma permutação, a queda volta para 0,258, parecida com a de antes. Quem olhasse só as importâncias individuais concluiria que <code>forte</code> perdeu relevância, e não é verdade: ela só dividiu o crédito. A leitura certa é a do grupo.</p>
+    <p><b>2. Importância não é causalidade.</b> Um conjunto inventado de 600 dias: o calor causa as vendas de sorvete e também os dias com afogamento, mas o sorvete não causa nada no afogamento. Treino um modelo só com as vendas de sorvete para prever o afogamento:</p>
+<pre class="codigo" tabindex="0" aria-label="Um modelo que prevê afogamentos pelas vendas de sorvete e o que uma intervenção não faz">rng = np.random.default_rng(<span class="n">0</span>)
+calor = rng.normal(size=<span class="n">600</span>)                                       <span class="c"># a causa de tudo</span>
+sorvete = calor + rng.normal(scale=<span class="n">0.5</span>, size=<span class="n">600</span>)                  <span class="c"># vendas de sorvete: efeito do calor</span>
+afogou = (calor + rng.normal(scale=<span class="n">0.7</span>, size=<span class="n">600</span>) &gt; <span class="n">0.5</span>).astype(int)   <span class="c"># dia com afogamento: efeito do calor</span>
+s_tr, s_te, a_tr2, a_te2 = train_test_split(sorvete.reshape(-<span class="n">1</span>, <span class="n">1</span>), afogou, test_size=<span class="n">0.4</span>, random_state=<span class="n">0</span>)
+m_s = LogisticRegression().fit(s_tr, a_tr2)
+<span class="k">print</span>(<span class="s">"acurácia"</span>, round(m_s.score(s_te, a_te2), <span class="n">3</span>), <span class="s">"| referência (sempre 'não')"</span>, round(<span class="n">1</span> - a_te2.mean(), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"importância por permutação do sorvete:"</span>, permutation_importance(m_s, s_te, a_te2, n_repeats=<span class="n">10</span>, random_state=<span class="n">0</span>).importances_mean.round(<span class="n">3</span>))
+forcado = np.full((<span class="n">600</span>, <span class="n">1</span>), <span class="n">2.0</span>)                                   <span class="c"># "promoção": todo dia vende muito sorvete</span>
+<span class="k">print</span>(<span class="s">"previsão média hoje:"</span>, round(m_s.predict_proba(sorvete.reshape(-<span class="n">1</span>, <span class="n">1</span>))[:, <span class="n">1</span>].mean(), <span class="n">3</span>),
+      <span class="s">"| previsão se forçarmos sorvete = 2:"</span>, round(m_s.predict_proba(forcado)[:, <span class="n">1</span>].mean(), <span class="n">3</span>),
+      <span class="s">"| fração real de dias com afogamento:"</span>, round(afogou.mean(), <span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">acurácia 0.792 | referência (sempre 'não') 0.683
+importância por permutação do sorvete: [0.213]
+previsão média hoje: 0.338 | previsão se forçarmos sorvete = 2: 0.928 | fração real de dias com afogamento: 0.337</div>
+    <p>O modelo acerta 79,2% contra 68,3% de quem sempre responde “não”, e as vendas de sorvete têm importância 0,213: elas ajudam de verdade a prever. Mas se uma promoção forçar todo dia a vender muito sorvete (valor 2), o modelo passa a prever afogamento em 92,8% dos dias contra 33,8% hoje, e a frequência real de dias com afogamento continua em 33,7%, porque nesta simulação ela só depende do calor. A importância diz “serve para prever”. Não diz “mexer nisso muda o resultado”.</p>
+    <p><b>3. A dependência parcial pode esconder interações.</b> Dois atributos independentes, <code>x1</code> e <code>x2</code>, e um rótulo que vale 1 quando o produto <code>x1 · x2</code> é positivo, isto é, quando os dois têm o mesmo sinal. O rótulo só depende do par:</p>
+<pre class="codigo" tabindex="0" aria-label="Interação entre duas colunas: permutação alta, dependência parcial quase plana">rng = np.random.default_rng(<span class="n">3</span>)
+x1, x2 = rng.normal(size=<span class="n">1000</span>), rng.normal(size=<span class="n">1000</span>)
+yi = (x1 * x2 &gt; <span class="n">0</span>).astype(int)                      <span class="c"># o rótulo depende do PRODUTO: só importa o par</span>
+Xi = np.column_stack([x1, x2])
+i_tr, i_te, yi_tr, yi_te = train_test_split(Xi, yi, test_size=<span class="n">0.4</span>, random_state=<span class="n">0</span>)
+f_i = RandomForestClassifier(n_estimators=<span class="n">50</span>, random_state=<span class="n">0</span>).fit(i_tr, yi_tr)
+<span class="k">print</span>(<span class="s">"acurácia no teste:"</span>, round(f_i.score(i_te, yi_te), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"importância por permutação:"</span>, permutation_importance(f_i, i_te, yi_te, n_repeats=<span class="n">10</span>, random_state=<span class="n">0</span>).importances_mean.round(<span class="n">3</span>))
+
+g1 = np.linspace(*np.percentile(i_te[:, <span class="n">0</span>], [<span class="n">5</span>, <span class="n">95</span>]), <span class="n">5</span>)
+<span class="k">print</span>(<span class="s">"valores de x1:   "</span>, g1.round(<span class="n">2</span>))
+<span class="k">print</span>(<span class="s">"todos os exemplos:"</span>, dependencia_parcial(f_i, i_te, <span class="n">0</span>, g1).round(<span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"só com x2 &gt; 0:    "</span>, dependencia_parcial(f_i, i_te[i_te[:, <span class="n">1</span>] &gt; <span class="n">0</span>], <span class="n">0</span>, g1).round(<span class="n">3</span>))
+<span class="k">print</span>(<span class="s">"só com x2 &lt;= 0:   "</span>, dependencia_parcial(f_i, i_te[i_te[:, <span class="n">1</span>] &lt;= <span class="n">0</span>], <span class="n">0</span>, g1).round(<span class="n">3</span>))</pre>
+<div class="saida" aria-label="Saída do código">acurácia no teste: 0.998
+importância por permutação: [0.496 0.502]
+valores de x1:    [-1.76 -0.88 -0.01  0.86  1.73]
+todos os exemplos: [0.431 0.475 0.46  0.548 0.539]
+só com x2 &gt; 0:     [0.033 0.04  0.216 0.98  0.964]
+só com x2 &lt;= 0:    [0.902 0.992 0.749 0.035 0.034]</div>
+    <figure class="fig" aria-labelledby="fig6">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Figura. No celular role para o lado para ver inteira."><svg viewBox="0 0 640 256" role="img" aria-label="Gráfico de linhas da dependência parcial de x1. A média de todos os exemplos fica entre 0,431 e 0,548. Só com x2 positivo, sobe de 0,033 a 0,964. Só com x2 menor ou igual a zero, desce de 0,902 a 0,034.">
+        <text class="t2" x="70" y="16">probabilidade média da classe 1</text>
+        <path d="M70 218.0H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="222.0" text-anchor="end">0,00</text><path d="M70 170.5H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="174.5" text-anchor="end">0,25</text><path d="M70 123.0H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="127.0" text-anchor="end">0,50</text><path d="M70 75.5H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="79.5" text-anchor="end">0,75</text><path d="M70 28.0H520" style="stroke:var(--color-border-secondary)" stroke-width="1"/><text class="t2" x="62" y="32.0" text-anchor="end">1,00</text><text class="t2" x="70.0" y="238" text-anchor="middle">−2</text><text class="t2" x="182.5" y="238" text-anchor="middle">−1</text><text class="t2" x="295.0" y="238" text-anchor="middle">0</text><text class="t2" x="407.5" y="238" text-anchor="middle">1</text><text class="t2" x="520.0" y="238" text-anchor="middle">2</text><polyline points="97.0,211.7 196.0,210.4 293.9,177.0 391.8,31.8 489.6,34.8" fill="none" style="stroke:var(--color-accent-primary)" stroke-width="2.2" stroke-linejoin="round"/><circle cx="97.0" cy="211.7" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="196.0" cy="210.4" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="293.9" cy="177.0" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="391.8" cy="31.8" r="3.6" style="fill:var(--color-accent-primary)"/><circle cx="489.6" cy="34.8" r="3.6" style="fill:var(--color-accent-primary)"/><text class="t" x="499.6" y="38.8" style="fill:var(--color-accent-primary)">só x2 &gt; 0</text><polyline points="97.0,46.6 196.0,29.5 293.9,75.7 391.8,211.3 489.6,211.5" fill="none" style="stroke:var(--color-status-error)" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="6 4"/><circle cx="97.0" cy="46.6" r="3.6" style="fill:var(--color-status-error)"/><circle cx="196.0" cy="29.5" r="3.6" style="fill:var(--color-status-error)"/><circle cx="293.9" cy="75.7" r="3.6" style="fill:var(--color-status-error)"/><circle cx="391.8" cy="211.3" r="3.6" style="fill:var(--color-status-error)"/><circle cx="489.6" cy="211.5" r="3.6" style="fill:var(--color-status-error)"/><text class="t" x="499.6" y="215.5" style="fill:var(--color-status-error)">só x2 ≤ 0</text><polyline points="97.0,136.1 196.0,127.8 293.9,130.6 391.8,113.9 489.6,115.6" fill="none" style="stroke:var(--color-text-secondary)" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="2 4"/><circle cx="97.0" cy="136.1" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="196.0" cy="127.8" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="293.9" cy="130.6" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="391.8" cy="113.9" r="3.6" style="fill:var(--color-text-secondary)"/><circle cx="489.6" cy="115.6" r="3.6" style="fill:var(--color-text-secondary)"/><text class="t" x="499.6" y="119.6" style="fill:var(--color-text-secondary)">todos</text>
+        <text class="t2" x="295" y="248" text-anchor="middle">valor em que x1 é fixado</text>
+      </svg></div>
+      <figcaption id="fig6"><b>Fig. 6</b>A dependência parcial de <code>x1</code> na seção 5.8. A média de todos os exemplos (cinza) é quase reta, mas ela mistura duas curvas de sentidos opostos.</figcaption>
+    </figure>
+    <p>A floresta acerta 99,8%, e a permutação mostra que cada coluna importa muito (0,496 e 0,502: embaralhar qualquer uma delas derruba a acurácia de 0,998 para perto de 0,5). Mesmo assim, a dependência parcial de <code>x1</code> é quase uma reta em torno de 0,5, entre 0,431 e 0,548. O motivo aparece quando separo os exemplos pelo sinal de <code>x2</code>: onde <code>x2 &gt; 0</code>, a probabilidade sobe de 0,033 para 0,964 conforme <code>x1</code> cresce; onde <code>x2 ≤ 0</code>, ela desce de 0,902 para 0,034. As duas curvas têm efeitos opostos, e a média dos dois grupos cancela quase tudo. Quem olhasse só a curva média concluiria que <code>x1</code> não faz diferença.</p>
+
+    <figure class="fig" aria-labelledby="tab1">
+      <div class="fig-rolagem" tabindex="0" role="group" aria-label="Tabela. No celular role para o lado para ver inteira.">
+        <table class="tab-dec" aria-labelledby="tab1">
+          <thead><tr><th scope="col">Ferramenta</th><th scope="col">Pergunta que responde</th><th scope="col">Onde calcular</th><th scope="col">Cuidados</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Importância por impureza</th><td>Quanto cada coluna foi usada para dividir os exemplos de treino?</td><td>Já vem do treino (<code>feature_importances_</code>).</td><td>Pode inflar colunas com muitos valores distintos; soma 1 mesmo para um modelo inútil; colunas correlacionadas se dividem.</td></tr>
+            <tr><th scope="row">Importância por permutação</th><td>Quanto o desempenho cai se a coluna deixar de valer?</td><td>Teste ou validação.</td><td>Colunas correlacionadas dividem a queda (embaralhe o grupo); custa <code>n_repeats × colunas</code> avaliações; olhe o desvio; não é causalidade.</td></tr>
+            <tr><th scope="row">Dependência parcial</th><td>Que previsão média o modelo dá quando a coluna vale <code>v</code>?</td><td>Teste ou validação.</td><td>A média pode esconder uma interação; força combinações de valores que talvez não existam; descreve o modelo, não o mundo.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption id="tab1"><b>Tabela 1</b>As três ferramentas de explicação e os cuidados de cada uma. São regras de uso para ler os resultados com juízo, não uma lista completa de limites.</figcaption>
+    </figure>
+
+    <h3>Código comentado</h3>
+    <p>No primeiro experimento, a função <code>importancia</code> separa treino e teste com o mesmo <code>random_state=0</code>, então as linhas são as mesmas nas duas versões da tabela. Para embaralhar duas colunas juntas, <code>rng.permutation(len(Ate_c))</code> sorteia uma ordem e <code>Xp[ordem, 0]</code> e <code>Xp[ordem, 2]</code> aplicam a mesma ordem às duas colunas, o que preserva a relação entre elas. No segundo, o <code>np.full((600, 1), 2.0)</code> cria uma coluna toda igual a 2, a promoção forçada. No terceiro, <code>i_te[i_te[:, 1] &gt; 0]</code> filtra as linhas em que <code>x2</code> é positivo, e a função <code>dependencia_parcial</code> da seção anterior é reaproveitada sobre cada grupo.</p>
+
+    <h3>Erro comum</h3>
+    <p>Fechar o relatório com “a coluna X é a mais importante, então é a que causa o resultado” ou “a curva da coluna Y é plana, então Y não importa”. A primeira confunde prever com causar. A segunda confunde média com efeito. A saída honesta é combinar as ferramentas: permutação para saber o que pesa, dependência parcial para ver a forma, separar os dados por faixas de outra coluna quando a curva média parecer plana demais, e tratar grupos de colunas parecidas como grupo. Todos os conjuntos deste capítulo são sintéticos e pequenos, e as três demonstrações mostram o mecanismo, mas não provam como cada ferramenta se comporta em dados reais.</p>
+
+    <div class="ponte"><p>Com os limites à vista, falta testar se você consegue aplicar as ideias do capítulo a cenários que ainda não viu.</p></div>
+
+    <h2 id="s9"><span class="nsec">5.9</span>Verifique o que entendeu</h2>
+    <p class="gancho">Um cenário mostra se você consegue aplicar a ideia num problema que ainda não viu.</p>
+
+    <fieldset class="quiz" data-quiz="ia-5-q1">
+      <legend>Cenário 1</legend>
+      <p class="pergunta">Uma equipe tem 1% de fraudes. Ela copia as fraudes ao acaso até chegarem a 50% do conjunto e só então separa treino e teste. Uma árvore sem limite de profundidade obtém recall de 0,99 no teste. O que há de errado?</p>
+      <label class="opcao"><input type="radio" name="ia-5-q1"><span>Nada: recall de 0,99 mostra que sobreamostrar resolve o desbalanceamento.</span><template class="fb"><p>O número alto é suspeito, não confirmação. Reamostrar antes de separar faz cópias da mesma fraude caírem no treino e no teste, e a árvore reconhece o que já viu.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-5-q1"><span>O recall deveria ser medido no treino, onde há mais fraudes.</span><template class="fb"><p>Medir no treino seria ainda mais otimista. O problema é que o teste deixou de ser independente do treino, e deixou também de ter a proporção real de 1%.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-5-q1"><span>Cópias da mesma fraude caíram no treino e no teste, e o teste deixou de ter 1% de fraudes. A medida certa separa primeiro e reamostra só o treino.</span><template class="fb"><p>Isso. É o vazamento da seção 5.3: o teste não mede mais generalização, e qualquer precisão calculada nele fica distorcida pela proporção artificial.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-5-q2">
+      <legend>Cenário 2</legend>
+      <p class="pergunta">Numa floresta, a coluna <code>numero_do_pedido</code> (um valor diferente por linha) aparece com 18% de importância por impureza. Pela permutação, no teste, a importância dela dá perto de zero. Em que acreditar?</p>
+      <label class="opcao" data-certa><input type="radio" name="ia-5-q2"><span>Na permutação: uma coluna com valores todos diferentes oferece muitos cortes, a floresta a usou para decorar o treino, e isso não ajuda em exemplos novos.</span><template class="fb"><p>Certo. A importância por impureza mede o uso nos exemplos de treino, e inclui a decoreba. A permutação, no teste, mede o que ajuda em exemplos que o modelo não viu.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-5-q2"><span>Na impureza: ela vem de dentro do modelo e mostra o que ele realmente usa, a permutação é só uma aproximação.</span><template class="fb"><p>Ela mostra o que o modelo usou para dividir o treino, e isso inclui decorar. O que interessa na hora de explicar é o que ajuda a prever dados novos.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-5-q2"><span>Nas duas: a média, 9%, é a importância real.</span><template class="fb"><p>As duas medidas respondem a perguntas diferentes, e tirar a média delas não produz uma importância “real”. A discordância é um aviso de que a impureza está inflada.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <fieldset class="quiz" data-quiz="ia-5-q3">
+      <legend>Cenário 3</legend>
+      <p class="pergunta">A dependência parcial de uma coluna é quase uma reta horizontal, mas a importância dela por permutação é alta. Qual é a leitura mais cuidadosa?</p>
+      <label class="opcao"><input type="radio" name="ia-5-q3"><span>A permutação errou: a reta horizontal prova que a coluna não faz diferença.</span><template class="fb"><p>A reta horizontal é uma média. Ela pode esconder efeitos opostos em grupos diferentes, como mostrou o experimento de <code>x1</code> e <code>x2</code>.</p></template></label>
+      <label class="opcao" data-certa><input type="radio" name="ia-5-q3"><span>A coluna provavelmente tem uma interação com outra, com efeitos em sentidos opostos que a média cancela. Vale refazer a curva separando os exemplos por faixas da outra coluna.</span><template class="fb"><p>Isso. Permutação alta com curva média plana costuma indicar interação (colunas correlacionadas também distorcem a curva, como visto na seção anterior, então vale conferir as duas hipóteses). Separar os exemplos pelo sinal ou pela faixa da outra coluna, como na seção 5.8, revela o efeito.</p></template></label>
+      <label class="opcao"><input type="radio" name="ia-5-q3"><span>O modelo está sobreajustado, e basta treinar de novo.</span><template class="fb"><p>Sobreajuste não explica essa combinação, e treinar de novo com os mesmos dados dá o mesmo modelo. A pista é o contraste entre as duas ferramentas.</p></template></label>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </fieldset>
+
+    <div class="lacuna" data-lacuna="ia-5-l1">
+      <span class="rotulo">Complete</span>
+      <p>Ao tratar uma classe rara, a reamostragem (sobreamostrar ou subamostrar) deve ser feita só no <input data-resp="treino|conjunto de treino|treinamento" aria-label="Em qual conjunto a reamostragem deve ser feita">, depois de <input data-resp="separar|dividir|separar treino e teste|dividir treino e teste|separar os dados|dividir os dados|separar o teste|dividir o teste|separar o treino do teste|a divisão|a separação|separação|divisão" aria-label="O que deve acontecer antes da reamostragem">. No <code>class_weight="balanced"</code>, cada classe recebe o peso <code>n / (K · n_c)</code>, e assim as duas classes passam a ter o mesmo peso <input data-resp="total|soma|somado|total somado|peso total" aria-label="Característica do peso das classes depois do balanced">. Para avaliar os alarmes de um modelo com classe rara, além da AUC, usa-se a <input data-resp="precisão média|precisao media|ap|average precision|average_precision|pr-auc|pr auc|area da curva pr|área da curva pr" aria-label="Medida que resume a curva de precisão contra recall">.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="lacuna" data-lacuna="ia-5-l2">
+      <span class="rotulo">Complete</span>
+      <p>A importância por <input data-resp="permutação|permutacao|embaralhamento|permutar" aria-label="Importância calculada embaralhando uma coluna"> embaralha uma coluna do conjunto de <input data-resp="teste|validação|validacao|teste ou validação|validação ou teste" aria-label="Em qual conjunto a permutação deve ser calculada"> e mede a <input data-resp="queda|diminuição|diminuicao|perda|redução|reducao|piora|diferença|diferenca|variação|variacao|mudança|mudanca" aria-label="O que se mede no desempenho depois do embaralhamento"> do desempenho. Já a <input data-resp="dependência parcial|dependencia parcial|pdp|dependência parcial média" aria-label="Ferramenta que fixa uma coluna em cada valor de uma grade"> fixa uma coluna em cada valor de uma grade e calcula a probabilidade <input data-resp="média|media|prevista média|esperada" aria-label="Que tipo de probabilidade a dependência parcial calcula"> prevista. Quando duas colunas dizem quase a mesma coisa, a importância se <input data-resp="divide|reparte|distribui|divide entre elas|espalha|dilui|se dilui|se divide|se reparte" aria-label="O que acontece com a importância de colunas correlacionadas"> entre elas.</p>
+      <button class="btn primario" type="button">Conferir</button>
+      <div class="feedback"></div>
+    </div>
+
+    <h2 id="s10">Fontes e avisos</h2>
+    <p>Este capítulo não usa fatos externos com data: tudo o que está aqui é código rodado, e cada saída foi colada do motor que roda no seu navegador, em 15/11/2026. As versões foram lidas no próprio motor:</p>
+<pre class="codigo" tabindex="0" aria-label="Versões do Python, do scikit-learn e do NumPy usadas neste capítulo"><span class="k">import</span> sys
+<span class="k">import</span> sklearn
+
+<span class="k">print</span>(sys.version.split()[<span class="n">0</span>], sklearn.__version__, np.__version__)</pre>
+<div class="saida" aria-label="Saída do código">3.14.2 1.8.0 2.4.6</div>
+    <p>Python 3.14.2, scikit-learn 1.8.0 e NumPy 2.4.6. Todos os dados são inventados ou gerados com semente fixa (<code>make_classification</code>, do scikit-learn, e o gerador do NumPy), e qualquer parecido com casos reais é coincidência. Os conjuntos são pequenos de propósito, para você conferir as contas: o teste principal tem 45 raros, a validação tem 31 e a tabela de explicabilidade tem 320 linhas de teste, então os números mostram o mecanismo, mas não provam nada sobre dados reais. Duas escolhas foram feitas olhando resultados e, por isso, podem ser otimistas: a combinação do conjunto principal (semente 1 e separação de classes 1,0) foi escolhida entre nove testadas, três sementes por três valores de separação, porque deixava o efeito visível (as 20 sementes de 100 a 119 da seção 5.3 não foram escolhidas assim), e o nível de ruído 0,8 da tabela da seção 5.5 foi escolhido depois de testar 0,5 e 0,8, porque deixava o contraste mais claro (as 10 tabelas da seção 5.6 usam o mesmo nível de ruído, então não confirmam essa escolha). O corte da seção 5.4 foi escolhido na validação, sem olhar o teste. Detalhes como o formato do retorno do <code>partial_dependence</code> (chaves <code>grid_values</code> e <code>average</code>), a existência de <code>custom_values</code> e o valor padrão de <code>C</code> na regressão logística são do scikit-learn dessa versão, e o fato de o <code>GradientBoostingClassifier</code> não ter <code>class_weight</code> mas aceitar <code>sample_weight</code> no <code>fit</code> foi conferido no motor; confira a documentação da sua. O SMOTE e a biblioteca imbalanced-learn não foram usados: o SMOTE é citado apenas como o nome de uma técnica, e este capítulo não afirma nada sobre ela. Este capítulo é um complemento, não foi dado em aula.</p>
+
+    <div class="ponte"><p>Agora você sabe tratar uma classe rara sem deixar o teste mentir e sabe perguntar a um modelo o que ele usa, sabendo onde cada resposta falha. Até aqui, porém, todos os exemplos vinham com rótulo: alguém já tinha dito o que era fraude, o que era cancelamento, o que era normal. O próximo capítulo, “Sem rótulo”, tira essa muleta e mostra o que dá para fazer quando só há linhas e colunas: agrupar com k-means, resumir colunas com PCA e procurar o que foge do padrão na detecção de anomalias.</p></div>
+
+  </article>
+
+  <footer class="rodape">
+    <a href="cap-4-arvores-florestas-e-boosting.html">Anterior: Árvores, florestas e boosting</a>
+    <span>Capítulo 5 de 20</span>
+    <button class="btn btn-concluir" id="btnConcluir" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="txt">Marcar capítulo como concluído</span></button>
+    <span>Próximo: Sem rótulo</span>
+  </footer>
+</main>
+
+<script src="assets/trilha.js"></script>
+<script src="assets/mapa.js"></script>
+<script src="assets/exercicio.js"></script>
+<script src="assets/leitura.js"></script>
+<script src="assets/ia.js"></script>
+</body>
+</html>
